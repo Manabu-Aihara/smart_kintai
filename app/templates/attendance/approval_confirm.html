@@ -1,0 +1,87 @@
+{% extends 'home.html' %}
+
+{% block child_content %}
+{% if f is true %}
+  <h4>社員氏名：{{ w_usr.LNAME }} {{ w_usr.FNAME }}</h4>
+{% else %}
+  <p>社員番号：　{{stf_login.STAFFID}}</p>
+{% endif %}
+
+<form method="post" action="/regist" id="approval">
+  <div class="w-25">
+    <p>申請内容</p><input type="text" name="content" value="{{ one_data[0] }}">
+  </div>
+  <div><p>対象日</p><input type="date" name="start-day" value="{{ one_data[1] }}">〜</div>
+  <div><p>対象終了日</p><input type="date" name="end-day" value="{{ one_data[2] }}"></div>
+  <div class="w-25"></div>
+  <div><p>開始時刻</p><input type="time" name="start-time" value="{{ one_data[3] }}">〜</div>
+  <div><p>終了時刻</p><input type="time" name="end-time" value="{{ one_data[4] }}"></div>
+  <div class="remark">
+    <p>備考</p>
+    <textarea name="remark">{{ one_data[5] }}</textarea>
+  </div>
+  <!-- one_data[6]status(申請状態) -->
+  {% if f is true and one_data[6] %}
+    <p class="opacity-status">{{ one_data[6] }}</p>
+  {% elif f is false and one_data[6] %}
+    <p class="status">{{ one_data[6] }}</p>
+  {% else %}
+    <button type="submit" class="btn btn-ask">申請依頼</button>
+  {% endif %}
+</form>
+
+<!-- one_data[7]id(NotificationListの)) -->
+{% if f is true and one_data[7] %}
+  <form method="post" class="form-bottom" action="{{ url_for('change_status_judge', id=one_data[7], STAFFID=w_usr.STAFFID, status=1) }}">
+    <p>申請者へコメント（承認する場合）</p>
+    <textarea name="comment"></textarea>
+    <button type="submit" class="btn judgement">承認</button>
+  </form>
+  <form method="post" class="form-bottom" action="{{ url_for('change_status_judge', id=one_data[7], STAFFID=w_usr.STAFFID, status=2) }}">
+    <p>申請者へコメント（未承認の場合）</p>
+    <textarea name="comment"></textarea>
+    <button type="submit" class="btn judgement">拒否</button>
+  </form>
+
+{# 下記は使えず #}
+{% elif f is true and (one_data[6] == "承認済" or one_data[6] == "未承認") %}
+  <p></p>
+{% endif %}
+
+<div class="confirm-back"><input type="button" value="戻る" id="btnBack"></div>
+<script>
+  let btnBack = document.getElementById('btnBack');
+  btnBack.addEventListener('click', function(){
+      history.back();
+  });
+</script>
+<script>
+  /*
+   取得urlによってフォームを入力不可にする
+  */
+  const tail_d = /\d+$/;
+  const tail_confirm = /confirm$/;
+  console.log(tail_d.test(location.pathname) || tail_confirm.test(location.pathname));
+  if(tail_d.test(location.pathname) || tail_confirm.test(location.pathname)){
+    const currentForm = document.getElementById('approval');
+    // console.log(currentForm);
+    // forEach, mapはダメだった
+    for(let i = 0; i <= 5; i++){
+      // console.log(currentForm[i]);
+      currentForm[i].readOnly = true;
+      currentForm[i].style.backgroundColor = "gainsboro";
+    };
+  }
+</script>
+<script>
+  // 承認済み、未承認欄ならボタンは非表示
+  const status = document.getElementsByClassName('opacity-status');
+  const bottomForm = document.getElementsByClassName('form-bottom');
+  if(status[0].textContent == "承認済" || status[0].textContent == "未承認"){
+    bottomForm[0].style.display = "none";
+    bottomForm[1].style.display = "none";
+  }
+</script>
+<script src="/static/js/ModalObj.js"></script>
+<script src="/static/js/ReportModal2.js"></script>
+{% endblock %}

@@ -1,0 +1,22 @@
+#page-top-wrap {
+  position: relative;
+  z-index: 1;
+}
+#page-top-wrap p {
+  width: 50px;
+  height: 50px;
+  text-align: center;
+  background: rgb(64, 207, 64);
+  border-radius: 25px;
+  position: fixed;
+  right: 5%;
+  bottom: 5%;
+  transition: all 0.3s;
+}
+#page-top-wrap p a#page-top-icon {
+  font-size: 50px;
+  color: rgb(243, 243, 242);
+  line-height: 45px;
+  text-decoration: none;
+  cursor: pointer;
+}

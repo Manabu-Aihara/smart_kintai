@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block app_content %}
+
+<h4>{{ title }}</h4>
+<p>{{ date }}</p>
+<p>5秒後に自動的に戻ります</p>
+
+<div class="confirm-back"><input type="hidden" value="戻る" id="btnBack"></div>
+<script>
+  let btnBack = document.getElementById('btnBack');
+  btnBack.addEventListener('click', function () {
+    history.back();
+  });
+  setTimeout((() => {
+    location.pathname = '/admin';
+  }), 5000);
+</script>
+
+{% endblock %}

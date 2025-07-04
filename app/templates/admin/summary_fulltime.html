@@ -1,0 +1,202 @@
+{% extends 'home.html' %}
+
+{% block child_content %}
+<h3>常勤職員一覧画面（１日基準）　　　対象期間：　{{ m }}月　1日　～　月末</span></h3>
+<hr>
+<div>
+    <form method="POST" action="{{ url_for('summary_fulltime') }}">
+        {{ form_month.csrf_token }}
+        <input type="{{ typ[1] }}" id="select_month" class="h5" name="workday_name" value="{{ workday_data }}">　
+        {{ wtf.form_field(form_month.slct, class="btn btn-primary") }}
+    </form>
+    <p>{{ str_workday }}</p>
+</div>
+<br>
+<br>
+<div class="text-center">
+    <a href="{{url_for('home_admin')}}" class="btn btn-success">管理者ホームに戻る</a>　　　
+    <a href="{{ url_for('users_nenkyu') }}" class="btn btn-success">ユーザ年休検索画面に戻る</a>
+</div>
+<br/><br>
+<div id="adm-tbl" class="col-12 center-block">
+    <div class="sort-table">
+        <a href="javascript:void(0)" onclick="onCSVDownload(this, document.querySelector('#fv-table'), '{{ y|tojson }}-{{ m|tojson }}常勤職員一覧画面（１日基準）download_({{ dwl_today.strftime('%Y-%m-%d') }}).csv');" type="button" class="btn btn-warning">CSVダウンロード</a>
+        <br><br><br>
+        <table id="fv-table" class="table table-striped table-hover">
+            <caption class="disp_csv">{{ y }}年 {{ m }}月</caption>
+            <thead>
+                <tr class="st3 text-center">
+                    <th><small>部門11111</small></th>
+                    <th><small>所属</small></th>
+                    <th><small>職種</small></th>
+                    <th><small>勤務形態</small></th>
+                    <th><small>社員ID</small></th>
+                    <th><small>氏名</small></th>
+                    <th><small>オンコール<br>平日担当回数</small></th>
+                    <th><small>オンコール<br>土日担当回数</small></th>
+                    <th><small>オンコール<br>対応件数</small></th>
+                    <th><small>エンゼルケア<br>対応件数</small></th>
+                    <th><small>実働時間計</small></th>
+                    <th><small>実働時間計（１０進法）</small></th>                    
+                    <th><small>実働日数</small></th>
+                    <th><small>年休（全日）</small></th>
+                    <th><small>年休（半日）</small></th>
+                    <th><small>時間外</small></th>
+                    <th><small>時間外（１０進法）</small></th>                    
+                    <th><small>遅刻</small></th>
+                    <th><small>早退</small></th>
+                    <th><small>欠勤</small></th>
+                    <th><small>祝日手当時間</small></th>
+                    <th><small>祝日手当時間（１０進法）</small></th>                                        
+                    <th><small>出張（全日）</small></th>
+                    <th><small>出張（半日）</small></th>
+                    <th><small>リフレッシュ休暇</small></th>
+                    <th><small>走行距離</small></th>
+                    <th><small>時間休</small></th>
+                    <th><small>中抜け</small></th>
+                    <th><small>時間休計</small></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for u in users %}
+                {% for cnt_for_tbl in cfts %}
+                {% if u.INDAY is not none %}
+                {% if (u.OUTDAY is none and ((u.INDAY.year < y or
+                    (u.INDAY.year == y and u.INDAY.month <= m)) and (workday_count != 0 or workday_count is not none)))
+                    or u.OUTDAY and (((u.OUTDAY.year > y or 
+                    u.OUTDAY.year == y and u.OUTDAY.month >= m) and (workday_count != 0 or workday_count is not none)) and
+                    ((u.INDAY.year < y or
+                    (u.INDAY.year == y and u.INDAY.month <= m)) and (workday_count != 0 or workday_count is not none))) %}
+                {% if u.STAFFID ==  cnt_for_tbl.STAFFID %}
+                {% if u.CONTRACT_CODE != 2 %}
+                <tr>
+                    <td>
+                        <small>
+                            {% if u.DEPARTMENT_CODE == 1 %}
+                            {{ bumon[0] }}
+                            {% elif u.DEPARTMENT_CODE == 2 %}
+                            {{ bumon[1] }}    
+                            {% elif u.DEPARTMENT_CODE == 3 %}
+                            {{ bumon[2] }}    
+                            {% elif u.DEPARTMENT_CODE == 4 %}
+                            {{ bumon[3] }}    
+                            {% elif u.DEPARTMENT_CODE == 5 %}
+                            {{ bumon[4] }}    
+                            {% elif u.DEPARTMENT_CODE == 6 %}
+                            {{ bumon[5] }}    
+                            {% elif u.DEPARTMENT_CODE == 7 %}
+                            {{ bumon[6] }}    
+                            {% elif u.DEPARTMENT_CODE == 8 %}
+                            {{ bumon[7] }}
+                            {% elif u.DEPARTMENT_CODE == 9 %}
+                            {{ bumon[8] }}                            
+                            {% endif %} 
+                        </small>
+                    </td>
+                    <td>
+                        <small>
+                            {% if u.TEAM_CODE == 1 %}
+                            {{ syozoku[0] }}
+                            {% elif u.TEAM_CODE == 2 %}
+                            {{ syozoku[1] }}
+                            {% elif u.TEAM_CODE == 3 %}
+                            {{ syozoku[2] }}            
+                            {% elif u.TEAM_CODE == 4 %}
+                            {{ syozoku[3] }}
+                            {% elif u.TEAM_CODE == 5 %}
+                            {{ syozoku[4] }}
+                            {% elif u.TEAM_CODE == 6 %}
+                            {{ syozoku[5] }}
+                            {% elif u.TEAM_CODE == 7 %}
+                            {{ syozoku[6] }}
+                            {% elif u.TEAM_CODE == 8 %}
+                            {{ syozoku[7] }}
+                            {% endif %}
+                        </small>
+                    </td>
+                    <td>
+                        <small>
+                            {% if u.JOBTYPE_CODE == 1 %}
+                            {{ syokusyu[0] }}    
+                            {% elif u.JOBTYPE_CODE == 2 %}
+                            {{ syokusyu[1] }}
+                            {% elif u.JOBTYPE_CODE == 3 %}
+                            {{ syokusyu[2] }}
+                            {% elif u.JOBTYPE_CODE == 4 %}
+                            {{ syokusyu[3] }}
+                            {% elif u.JOBTYPE_CODE == 5 %}
+                            {{ syokusyu[4] }}
+                            {% elif u.JOBTYPE_CODE == 6 %}
+                            {{ syokusyu[5] }}
+                            {% elif u.JOBTYPE_CODE == 7 %}
+                            {{ syokusyu[6] }}
+                            {% elif u.JOBTYPE_CODE == 8 %}
+                            {{ syokusyu[7] }}
+                            {% elif u.JOBTYPE_CODE == 9 %}
+                            {{ syokusyu[8] }}
+                            {% elif u.JOBTYPE_CODE == 10 %}
+                            {{ syokusyu[9] }}
+                            {% elif u.JOBTYPE_CODE == 11 %}
+                            {{ syokusyu[10] }}
+                            {% endif %}
+                        </small>
+                    </td>
+                    <td>
+                        <small>
+                            {% if u.CONTRACT_CODE == 1 %}
+                            {{ keitai[0] }}    
+                            {% elif u.CONTRACT_CODE == 2 %}
+                            {{ keitai[1] }}
+                            {% elif u.CONTRACT_CODE == 3 %}
+                            {{ keitai[2] }}
+                            {% elif u.CONTRACT_CODE == 4 %}
+                            {{ keitai[3] }}
+                            {% elif u.CONTRACT_CODE == 5 %}
+                            {{ keitai[4] }}
+                            {% endif %}
+                        </small>
+                    </td>                    
+                    <td><small>{{ cnt_for_tbl.STAFFID }}</small></td>
+                    <td><small>{{ u.LNAME }} {{ u.FNAME }}</small></td>
+                    <td><small>{{ cnt_for_tbl.ONCALL }}</small></td>
+                    <td><small>{{ cnt_for_tbl.ONCALL_HOLIDAY }}</small></td>
+                    <td><small>{{ cnt_for_tbl.ONCALL_COUNT }}</small></td>
+                    <td><small>{{ cnt_for_tbl.ENGEL_COUNT }}</small></td>
+                    <td><small>{{ cnt_for_tbl.SUM_WORKTIME }}</small></td>
+                    <td><small>{{ cnt_for_tbl.SUM_WORKTIME_10 }}</small></td>
+                    <td><small>{{ cnt_for_tbl.WORKDAY_COUNT }}</small></td>
+                    <td><small>{{ cnt_for_tbl.NENKYU }}</small></td>
+                    <td><small>{{ cnt_for_tbl.NENKYU_HALF }}</small></td>
+                    <td><small>{{ cnt_for_tbl.OVERTIME }}</small></td>
+                    <td><small>{{ cnt_for_tbl.OVERTIME_10 }}</small></td>
+                    <td><small>{{ cnt_for_tbl.TIKOKU }}</small></td>
+                    <td><small>{{ cnt_for_tbl.SOUTAI }}</small></td>
+                    <td><small>{{ cnt_for_tbl.KEKKIN }}</small></td>
+                    <td><small>{{ cnt_for_tbl.HOLIDAY_WORK }}</small></td>
+                    <td><small>{{ cnt_for_tbl.HOLIDAY_WORK_10 }}</small></td>
+                    <td><small>{{ cnt_for_tbl.SYUTTYOU }}</small></td>
+                    <td><small>{{ cnt_for_tbl.SYUTTYOU_HALF }}</small></td>
+                    <td><small>{{ cnt_for_tbl.REFLESH }}</small></td>
+                    <td><small>{{ cnt_for_tbl.MILEAGE }}</small></td>
+                    <td><small>{{ cnt_for_tbl.TIMEOFF }}</small></td> 
+                    <td><small>{{ cnt_for_tbl.HALFWAY_THROUGH }}</small></td>
+                    <td><small>{{ cnt_for_tbl.TIMEOFF|int + cnt_for_tbl.HALFWAY_THROUGH|int }}</small></td>                   
+                </tr>
+                {% endif %}
+                {% endif %}
+                {% endif %}
+                {% endif %}
+                {% endfor %}
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="h1">
+        <br><br><br><br><br>
+        <br><br><br><br><br>
+    </div>       
+
+<div>
+
+{% endblock %}

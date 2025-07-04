@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div id="back-wrap">
+  <input type="button" value="戻る" id="btnBack" class="btn">
+</div>
+<div id="list-container">
+  <ul id="list-wrapper">
+    {% for last_update in last_update_list %}
+    <li class="last-update">
+      <span class="full-name">{{ last_update['staff'] }}: </span>
+      <span class="last-date">{{ last_update['last_date'] }}</span>
+    </li>
+    {% endfor %}
+  </ul>
+</div>
+<script>
+  let btnBack = document.getElementById('btnBack');
+  btnBack.addEventListener('click', function () {
+    history.back();
+  });
+</script>
+{% endblock %}

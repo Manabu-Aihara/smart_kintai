@@ -1,0 +1,19 @@
+{% extends 'home.html' %}
+
+{% block child_content %}
+
+<div>
+  <form method="post" action="/holidays-regist/{{ month }}">
+    {% for target, remain in input_id_list %}
+    <div>
+      <span>ID{{ target.STAFFID }}: </span>
+      <span>残り日数：<input type="text" name="remain_days" value="{{ remain }}" required /></span>
+      <span>（内可能であれば）from〜toの時間休合計（時間）:<input type="text" name="time_rests" /></span>
+    </div>
+    {% endfor %}
+    <!-- <input type="button" value="登録" /> -->
+    <button type="submit">登録</button>
+  </form>
+</div>
+
+{% endblock %}

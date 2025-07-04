@@ -1,0 +1,59 @@
+{% extends 'home.html' %}
+
+{% block child_content %}
+<h3 class="notification-title">届出申請</h3>
+<p><span style="color: red;">※</span>は入力必須です。</p>
+<h4>社員番号{{ stf_login.STAFFID }}：　{{ stf_login.LNAME }}{{ stf_login.FNAME }}</h4>
+<input type="text" value="{{ worktime }}" id="worktime" />
+
+<form method="post" action="/regist" name="notice-form" id="approval">
+  <div class="w-25">
+    <span style="color: red;">※</span>
+    <select class="form-control form-control-sm" name="content" required>
+      <option value="">選択してください</option>
+      {% for n in n_all %}
+      <option value="{{ n[0] }}">{{ n[1] }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div>
+    <p class="p-day">対象日<span style="color: red;">※</span></p><input type="date" name="start-day" class="notice-day"
+      required>〜
+  </div>
+  <div>
+    <p class="p-day">対象終了日（同日なら入力の必要はありません）</p><input type="date" class="notice-day" name="end-day">
+  </div>
+  <div class="w-25"></div>
+  <div>
+    <p>開始時刻</p><input type="time" name="start-time" class="restrict-form">〜
+  </div>
+  <div>
+    <p>終了時刻</p><input type="time" name="end-time" class="restrict-form">
+  </div>
+  <div class="remark">
+    <p>備考(欠勤や遅刻なら理由等)</p>
+    <textarea name="remark"></textarea>
+  </div>
+  <input type="button" value="申請" class="btn btn-ask" />
+  <div id="confirm-modal">
+    <p>申請します。この内容で宜しいですか？</p>
+    <div class="submit-area">
+      <span><input type="button" value="ＯＫ" id="on-submit" /></span>
+      <span><input type="button" value="Ｃａｎｃｅｌ" id="on-hide" /></span>
+    </div>
+  </div>
+</form>
+
+<div class="confirm-back"><input type="button" value="戻る" id="btnBack"></div>
+<script>
+  let btnBack = document.getElementById('btnBack');
+  btnBack.addEventListener('click', function () {
+    history.back();
+  });
+</script>
+<script src="/static/js/ValidationCheck.js"></script>
+<script src="/static/js/FormRestriction.js"></script>
+<script src="/static/js/DiffDays.js"></script>
+<script src="/static/js/ModalObj.js"></script>
+<script src="/static/js/ReportModal1.js"></script>
+{% endblock %}

@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <!-- Required meta tags -->
+  <meta charset="utf-8" />
+  <!-- Bootstrap CSS -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+    integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous" />
+  <link href="{{bootstrap_find_resource('css/bootstrap.css', cdn='bootstrap')}}" rel="stylesheet">
+  <link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.31.0/css/theme.default.min.css">
+  <link rel="stylesheet" href="{{url_for('static', filename='css/style.css')}}" />
+  <!-- 2025/2/4 追加StyleSheet -->
+  <link rel="stylesheet" href="{{url_for('static', filename='css/app-style.css')}}" />
+  <!-- 2023/8/10 追加StyleSheet -->
+  <link rel="stylesheet" href="{{url_for('static', filename='css/approval-style.css')}}" />
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.10.16/css/jquery.dataTables.min.css" type="text/css" />
+  <!-- bootstrap-datepicker -->
+  <link rel="stylesheet" type="text/css"
+    href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.min.css">
+  <script type="text/javascript"
+    src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"></script>
+  <script type="text/javascript"
+    src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/locales/bootstrap-datepicker.ja.min.js"></script>
+  <title>yoboiryo株式会社 System - サインイン</title>
+  <script src="{{ url_for('static', filename='js/common.js') }}"></script>
+</head>
+{% include "attendance/approval_modal.html" %}
+{% from "jimu_list_macro.html" import generate_jimu_row %}
+{% from "clerk_list_macro.html" import generate_ref_row %}
+<div class="disp center-block">
+  <nav class="navbar navbar-default navbar-bgc">
+    <div class="container">
+      <div class="navbar-header mr-auto">
+        <a class="navbar-brand navbar-fntc">yoboiryo株式会社</a>
+        <a class="navbar-brand navbar-fntc" href="{{ url_for('select_links') }}"><small>ホーム</small></a>
+        {% if stf_login.ADMIN is true %}
+        <a class="navbar-brand navbar-fntc" href="{{url_for('home_admin')}}"><small>管理者</small></a>
+        {% endif %}
+        {% if current_user.is_anonymous %}
+        <a class="navbar-brand navbar-fntc" href="{{ url_for('login') }}"><small>ログイン</small></a>
+        {% else %}
+        <a class="navbar-brand navbar-fntc" href="{{ url_for('logout') }}"><small>ログアウト</small></a>
+        {% endif %}
+      </div>
+    </div>
+  </nav>
+
+  <!-- <body> -->
+  <div id="kintai-input" class="center-block">
+    <br />
+    {% import "bootstrap/wtf.html" as wtf %}
+    <br />
+    {% block child_content %}
+    {% endblock %}
+    <div>
+      {% block scripts %}
+      <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+        integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+        crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+        integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+        crossorigin="anonymous"></script>
+      <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+        integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+        crossorigin="anonymous"></script>
+      <script type="text/javascript"
+        src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.6.1/js/bootstrap-datepicker.min.js"></script>
+      <script type="text/javascript"
+        src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.6.1/locales/bootstrap-datepicker.ja.min.js"></script>
+      <script type="text/javascript"
+        src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.31.0/js/jquery.tablesorter.min.js"></script>
+      <script src="{{ url_for('static', filename='js/sort.js') }}"></script>
+      <script src="{{ url_for('static', filename='js/sort_and_filter.js') }}"></script>
+      <script src="{{ url_for('static', filename='js/sort2.js') }}"></script>
+      <script type="text/javascript" src="https://cdn.datatables.net/1.10.16/js/jquery.dataTables.min.js"></script>
+      <script src="{{ url_for('static', filename='js/csv_download.js') }}"></script>
+
+      <script src="{{ url_for('static', filename='js/FadeScrollTopButton.js') }}"></script>
+      <script>
+        $('#fv-table').DataTable({
+          lengthMenu: [200, 40, 80, 120],
+          columnDefs: [
+            { targets: 0, searchable: true },
+            { targets: 1, searchable: true },
+            { targets: 2, searchable: true },
+            { targets: 3, searchable: true },
+            { targets: 4, searchable: true },
+            { targets: 5, searchable: true },
+          ],
+        });
+        /*
+          $.extend($.fn.dataTable.defaults, {
+              "language": {
+                  "url": "//cdn.datatables.net/plug-ins/1.10.16/i18n/Japanese.json",
+                  "sEmptyTable": "テーブルにデータがありません",
+                  "sInfo": " _TOTAL_ 件中 _START_ から _END_ まで表示",
+                  "sInfoEmpty": " 0 件中 0 から 0 まで表示",
+                  "sInfoFiltered": "（全 _MAX_ 件より抽出）",
+                  "sInfoPostFix": "",
+                  "sInfoThousands": ",",
+                  "sLengthMenu": "_MENU_ 件表示",
+                  "sLoadingRecords": "読み込み中...",
+                  "sProcessing": "処理中...",
+                  "sSearch": "検索:",
+                  "sZeroRecords": "一致するレコードがありません",
+                  "oPaginate": {
+                      "sFirst": "先頭",
+                      "sLast": "最終",
+                      "sNext": "次",
+                      "sPrevious": "前"
+                  },
+                  "oAria": {
+                      "sSortAscending": ": 列を昇順に並べ替えるにはアクティブにする",
+                      "sSortDescending": ": 列を降順に並べ替えるにはアクティブにする"
+                  }
+              }
+          });
+          $('#fv-table').DataTable();
+        });
+        */
+      </script>
+      <script>
+        $('#select_month').datepicker({
+          format: "yyyy-mm",
+          language: "ja",
+          autoclose: true, //日付選択で自動的にカレンダーを閉じる
+          minViewMode: 'months',
+          orientation: 'bottom left'
+        });
+      </script>
+      <script>
+        var st = new Date();
+        var startTime = st.getTime();
+        var finishTime = startTime + (1000 * 60 * 20);
+        var mes = document.getElementById("min");
+        min.textContent = "ログアウトの予定時刻 " + new Date(finishTime).toLocaleTimeString();
+
+        function realTime() {
+          if (finishTime <= new Date().getTime()) {
+            window.location.href = 'https://yobo-system.net/logout_mes';
+          }
+        }
+        setInterval(realTime, 1000);
+      </script>
+      {% endblock %}
+    </div>
+  </div>
+  <!-- </body> -->
+</div>
+
+</html>

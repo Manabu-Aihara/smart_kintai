@@ -1,0 +1,421 @@
+{% extends "parent.html" %}
+
+{% block attendance_content %}
+
+<head>
+  <meta charset="utf-8" />
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+    integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous" />
+  <link href="{{bootstrap_find_resource('css/bootstrap.css', cdn='bootstrap')}}" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style.css') }}">
+  <!-- bootstrap-datepicker -->
+  <link rel="stylesheet" type="text/css"
+    href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.min.css">
+  <script type="text/javascript"
+    src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"></script>
+  <script type="text/javascript"
+    src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/locales/bootstrap-datepicker.ja.min.js"></script>
+  <title>yoboiryo株式会社 System - サインイン</title>
+  <script src="{{ url_for('static', filename='js/common.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/half.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/choiceallarea.js') }}"></script>
+</head>
+
+<body>
+  {{ display_top_belt(stf_login, current_user) }}
+  {% import "bootstrap/wtf.html" as wtf %}
+  {% if STAFFID != 10000 %}
+  <h3>
+    <form method="POST" action="{{ url_for('index_select', STAFFID=STAFFID, intFlg=intFlg) }}">
+      {{ form_month.csrf_token }}
+      <input type="{{ typ[1] }}" id="select_month" class="h5" name="workday_name" value="{{ workday_data }}">　
+      {{ wtf.form_field(form_month.slct, class="btn btn-primary") }}
+    </form>
+  </h3>
+  {% endif %}
+
+  <div class="idx-tbl">
+    <form method="POST" action="{{ url_for('indextime', STAFFID=STAFFID, intFlg=intFlg) }}" onsubmit="mes()">
+      <div class="posilock">
+        <ul class="btn-list2">
+          <li>
+            {% if intFlg == 1 or intFlg == 2 %}
+            <input id="save" class="btn btn-loyal btn-blue" type="{{ typ[0] }}" value="　　　保　　　　存　　　">
+            {% else %}
+            <input type="button" onclick="dl_pdf()" class="btn btn-loyal btn-orange" value="PDF ダウンロード">
+            {% endif %}
+          </li>
+          <li>
+            {% if intFlg == 1 or intFlg == 2 %}
+            <a class="btn btn-loyal btn-green" href="{{ url_for('select_links') }}">戻　る</a>
+            {% else %}
+            <a class="btn btn-loyal btn-green"
+              href="{{ url_for('jimu_users_list', STAFFID=current_user.STAFFID) }}">戻　る</a>
+            {% endif %}
+          </li>
+        </ul>
+      </div><!-- .posilock -->
+      <div id="dl_pdf">
+        <div class="text-center">
+          <h3>{{ y }}年{{ m }}月分　　　出退勤</h3>
+          <h4>社員ID：{{ attend_u.STAFFID }}　　　氏名：{{ attend_u.LNAME}} {{ attend_u.FNAME }}</h4>
+        </div>
+
+        <table id="dl_pdf2" class="table table-striped table-hover" style="{{ dsp_page }}">
+          <div class="form-group">
+            <thead class="st1">
+              <tr class="text-center">
+                <th colspan="14" class="text-center">
+                  {{ appear_warning() }}
+                  {{ form.csrf_token }}
+                </th>
+              </tr>
+              <tr class="text-center">
+                <th class="text-center"></th>
+                <th class="text-center">
+                  <div></div>
+                </th>
+                <th class="text-center youbi">
+                  <div></div>
+                </th>
+                <th class="text-center" id="shinseis_flag"></th>
+                {% if template1 == 1 or template2 == 1 %}
+                <th class="text-center">
+                  <div>当番</div>
+                </th>
+                <th class="text-center">
+                  <div>対応件数</div>
+                </th>
+                <th class="text-center">
+                  <div>エンゼル</div>
+                </th>
+                {% endif %}
+                <th class="text-center">
+                  <div>出勤</div>
+                </th>
+                <th class="text-center">
+                  <div>退勤</div>
+                </th>
+                {% if template1 == 2 or template2 == 2 or stf_login.STAFFID in sp_nums or (intFlg == 2 and
+                attend_u.STAFFID in sp_nums) or (intFlg == 3 and attend_u.STAFFID in sp_nums)%}
+                <th class="text-center">
+                  <div>走行距離<br>(km)</div>
+                </th>
+                {% endif %}
+                <th class="text-center">
+                  <div>届出(AM)</div>
+                </th>
+                <th class="text-center">
+                  <div>届出(PM)</div>
+                </th>
+                <th class="text-center">
+                  <div>残業<br>申請</div>
+                </th>
+                <th class="text-center">
+                  <div class="alc">
+                    <p class="alcohol">ALC<br>Check</p>
+                    <p class="fukidashi">運転前と運転後にアルコールチェックをして問題なければチェックを入れて下さい。</p>
+                  </div>
+                </th>
+                <th class="text-center">
+                  <div>実働時間</div>
+                </th>
+                <th class="text-center">
+                  <div>備考</div>
+                </th>
+              </tr>
+            </thead>
+          </div><!-- .form-group -->
+
+          <tbody>
+            {% set ms = namespace(m=0) %} {% set ns = namespace(n = hld|length) %}
+            {% for i in range(1, AttendanceData | length - 1) %}
+            <tr>
+              <!-- これは隠しかな -->
+              <td>
+                <div class="text-center">
+                  <input class="form-control hiduke-sun kinshi" type="{{ typ[1] }}" name="row{{ ms.m }}"
+                    value="{{ AttendanceData[i]['date'] }}" {{ specification[3] }} size="0" />
+                </div>
+              </td>
+              <!-- 日付 -->
+              <td class="date">
+                {% if AttendanceData[i]["dow"] == '日' %}
+                {% set DateStyle = "hiduke-sun" %}
+                {% set YoubiStyle = "youbi-sun" %}
+                {% elif AttendanceData[i]["dow"] == '土' %}
+                {% set DateStyle = "hiduke-sat" %}
+                {% set YoubiStyle = "youbi-sat" %}
+                {% elif hld[-ns.n] %}
+                {% set DateStyle = "hiduke-hld" %}
+                {% set YoubiStyle = "youbi" %}
+                {% else %}
+                {% set DateStyle = "hiduke-base" %}
+                {% set YoubiStyle = "youbi" %}
+                {% endif %}
+                <span class="{{ DateStyle }}">{{ AttendanceData[i]["date_DD"] }}</span>
+              </td>
+              <!-- 曜日 -->
+              <td class="youbi text-center">
+                <span class="{{ YoubiStyle }}">{{ AttendanceData[i]["dow"] }}</span>
+              </td>
+              {% set ns.n = ns.n - 1 %}
+              <!-- オンコール対応 -->
+              {% if template1 == 1 or template2 == 1 %}
+              <td class="text-center">
+                <div class="custom-control custom-checkbox checkbox-lg">
+                  {% if AttendanceData[i]["oncall"] == '1' %}
+                  <div class="form-control form-control-sm custom-control custom-checkbox checkbox-lg">
+                    <input type="{{ typ[3] }}" name="oncall{{ ms.m }}" {{ specification[1] }} />
+                  </div>
+                  {% else %}
+                  <div class="form-control form-control-sm custom-control custom-checkbox checkbox-lg">
+                    <input type="{{ typ[3] }}" name="oncall{{ ms.m }}" />
+                  </div>
+                  {% endif %}
+                </div>
+              </td>
+              <td class="text-center oncall">
+                <div>
+                  <input id="hlf" class="form-control form-control-sm" type="number" name="oncall_cnt{{ ms.m }}"
+                    step="1" inputmode="numeric" pattern="{{ ptn[0] }}" size="2"
+                    value="{{ AttendanceData[i]['oncall_count'] }}" style="text-align:right;font-size:0.9em;" />
+                </div>
+              </td>
+              <td class="text-center oncall">
+                <div>
+                  <input id="hlf" class="form-control form-control-sm" type="number" name="engel{{ ms.m }}" step="1"
+                    inputmode="numeric" pattern="{{ ptn[0] }}" size="2" value="{{ AttendanceData[i]['engel_count'] }}"
+                    style="text-align:right;font-size:0.9em;" />
+                </div>
+              </td>
+              {% endif %}
+              <!-- 開始時間 -->
+              <td class="text-center">
+                <div style="font-size:0.9em;" id="forsave1_{{ ms.m }}">
+                  {% if (AttendanceData[i]["start_time"] != "00:00" and AttendanceData[i]["end_time"] != "00:00") or
+                  ((AttendanceData[i]["start_time"] == "00:00" and AttendanceData[i]["end_time"] == "00:00") and
+                  (AttendanceData[i]["notification"] is not none or AttendanceData[i]["notification_pm"] is not none))
+                  %}
+                  <input class="form-control form-control-sm checked-time" type="{{ typ[2] }}" name="stime{{ ms.m }}"
+                    value="{{ AttendanceData[i]['start_time'] }}"><span>{{ AttendanceData[i]["notification"] }}</span>
+                  {% elif AttendanceData[i]["start_time"] == "00:00" and AttendanceData[i]["end_time"] != "00:00" %}
+                  <input class="form-control form-control-sm alert-time" type="{{ typ[2] }}" name="stime{{ ms.m }}"
+                    value="{{ AttendanceData[i]['start_time'] }}">
+                  {% else %}
+                  <input class="form-control form-control-sm" type="{{ typ[2] }}" name="stime{{ ms.m }}"
+                    value="{{ AttendanceData[i]['start_time'] }}">
+                  {% endif %}
+                </div>
+              </td>
+              <!-- 終業時間 -->
+              <td class="text-center">
+                <div style="font-size:0.9em;" id="forsave2_{{ ms.m }}">
+                  {% if (AttendanceData[i]["start_time"] != "00:00" and AttendanceData[i]["end_time"] != "00:00") %}
+                  <input class="form-control form-control-sm checked-time" type="{{ typ[2] }}" name="ftime{{ ms.m }}"
+                    value="{{ AttendanceData[i]['end_time'] }}" onchange="func1()"><span>{{
+                    AttendanceData[i]["notification_pm"] }}</span>
+                  {% elif (AttendanceData[i]["start_time"] == "00:00" and AttendanceData[i]["end_time"] == "00:00") and
+                  (AttendanceData[i]["notification"] or AttendanceData[i]["notification_pm"]) %}
+                  <input class="form-control form-control-sm checked-time" type="{{ typ[2] }}" name="ftime{{ ms.m }}"
+                    value="{{ AttendanceData[i]['end_time'] }}" onchange="func1()">
+                  {% elif AttendanceData[i]["start_time"] != "00:00" and AttendanceData[i]["end_time"] == "00:00" %}
+                  <input class="form-control form-control-sm alert-time" type="{{ typ[2] }}" name="ftime{{ ms.m }}"
+                    value="{{ AttendanceData[i]['end_time'] }}" onchange="func1()">
+                  {% else %}
+                  <input class="form-control form-control-sm" type="{{ typ[2] }}" name="ftime{{ ms.m }}"
+                    value="{{ AttendanceData[i]['end_time'] }}" onchange="func1()">
+                  {% endif %}
+                </div>
+              </td>
+              <!-- 走行距離 -->
+              {% if template1 == 2 or template2 == 2 or stf_login.STAFFID in sp_nums or (intFlg == 2 and
+              attend_u.STAFFID in sp_nums) or (intFlg == 3 and attend_u.STAFFID in sp_nums) %}
+              <td>
+                <div class="skyori-w text-center" {{ sk }} id="skyori">
+                  <input id="hlf" class="form-control form-control-sm kyori" type="number" step="0.1"
+                    onclick="this.select(0,this.value.length)" name="skyori{{ ms.m }}" pattern="{{ ptn[1] }}"
+                    value="{{ AttendanceData[i]['mileage'] }}" size="4" style="font-size:0.9em;">
+                </div>
+              </td>
+              {% endif %}
+              <!-- 申請AM -->
+              <td class="text-center">
+                <select class="form-control form-control-sm" name="todokede{{ ms.m }}">
+                  <option value=""></option>
+                  {% for notifi_opt in notifi_lst %}
+                  {# Jinja2で数値(int)に変換エラー：UndefinedError: 'int' is undefined #}
+                  {# https://yuki.world/jinja2-int-cast/ #}
+                  {% if AttendanceData[i]["notification"]|int == notifi_opt.CODE %}
+                  <option value="{{ notifi_opt.CODE }}" {{ specification[2] }}>{{ notifi_opt.NAME }}</option>
+                  {% else %}
+                  <option value="{{ notifi_opt.CODE }}">{{ notifi_opt.NAME }}</option>
+                  {% endif %}
+                  {% endfor %}
+                </select>
+              </td>
+              <!-- 申請PM -->
+              <td class="text-center">
+                <div>
+                  <select class="form-control form-control-sm" name="todokede_pm{{ ms.m }}"
+                    style="border:1px solid;border-color:#dcdcdc;font-size:0.9em;">
+                    {% if AttendanceData[i]["notification_pm"] == "" %}
+                    <option value="" {{ specification[2] }}></option>
+                    {% else %}
+                    <option value=""></option>
+                    {% endif %}
+                    {% for notifi_opt in notifi_pm_lst %}
+                    {% if AttendanceData[i]["notification_pm"]|int == notifi_opt.CODE %}
+                    <option value="{{ notifi_opt.CODE }}" {{ specification[2] }}>{{ notifi_opt.NAME }}</option>
+                    {% elif AttendanceData[i]["notification"] == "3" or AttendanceData[i]["notification"] == "5" or
+                    AttendanceData[i]["notification"]
+                    == "7" or AttendanceData[i]["notification"] == "8" %}
+                    <option value="{{ notifi_opt.CODE }}" {{ specification[4] }}></option>
+                    {% else %}
+                    <option value="{{ notifi_opt.CODE }}">{{ notifi_opt.NAME }}</option>
+                    {% endif %}
+                    {% endfor %}
+                  </select>
+                </div>
+              </td>
+              <!-- 残業 -->
+              <td class="text-center">
+                <div {{ othr }}>
+                  {% if AttendanceData[i]["over_time"] == "1" %}
+
+                  <div class="form-control form-control-sm custom-control custom-checkbox checkbox-lg">
+                    <input type="{{ typ[3] }}" name="zangyou{{ ms.m }}" {{ specification[1] }}>
+                  </div>
+                  {% else %}
+
+                  <div class="form-control form-control-sm custom-control custom-checkbox checkbox-lg">
+                    <input type="{{ typ[3] }}" name="zangyou{{ ms.m }}" />
+                  </div>
+                  {% endif %}
+                </div>
+              </td>
+              <!-- アルコールチェック -->
+              <td class="text-center">
+                <div>
+                  {% if AttendanceData[i]["alcohol"] == 1 %}
+                  <div class="form-control form-control-sm custom-control custom-checkbox checkbox-lg">
+                    <input type="{{ typ[3] }}" name="alcohol{{ ms.m }}" {{ specification[1] }} />
+                  </div>
+                  {% else %}
+                  <div class="form-control form-control-sm custom-control custom-checkbox checkbox-lg">
+                    <input type="{{ typ[3] }}" name="alcohol{{ ms.m }}" />
+                  </div>
+                  {% endif %}
+                </div>
+              </td>
+              <!-- 実労時間 -->
+              <td>
+                <div class="text-center" {{ bk }}>
+                  <span id="hlf" class="form-control form-control-sm">{{ AttendanceData[i]["worktime"] }}</span>
+                </div>
+              </td>
+              <!-- 備考 -->
+              <td class="text-center">
+                <div>
+                  <input class="form-control form-control-sm" type="{{ typ[1] }}" name="bikou{{ ms.m }}" size="44"
+                    value="{{ AttendanceData[i]['remark'] }}" style="font-size:0.9em;">
+                </div>
+              </td>
+              {% set ms.m = ms.m + 1 %}
+            </tr>
+            {% endfor %}
+            <input type="text" name="reload_h" id="reload_h" hidden="true" />
+          </tbody>
+        </table>
+      </div><!-- #dl_pdl -->
+    </form>
+
+    <p>合計走行距離：{{ ln_s_kyori }}</p>
+    <p>月労働時間計：{{ working_time }}</p>
+    <p>出勤日数：{{ workday_count }}</p>
+    <p>祝日手当時間：{{ holiday_work }}</p>
+
+    <div class="h1"></div>
+  </div><!-- .idx-tbl -->
+
+  {% block scripts %}
+  <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+    integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous">
+    </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+    integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous">
+    </script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+    integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous">
+    </script>
+  <script type="text/javascript"
+    src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.6.1/js/bootstrap-datepicker.min.js"></script>
+  <script type="text/javascript"
+    src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.6.1/locales/bootstrap-datepicker.ja.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"
+    integrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+dvLusV+eNQATqgA/HdeKFVgA5v3S/cIrLF7QnIg=="
+    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script>
+    window.addEventListener('scroll', function () {
+      scroll_position = window.pageYOffset;
+      console.log(scroll_position);
+      document.querySelector('input[type=text][name=reload_h]').value = scroll_position;
+    });          
+  </script>
+  <script>
+    window.onload = function () {
+      window.scroll(0, {{ reload_y| tojson }}); 
+          }          
+  </script>
+  <script>
+    $('#select_month').datepicker({
+      format: "yyyy-mm",
+      language: "ja",
+      autoclose: true, //日付選択で自動的にカレンダーを閉じる
+      minViewMode: 'months',
+      orientation: 'bottom left'
+    });
+  </script>
+  <!--<script>
+          $(function(){
+            $(window).on("beforeunload",function(e){
+              return "ブラウザを閉じても良いでしょうか？"; // 文字列はメッセージに反映されません。必ずreturnすればブランクでもOKです。
+            });
+          });
+        </script>-->
+  <script>
+    function dl_pdf() {
+      const element = document.getElementById('dl_pdf'); // 対象要素を指定
+      const option = {
+        height: 100,
+        margin: 1, // 余白
+        filename: '{{ y|tojson }}-{{ m|tojson }}社員月別勤務状況（１日基準）{{ attend_u.STAFFID|tojson }} {{ attend_u.LNAME|tojson }}{{ attend_u.FNAME|tojson }} .pdf', // ファイル名
+        image: { type: 'jpeg', quality: 1 }, // PDFの生成に使用される画像のタイプとクオリティ
+        html2canvas: { scale: 3, useCORS: true }, // html2canvasで使用される設定を記述。useCORS: trueを設定すると別ドメインの画像を表示できる（サイトによってはできないこともある）
+        jsPDF: { format: 'a2', orientation: 'portrait' }, // jsPDFで使用される設定を記述
+      };
+
+      html2pdf()
+        .from(element)
+        .set(option)
+        .save()
+    }
+  </script>
+  <script>
+    var st = new Date();
+    var startTime = st.getTime();
+    var finishTime = startTime + (1000 * 60 * 20);
+    var mes = document.getElementById("min");
+    min.textContent = "ログアウトの予定時刻 " + new Date(finishTime).toLocaleTimeString();
+
+    function realTime() {
+      if (finishTime <= new Date().getTime()) {
+        window.location.href = 'https://yobo-system.net/logout_mes';
+      }
+    }
+    setInterval(realTime, 1000);
+  </script>
+  {% endblock %}
+</body>
+{% endblock %}

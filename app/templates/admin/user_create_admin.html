@@ -1,0 +1,41 @@
+{% extends 'home.html' %}
+
+{% block child_content %}
+<h2>新規ユーザ作成</h2>
+<hr />
+<div class="text-center">
+  <a href="{{url_for('home_admin')}}" class="btn btn-success">管理者ホームに戻る</a>　　　
+</div>
+<br><br><br>
+<div class="disp">
+  <div class="container base-w">
+    {% with messages = get_flashed_messages(with_categories=true) %} {% if
+    messages %} {% for category, message in messages %}
+    <div class="alert alert-warning">{{ message }}</div>
+    {% endfor %} {% endif %} {% endwith %}
+  </div>
+</div>
+<div class="row">
+  <div class="col-md-4 center-block">
+    <div class="form-group">
+      <form method="POST" action="{{ url_for('user_create_admin') }}" onsubmit="mes()">
+        {{ form.csrf_token }}
+
+        {{ wtf.form_field(form.staffid) }}
+        {{ wtf.form_field(form.password) }}
+        {{ wtf.form_field(form.admin) }}
+        <button type="submit" class="btn btn-primary">　　新規ユーザ作成　　</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+  function mes() {
+    let list_data = '{{ mes|tojson }}';
+    if (list_data == "null") { ; }
+    else { alert(list_data); }
+  }
+</script>
+{% endblock %}

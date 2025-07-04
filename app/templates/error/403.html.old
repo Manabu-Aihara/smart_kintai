@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+
+{% block app_content %}
+
+{{ title }}
+
+<h1>{{ message }}</h1>
+<h3><a href="{{ url_for('indextime', STAFFID=u.STAFFID, intFlg=1) }}">戻る</a></h3>
+{% endblock %}

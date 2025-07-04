@@ -1,0 +1,25 @@
+{% macro display_top_belt(login_staff, flask_user) %}
+<nav class="navbar navbar-default navbar-bgc">
+  <div class="container">
+    <div class="navbar-header mr-auto">
+      <a class="navbar-brand navbar-fntc">yoboiryo株式会社</a>
+      <a class="navbar-brand navbar-fntc" href="{{ url_for('select_links') }}"><small>ホーム</small></a>
+      {% if login_staff.ADMIN is true %}
+      <a class="navbar-brand navbar-fntc" href="{{url_for('home_admin')}}"><small>管理者</small></a>
+      {% endif %}
+      {% if flask_user.is_anonymous %}
+      <a class="navbar-brand navbar-fntc" href="{{ url_for('login') }}"><small>ログイン</small></a>
+      {% else %}
+      <a class="navbar-brand navbar-fntc" href="{{ url_for('logout') }}"><small>ログアウト</small></a>
+      {% endif %}
+      <a class="navbar-brand navbar-fntc navbar-right"><small><span id="min"></span></small></a>
+    </div>
+  </div>
+</nav>
+
+<div id="kintai-input" class="center-block">
+  {% import "bootstrap/wtf.html" as wtf %}
+  <h4>複数端末(ブラウザ)で使用される方は、必ず１度<a id="for_logout_mes" class="h4" href="{{ url_for('logout') }}">ログアウト</a>してから使用して下さい</h4>
+</div>
+
+{% endmacro %}

@@ -1,0 +1,390 @@
+{% extends "parent.html" %}
+
+{% block attendance_content %}
+
+<head>
+  <meta charset="utf-8" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css"
+    integrity="sha384-xOolHFLEh07PJGoPkLv1IbcEPTNtaed2xpHsD9ESMhqIYd0nLMwNLD69Npy4HI+N" crossorigin="anonymous">
+  <link href="{{bootstrap_find_resource('css/bootstrap.css', cdn='bootstrap')}}" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style.css') }}">
+  <!-- bootstrap-datepicker -->
+  <link rel="stylesheet" type="text/css"
+    href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.min.css">
+  <script type="text/javascript"
+    src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"></script>
+  <script type="text/javascript"
+    src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/locales/bootstrap-datepicker.ja.min.js"></script>
+  <title>yoboiryo株式会社 System - サインイン</title>
+  <script src="{{ url_for('static', filename='js/common.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/half.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/choiceallarea.js') }}"></script>
+</head>
+
+<body>
+  {{ display_top_belt(stf_login, current_user) }}
+  {% import "bootstrap/wtf.html" as wtf %}
+  <h3>
+    <form method="POST" action="/attendance/{{ stf_login.STAFFID }}/input.do">
+      {{ month_form.csrf_token }}
+      <input type="text" id="select_month" class="h5" name="select_month" value="{{ selected_date }}" />
+      {{ wtf.form_field(month_form.slct, class="btn btn-primary") }}
+    </form>
+  </h3>
+  <div class="idx-tbl">
+    <form method="POST" action="/attendance/{{ stf_login.STAFFID }}/input.do" onsubmit="mes()">
+      <div class="posilock">
+        <ul class="btn-list2">
+          <li>
+            {% if ref_flag == "1" or ref_flag == "2" %}
+            <input type="hidden" name="select_month" value="{{ selected_date }}">
+            <input id="save" class="btn btn-loyal btn-blue" type="submit" value="　　　保　　　　存　　　">
+            {% else %}
+            <input type="button" onclick="dl_pdf()" class="btn btn-loyal btn-orange" value="PDF ダウンロード">
+            {% endif %}
+          </li>
+          <li>
+            {% if ref_flag == "1" or ref_flag == "2" %}
+            <a class="btn btn-loyal btn-green" href="{{ url_for('select_links') }}">戻　る</a>
+            {% else %}
+            <a class="btn btn-loyal btn-green"
+              href="{{ url_for('jimu_users_list', STAFFID=current_user.STAFFID) }}">戻　る</a>
+            {% endif %}
+          </li>
+        </ul>
+      </div><!-- .posilock -->
+      <div id="dl-pdf">
+        <div class="text-center title-name">
+          <h3>{{ select_y }}年{{ select_m }}月分出退勤</h3>
+          <h4>社員ID：{{ user.STAFFID }}氏名：{{ user.LNAME}} {{ user.FNAME }}</h4>
+        </div>
+
+        <div class="disp">
+          {% with successes = get_flashed_messages(category_filter=["success", "pre-success"]) %}
+          <ul>
+            {% for success in successes %}
+            <li class="success">{{ success }}</li>
+            {% endfor %}
+          </ul>
+          {% endwith %}
+
+          {% with fails = get_flashed_messages(category_filter=["warning", "uncorrect"]) %}
+          <ul>
+            {% for fail in fails %}
+            <li class="warnings">{{ fail }}</li>
+            {% endfor %}
+          </ul>
+        </div>
+        {% endwith %}
+
+        {% set ns = namespace(cnt=0) %}
+        {% for outer_key, outer_value_dict in attd_tbl.items() %}
+        <table class="table table-striped table-hover" style="{{ mode }}">
+          <thead class="st1">
+            <tr>
+              <th></th>
+              {% for title_value in outer_value_dict.get("columns") %}
+              <th class="text-center">
+                <div>{{ title_value }}</div>
+              </th>
+              {% endfor %}
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              {% for inner_key, inner_value_dict in outer_value_dict.items() %}
+              {# Jinja2にenumrateはない #}
+              {# Jinjaテンプレートの書き方をがっつり調べてまとめてみた。
+              https://qiita.com/simonritchie/items/cc2021ac6860e92de25d#%E3%83%AB%E3%83%BC%E3%83%97%E3%81%AE%E7%8F%BE%E5%9C%A8%E3%81%AE%E3%82%A4%E3%83%B3%E3%83%87%E3%83%83%E3%82%AF%E3%82%B9%E7%95%AA%E5%8F%B7%E3%82%92%E5%8F%96%E5%BE%97%E3%81%99%E3%82%8B0
+              #}
+              {% if loop.index0 >= 6 %}
+              <td>
+                {% if inner_value_dict["dow"] == "日" %}
+                {% set calendar_style = "color: red" %}
+                {% elif inner_value_dict["dow"] == "土" %}
+                {% set calendar_style = "color: blue" %}
+                {% elif inner_value_dict["date_DD"] in h_idx %}
+                {% set anniversary_style = "background-color: red; opacity: 0.6" %}
+                {% endif %}
+                <input type="hidden" name="date{{ outer_key }}{{ ns.cnt }}" value="{{ inner_value_dict['date'] }}" />
+                <!-- 日付 -->
+                <span class="date" style="{{ calendar_style }}{{ anniversary_style }}">{{ inner_value_dict['date_DD']
+                  }}</span>
+                <!-- 曜日 -->
+                <span class="youbi text-center" style="{{ calendar_style }}">{{ inner_value_dict["dow"]
+                  }}</span>
+                <input type="text" name="id{{ outer_key }}{{ ns.cnt }}" value="{{ inner_value_dict['ID'] }}" />
+              </td>
+              <!-- </td> -->
+              <!-- オンコール -->
+              <td class="text-center" style="{{ outer_value_dict.get('oncall_disp') }}">
+                <div class="custom-control custom-checkbox checkbox-lg">
+                  <div class="form-control form-control-sm custom-control custom-checkbox checkbox-lg">
+                    {% if inner_value_dict["oncall"] == "1" %}
+                    <input type="checkbox" name="oncall{{ outer_key }}{{ ns.cnt }}" checked />
+                    {% else %}
+                    <input type="checkbox" name="oncall{{ outer_key }}{{ ns.cnt }}" />
+                    {% endif %}
+                  </div>
+                </div>
+              </td>
+              <!-- オンコール対応 -->
+              <td class="text-center oncall" style="{{ outer_value_dict.get('oncall_crsp_disp') }}">
+                <div>
+                  <input id="hlf" class="form-control form-control-sm" type="number"
+                    name="oncall_cnt{{ outer_key }}{{ ns.cnt }}" step="1" inputmode="numeric" pattern="^[0-9０-９]+$"
+                    size="2" value="{{ inner_value_dict['oncall_count'] }}" style="text-align:right;font-size:0.9em;" />
+                </div>
+              </td>
+              <!-- エンゼル対応 -->
+              <td class="text-center oncall" style="{{ outer_value_dict.get('engel_disp') }}">
+                <div>
+                  <input id="hlf" class="form-control form-control-sm" type="number"
+                    name="engel{{ outer_key }}{{ ns.cnt }}" step="1" inputmode="numeric" pattern="^[0-9０-９]+$" size="2"
+                    value="{{ inner_value_dict['engel_count'] }}" style="text-align:right;font-size:0.9em;" />
+                </div>
+              </td>
+              <!-- 開始時間 -->
+              <td class="text-center">
+                <div style="font-size:0.9em;" id="forsave1_{{ ns.cnt }}">
+                  {% if (inner_value_dict["start_time"] != "00:00" and
+                  inner_value_dict["end_time"] !=
+                  "00:00") or
+                  ((inner_value_dict["start_time"] == "00:00" and inner_value_dict["end_time"] ==
+                  "00:00")
+                  and
+                  (inner_value_dict["notification"] is not none or
+                  inner_value_dict["notification_pm"] is
+                  not none))
+                  %}
+                  <input class="form-control form-control-sm checked-time" type="time"
+                    name="begin_time{{ outer_key }}{{ ns.cnt }}" value="{{ inner_value_dict['start_time'] }}"><span>{{
+                    inner_value_dict["notification"]
+                    }}</span>
+                  {% elif inner_value_dict["start_time"] == "00:00" and
+                  inner_value_dict["end_time"] !=
+                  "00:00" %}
+                  <input class="form-control form-control-sm alert-time" type="time"
+                    name="begin_time{{ outer_key }}{{ ns.cnt }}" value="{{ inner_value_dict['start_time'] }}">
+                  {% else %}
+                  <input class="form-control form-control-sm" type="time" name="begin_time{{ outer_key }}{{ ns.cnt }}"
+                    value="{{ inner_value_dict['start_time'] }}">
+                  {% endif %}
+                </div>
+              </td>
+              <!-- 終業時間 -->
+              <td class="text-center">
+                <div style="font-size:0.9em;" id="forsave2_{{ ns.cnt }}">
+                  {% if (inner_value_dict["start_time"] != "00:00" and
+                  inner_value_dict["end_time"] !=
+                  "00:00") %}
+                  <input class="form-control form-control-sm checked-time" type="time"
+                    name="fin_time{{ outer_key }}{{ ns.cnt }}" value="{{ inner_value_dict['end_time'] }}"
+                    onchange="func1()"><span>{{
+                    inner_value_dict["notification_pm"] }}</span>
+                  {% elif (inner_value_dict["start_time"] == "00:00" and
+                  inner_value_dict["end_time"] ==
+                  "00:00")
+                  and
+                  (inner_value_dict["notification"] or inner_value_dict["notification_pm"]) %}
+                  <input class="form-control form-control-sm checked-time" type="time"
+                    name="fin_time{{ outer_key }}{{ ns.cnt }}" value="{{ inner_value_dict['end_time'] }}"
+                    onchange="func1()">
+                  {% elif inner_value_dict["start_time"] != "00:00" and
+                  inner_value_dict["end_time"] ==
+                  "00:00" %}
+                  <input class="form-control form-control-sm alert-time" type="time"
+                    name="fin_time{{ outer_key }}{{ ns.cnt }}" value="{{ inner_value_dict['end_time'] }}"
+                    onchange="func1()">
+                  {% else %}
+                  <input class="form-control form-control-sm" type="time" name="fin_time{{ outer_key }}{{ ns.cnt }}"
+                    value="{{ inner_value_dict['end_time'] }}" onchange="func1()">
+                  {% endif %}
+                </div>
+              </td>
+              <!-- 走行距離 -->
+              <td style="{{ outer_value_dict.get('distance_disp') }}">
+                <div class="skyori-w text-center" id="skyori">
+                  <input id="hlf" class="form-control form-control-sm kyori" type="number" step="0.1"
+                    onclick="this.select(0,this.value.length)" name="distance{{ outer_key }}{{ ns.cnt }}"
+                    pattern="^[0-9.０-９．]+$" value="{{ inner_value_dict['mileage'] }}" size="4" style="font-size:0.9em;">
+                </div>
+              </td>
+              <!-- 申請AM -->
+              <td class="text-center">
+                <select class="form-control form-control-sm" name="notification{{ outer_key }}{{ ns.cnt }}">
+                  <option value=""></option>
+                  {% for notifi_opt in notifi_lst %}
+                  {# Jinja2で数値(int)に変換エラー：UndefinedError: 'int' is undefined #}
+                  {# https://yuki.world/jinja2-int-cast/ #}
+                  {# （2025/6/3）ていうか、表示されなくなる。更新すると消える #}
+                  {% if inner_value_dict["notification"]|int == notifi_opt.CODE %}
+                  <option value="{{ notifi_opt.CODE }}" selected>{{ notifi_opt.NAME }}</option>
+                  {% else %}
+                  <option value="{{ notifi_opt.CODE }}">{{ notifi_opt.NAME }}</option>
+                  {% endif %}
+                  {% endfor %}
+                </select>
+              </td>
+              <!-- 申請PM -->
+              <td class="text-center">
+                <div>
+                  <select class="form-control form-control-sm" name="notification_pm{{ outer_key }}{{ ns.cnt }}"
+                    style="border:1px solid;border-color:#dcdcdc;font-size:0.9em;">
+                    {% if inner_value_dict["notification_pm"] == "" %}
+                    <option value=""></option>
+                    {% else %}
+                    <option value=""></option>
+                    {% endif %}
+                    {% for notifi_opt in notifi_pm_lst %}
+                    {% if inner_value_dict["notification_pm"]|int == notifi_opt.CODE %}
+                    <option value="{{ notifi_opt.CODE }}" selected>{{ notifi_opt.NAME }}</option>
+                    {% elif inner_value_dict["notification"] == "3" or
+                    inner_value_dict["notification"] ==
+                    "5" or
+                    inner_value_dict["notification"]
+                    == "7" or inner_value_dict["notification"] == "8" %}
+                    <option value="{{ notifi_opt.CODE }}"></option>
+                    {% else %}
+                    <option value="{{ notifi_opt.CODE }}">{{ notifi_opt.NAME }}</option>
+                    {% endif %}
+                    {% endfor %}
+                  </select>
+                </div>
+              </td>
+              <!-- 残業 -->
+              <td class="text-center">
+                {% if inner_value_dict["over_time"] == "1" %}
+                <div class="form-control form-control-sm custom-control custom-checkbox checkbox-lg">
+                  <input type="{{ outer_value_dict.get('over_time_disp') }}" name="over{{ outer_key }}{{ ns.cnt }}"
+                    checked />
+                </div>
+                {% else %}
+                <div class="form-control form-control-sm custom-control custom-checkbox checkbox-lg">
+                  <input type="{{ outer_value_dict.get('over_time_disp') }}" name="over{{ outer_key }}{{ ns.cnt }}" />
+                </div>
+                {% endif %}
+              </td>
+              <!-- アルコールチェック -->
+              <td class="text-center">
+                {% if inner_value_dict["alcohol"] == 1 %}
+                <div class="form-control form-control-sm custom-control custom-checkbox checkbox-lg">
+                  <input type="checkbox" name="alcohol{{ outer_key }}{{ ns.cnt }}" checked />
+                </div>
+                {% else %}
+                <div class="form-control form-control-sm custom-control custom-checkbox checkbox-lg">
+                  <input type="checkbox" name="alcohol{{ outer_key }}{{ ns.cnt }}" />
+                </div>
+                {% endif %}
+              </td>
+              <!-- 実労時間 -->
+              <td>
+                <div class="text-center">
+                  <span id="hlf" class="form-control form-control-sm">{{ inner_value_dict["worktime"]
+                    }}</span>
+                </div>
+              </td>
+              <!-- 備考 -->
+              <td class="text-center">
+                <div>
+                  <input class="form-control form-control-sm" type="text" name="remark{{ outer_key }}{{ ns.cnt }}"
+                    size="44" value="{{ inner_value_dict['remark'] }}" style="font-size:0.9em;">
+                </div>
+              </td>
+              {% set ns.cnt = ns.cnt + 1 %}
+            </tr>
+            {% endif %}
+            {% endfor %}
+            <input type="text" name="reload_h" id="reload_h" hidden="true" />
+          </tbody>
+        </table>
+        {% endfor %}
+        <p>合計走行距離：{{ distance_sum }}</p>
+        <p>月労働時間計：{{ actual_time_sum }}</p>
+        <p>出勤日数：{{ work_cnt }}</p>
+        <p>祝日手当時間：{{ holiday_works }}</p>
+      </div><!-- #dl_pdf -->
+    </form>
+  </div><!-- idx-tbl -->
+
+  {% block scripts %}
+  <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+    integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous">
+    </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+    integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous">
+    </script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+    integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous">
+    </script>
+  <script type="text/javascript"
+    src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.6.1/js/bootstrap-datepicker.min.js"></script>
+  <script type="text/javascript"
+    src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.6.1/locales/bootstrap-datepicker.ja.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"
+    integrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+dvLusV+eNQATqgA/HdeKFVgA5v3S/cIrLF7QnIg=="
+    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script>
+    window.addEventListener('scroll', function () {
+      scroll_position = window.pageYOffset;
+      console.log(scroll_position);
+      document.querySelector('input[type=text][name=reload_h]').value = scroll_position;
+    });          
+  </script>
+  <script>
+    window.onload = function () {
+      window.scroll(0, {{ reload_y| tojson }}); 
+    }          
+  </script>
+  <script>
+    $('#select_month').datepicker({
+      format: "yyyy-mm",
+      language: "ja",
+      autoclose: true, //日付選択で自動的にカレンダーを閉じる
+      minViewMode: 'months',
+      orientation: 'bottom left'
+    });
+  </script>
+  <!--<script>
+          $(function(){
+            $(window).on("beforeunload",function(e){
+              return "ブラウザを閉じても良いでしょうか？"; // 文字列はメッセージに反映されません。必ずreturnすればブランクでもOKです。
+            });
+          });
+        </script>-->
+  <script>
+    function dl_pdf() {
+      const element = document.getElementById('dl_pdf'); // 対象要素を指定
+      const option = {
+        height: 100,
+        margin: 1, // 余白
+        filename: '{{ select_y|tojson }}-{{ select_m|tojson }}社員月別勤務状況（１日基準）{{ user.STAFFID|tojson }} {{ user.LNAME|tojson }}{{ user.FNAME|tojson }} .pdf', // ファイル名
+        image: { type: 'jpeg', quality: 1 }, // PDFの生成に使用される画像のタイプとクオリティ
+        html2canvas: { scale: 3, useCORS: true }, // html2canvasで使用される設定を記述。useCORS: trueを設定すると別ドメインの画像を表示できる（サイトによってはできないこともある）
+        jsPDF: { format: 'a2', orientation: 'portrait' }, // jsPDFで使用される設定を記述
+      };
+
+      html2pdf()
+        .from(element)
+        .set(option)
+        .save()
+    }
+  </script>
+  <script>
+    var st = new Date();
+    var startTime = st.getTime();
+    var finishTime = startTime + (1000 * 60 * 20);
+    var mes = document.getElementById("min");
+    min.textContent = "ログアウトの予定時刻 " + new Date(finishTime).toLocaleTimeString();
+
+    function realTime() {
+      if (finishTime <= new Date().getTime()) {
+        window.location.href = 'https://yobo-system.net/logout_mes';
+      }
+    }
+    setInterval(realTime, 1000);
+  </script>
+  {% endblock %}
+</body>
+{% endblock %}

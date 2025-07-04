@@ -1,0 +1,29 @@
+{% extends 'home.html' %}
+
+{% block child_content %}
+<h2>職員パスワード変更</h2>
+<br>
+<div class="text-center">
+    <a href="{{url_for('home_admin')}}" class="btn btn-success">管理者ホームに戻る</a>　　　
+    <a href="{{ url_for('users_nenkyu') }}" class="btn btn-success">ユーザ年休検索画面に戻る</a>
+</div>
+<br><br><br>
+<h4>5社員番号：{{ STAFFID }} 氏名：{{ u.LNAME }} {{ u.FNAME }}</h4>
+<hr />
+<div class="container base-w">
+  <div class="alert alert-info" {{ hid_a }}>設定したいパスワードを入力してください。</div>
+  <div class="alert alert-warning" {{ hid_b}}>入力したパスワードが一致しません。</div>
+<div class="disp">
+      <div class="form-group w-50 mx-auto">
+        <form method="POST" action="{{ url_for('reset_token', STAFFID=STAFFID) }}">
+          {{ form.csrf_token }}
+
+          {{  wtf.form_field(form.PASSWORD) }}
+          {{  wtf.form_field(form.PASSWORD2) }}
+          {{ wtf.form_field(form.ADMIN) }}          
+          {{  wtf.form_field(form.submit) }}
+        </form>
+    </div>
+
+</div>
+{% endblock %}

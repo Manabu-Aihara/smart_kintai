@@ -1,0 +1,36 @@
+#back-wrap {
+  width: 70%;
+  height: 7vh;
+  margin-top: 3%;
+  text-align: right;
+}
+#back-wrap #btnBack {
+  width: 15%;
+  height: 100%;
+}
+
+#list-container {
+  max-height: 100vh;
+  overflow: auto;
+}
+#list-container ul#list-wrapper {
+  margin: 3% 10%;
+}
+#list-container ul#list-wrapper li.last-update {
+  width: 80%;
+  list-style: none;
+  font-size: large;
+}
+#list-container ul#list-wrapper li.last-update span.full-name {
+  display: inline-block;
+  width: 30%;
+  text-align: center;
+}
+#list-container ul#list-wrapper li.last-update span.last-date {
+  display: inline-block;
+  width: 40%;
+}
+#list-container ul#list-wrapper li.last-update:nth-child(even) {
+  background-color: lightblue;
+  opacity: 0.8;
+}

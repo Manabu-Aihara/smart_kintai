@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container my-2">
+  <h2>管理者ホーム</h2>
+  <div class="disp">
+    <div class="container base-w">
+      {% with messages = get_flashed_messages(with_categories=true) %} {% if
+      messages %} {% for category, message in messages %}
+      <div class="alert alert-warning">{{ message }}</div>
+      {% endfor %} {% endif %} {% endwith %}
+    </div>
+  </div>
+  <a href="{{ url_for('user_create_admin') }}" class="btn btn-gr">ユーザの新規作成</a>
+  <br><br>
+  <a href="{{ url_for('edit_list_user') }}" class="btn btn-purple">ユーザ個人データ編集</a>
+  <br><br>
+  <a href="{{ url_for('users_list_admin') }}" class="btn btn-warning">ユーザリスト画面（ユーザ削除・打刻編集・パスワード編集）</a>
+  <br><br>
+  <!-- 2025/2/3 追加 -->
+  {% import "bootstrap/wtf.html" as wtf %}
+  <div style="margin: 2%;">
+    <form method="POST" action="{{ url_for('post_select_month') }}">
+      <input type="month" class="h5" style="height: 5vh;" name="target-month" value="">
+      <input type="submit" class="btn btn-primary" value="表　示">
+    </form>
+  </div>
+  <!---->
+  <a href="{{ url_for('logout') }}" class="btn btn-secondary">ログアウト</a>
+</div>
+{% endblock %}

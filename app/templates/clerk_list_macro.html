@@ -1,0 +1,21 @@
+{% macro generate_ref_row(list, current_m) %}
+
+{% for _ in list %}
+<tr class="user-info-row">
+    <td>{{ _.STAFFID }}</td>
+    <td>{{ _.LNAME }} {{ _.FNAME }}</td>
+    <td>{{ _.NAME }}</td>
+    <td><a href="{{ url_for('output_attendance', STAFFID=_.STAFFID, reference_flag=2, selected_date=current_m) }}"
+            class="btn btn-warning">出退勤編集</a></td>
+    <td><a href="{{ url_for('output_attendance', STAFFID=_.STAFFID, reference_flag=3, selected_date=current_m) }}"
+            class="btn btn-info">出退勤参照（1日～末）</a></td>
+    <td><a href="{#{ url_for('jimu_every_dl', STAFFID=_.STAFFID, startday=26) }#}"
+            class="btn btn-info">出退勤参照（26日～25日）</a>
+    </td>
+    <td><a href="{#{ url_for('jimu_nenkyu_detail', STAFFID=_.STAFFID) }#}" class="btn btn-primary">有休情報</a></td>
+    <td class="shadow-column1">{{ _.OUTDAY }}</td>
+    <td class="shadow-column2">{{ _.DISPLAY }}</td>
+</tr>
+{% endfor %}
+
+{% endmacro %}

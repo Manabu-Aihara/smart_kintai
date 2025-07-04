@@ -1,0 +1,88 @@
+{% extends 'home.html' %}
+
+{% block child_content %}
+<h2>ユーザ編集リスト情報</h2>
+<br>
+<div class="text-center">
+  <a href="{{url_for('home_admin')}}" class="btn btn-success">管理者ホームに戻る</a>
+  ユーザ年休検索画面に戻る
+</div>
+<hr>
+<!-- <div class="outday-area">
+  <button id="outday-switch">退職者</button>
+  <p id="shadow-today">{{ today }}</p>
+  <p id="outday-on">退職された方 表示中</p>
+</div> -->
+<!-- <select id="display-toggle">
+  <option value="">表示</option>
+  <option value="">非表示</option>
+</select> -->
+<!-- <div class="back-caution">
+    <p class="the-caution">CAUTION!</p>ID{{ cause_users }}
+    <p class="caution-message">{{ exception }}</p>
+</div> -->
+<div id="adm-tbl" class="col-10 center-block">
+  <div class="sort-table">
+    <table id="fv-table" class="table table-striped table-hover">
+      <thead>
+        <tr class="st3 text-center">
+          <th></th>
+          <th>社員<br>番号</th>
+          <th>苗字</th>
+          <th>名前</th>
+          <th>苗字<br>（カナ）</th>
+          <th>名前<br>（カナ）</th>
+          <th>部門<br>コード</th>
+          <th>所属<br>コード</th>
+          <th></th>
+          <th>契約<br>形態<br>コード</th>
+          <th>職種<br>コード</th>
+          <th>役職<br>コード</th>
+          <th>入職日</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody class="users-info">
+        {% for info in info_list %}
+        <tr class="user-info-row">
+          <form method="POST" action="{{ url_for('edit_data_user', STAFFID=info['staff_id'], intFlg=1)}}">
+            <td><button type="submit" class="btn btn-warning">情報編集</button></td>
+          </form>
+          <td>{{ info["staff_id"] }}</td>
+          <td>{{ info["family_name"] }}</td>
+          <td>{{ info["first_name"] }}</td>
+          <td>{{ info["family_kana"] }}</td>
+          <td>{{ info["first_kana"] }}</td>
+
+          <td>{{ info["department"] }}</td>
+          <td>{{ info["team"] }}</td>
+          <td>
+            <form method="POST"
+              action="{{ url_for('edit_user_history', STAFFID=info['staff_id'], post_type=1, ProcFlag=0) }}">
+              <button type="submit" class="btn btn-warning">契約・有休編集</button>
+            </form>
+            <p></p>
+            {% if info["contract"] == "パートタイマー" %}
+            <form method="POST"
+              action="{{ url_for('edit_user_history', STAFFID=info['staff_id'], post_type=2, ProcFlag=0) }}">
+              <button type="submit" class="btn" style="background-color: green; color: white;">P有休時間</button>
+            </form>
+            {% endif %}
+          </td>
+          <td>{{ info["contract"] }}</td>
+          <td>{{ info["job_type"] }}</td>
+          <td>{{ info["post"] }}</td>
+
+          <td>{{ info["inday"] }}</td>
+          <!-- <td class="shadow-item">{{ info["display"] }}</td> -->
+          <td class="shadow-item">{{ info["outday"] }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<br><br><br><br>
+<script src="/static/js/OutdayToggle.js"></script>
+{% endblock %}

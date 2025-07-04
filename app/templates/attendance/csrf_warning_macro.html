@@ -1,0 +1,29 @@
+{% macro appear_warning() %}
+<div class="disp">
+  <div class="container base-w">
+    {% with warnings = get_flashed_messages(category_filter=["warning"]) %}
+    {% with successes = get_flashed_messages(category_filter=["success"]) %}
+    {% if successes and warnings %}
+    <div>
+    </div>
+    {% elif successes %}
+    <div class="success">
+      {{ successes[-1] }}
+    </div>
+    {% endif %}
+
+    {% if warnings %}
+    <div class="warnings">
+      <ul>
+        {% for msg in warnings %}
+        <li>{{ msg }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+
+    {% endwith %}
+    {% endwith %}
+  </div>
+</div>
+{% endmacro %}

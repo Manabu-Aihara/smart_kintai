@@ -1,0 +1,19 @@
+{% extends 'home.html' %}
+
+{% block child_content %}
+<div id="container">
+  やった事：
+  <input type="text" name="summary" class="summary-form" /><br>
+  誰が：
+  <input type="text" name="owner" class="owner-form" /><br>
+  <input type="button" value="REFLECT" id="reflect" />
+  <p id="target-number">{{ t_num }}</p>
+  <div>
+    <p>最も最近のTodo（from DB query）</p>
+    <p>やった事：{{ recent.summary }}</p>
+    <p>誰が：{{ recent.owner }}</p>
+    <p>達成：{{ recent.done }}</p>
+  </div>
+</div>
+<script src="/static/js/SubAction.js"></script>
+{% endblock %}

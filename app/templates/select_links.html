@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% block title %}yoboiryo System{% endblock %}
+{% block content %}
+<div class="container my-2">
+  <h3 class="ttl01 ttl01--blueN"><span>Select Page</span></h3>
+  <div class="box-design13 area-blue">
+    <h3 class="box-design13-ttl label-blue">出退勤</h3>
+    <ul class="btn-list">
+      <!-- <li><a href="{#{ url_for('indextime', STAFFID=u.STAFFID, intFlg=1) }#}" class="btn btn-loyal btn-blue">出退勤入力</a>
+      </li> -->
+      <li><a href="{{ url_for('output_attendance', STAFFID=u.STAFFID, reference_flag=1, selected_date=this_month) }}"
+          class="btn btn-loyal btn-orange">出退勤v2</a></li>
+    </ul>
+  </div>
+  <div class="box-design13 area-green">
+    <h3 class="box-design13-ttl label-green">届出</h3>
+    <ul class="btn-list">
+      {#% set condition_list = [20, 32, 201, 205] %#}
+      {% set condition_list = [3, 20, 201] %}
+      {% for conditional_id in condition_list %}
+      {% if stf_login.STAFFID == conditional_id %}
+      <li><a class="btn btn-loyal btn-green" href="{{ url_for('get_notification_list', STAFFID=u.STAFFID) }}">届出申請</a>
+      </li>
+      <li>
+        <a class="btn btn-loyal btn-orange" href="{{ url_for('clerk_select_page') }}">シン月別集計</a>
+      </li>
+
+      {# そのうち追加するかな #}
+      {% if charge_p %}
+      <li>
+        <form method="get" action="/approval-list/charge">
+          <input type="submit" value="届出承認" class="btn btn-loyal">
+        </form>
+      </li>
+      {% endif %}
+      {% endif %}
+      {% endfor %}
+    </ul>
+  </div>
+
+
+
+
+  <br><br>
+  <form method="POST" action="{{ url_for('reset_token_self') }}">
+    <div {{ othr }}>
+      <input type="submit" name="row" value="パスワード変更" class="btn btn-loyal" />
+    </div>
+  </form>
+  <br><br>
+  {% if stf_login.ADMIN is true %}
+  <a class="btn btn-loyal" href="{{url_for('home_admin')}}">管理者</a>
+  <br>
+  <!-- <a class="btn btn-loyal" href="{#{ url_for('kinmuhyo') }#}">契約・有休編集</a> -->
+  {% endif %}
+  <br><br>
+  <a href="{{ url_for('logout') }}" class="btn btn-loyal">ログアウト</a>
+</div>
+{% endblock %}
