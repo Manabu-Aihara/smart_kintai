@@ -573,9 +573,6 @@ def input_attendance(STAFFID):
     to_date = date(selected_year, selected_month, last_day_of_month)
     update_exist_list: List[tuple] = []
 
-    pass_flash = []
-    error_flash = []
-
     attendace_qry_obj = AttendanceQuery(STAFFID, from_date, to_date)
     # TEMPLATE_NOの連番の、2次元配列
     template_repeat = []

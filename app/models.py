@@ -247,7 +247,7 @@ class Contract(Base):
     NAME = Column(String(50), index=True, nullable=True)
     SHORTNAME = Column(String(50), index=True, nullable=False)
     WORKTIME = Column(Float, nullable=True)
-    table_of_count = db.relationship("TableOfCount", backref="M_CONTRACT")
+    table_of_count = relationship("TableOfCount", backref="M_CONTRACT")
 
     def __init__(self, CONTRACT_CODE):
         self.CODE = CONTRACT_CODE
@@ -398,8 +398,8 @@ class TableOfCount(Base):
         index=True,
         nullable=False,
     )
-    CONTRACT_CODE = db.Column(
-        db.Integer, db.ForeignKey("M_CONTRACT.CONTRACT_CODE"), index=True, nullable=True
+    CONTRACT_CODE = Column(
+        Integer, ForeignKey("M_CONTRACT.CONTRACT_CODE"), index=True, nullable=True
     )
     YEAR_MONTH = Column(String(10), index=True, nullable=False)
     ONCALL = Column(Integer, index=True, nullable=True)

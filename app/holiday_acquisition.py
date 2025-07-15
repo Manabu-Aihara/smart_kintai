@@ -1,4 +1,3 @@
-import enum
 from datetime import date, datetime, timedelta
 from dataclasses import dataclass
 from typing import List, Tuple, Callable, Union
@@ -9,41 +8,18 @@ from dateutil.relativedelta import relativedelta
 from sqlalchemy import and_
 
 from . import db
-from .models import User, RecordPaidHoliday, Attendance
+from .models import (
+    StaffHolidayContract,
+    StaffJobContract,
+    Contract,
+    User,
+    RecordPaidHoliday,
+    Attendance,
+)
 from .models_aprv import NotificationList, PaidHolidayLog
+from .acquisition_type import divide_acquire_type, AcquisitionType
 from .new_calendar import NewCalendar
 from .holiday_logging import HolidayLogger
-
-
-# コンストラクタを作って、その引数に、各項目に与えた値の
-# 1つめ、2つめ、3つめが何を意味しているか名前を与えて、
-# インスタンス変数に格納して上げると、特にインスタンスを作らなくても、
-# アクセス出来るようになります。
-# https://note.com/yucco72/n/ne69ea7fb26e7
-class AcquisitionType(enum.Enum):
-    A = (list(range(10, 12)) + list(range(12, 20, 2)), 20)  # 以降20 年間勤務日数>=217
-    B = ([7, 8, 9, 10, 12, 13], 15)  # 以降15 年間勤務日数range(169, 216)
-    C = ([5, 6, 6, 8, 9, 10], 11)  # 以降11 年間勤務日数range(121, 168)
-    D = ([3, 4, 4, 5, 6, 6], 7)  # 以降7 年間勤務日数range(73, 120)
-    E = ([1, 2, 2, 2, 3, 3], 3)  # 以降3 年間勤務日数range(48, 72)
-
-    def __init__(self, under5y: list, onward: int):
-        super().__init__()
-        self.under5y = under5y
-        self.onward = onward
-
-    # 例: AからAcquisition.Aを引き出す
-    @classmethod
-    def name(cls, name: str) -> str:
-        """
-        Subject: 該当ID抽出に発生すると思われる例外①
-        """
-        if name is None:
-            raise KeyError(
-                "M_RECORD_PAIDHOLIDAYテーブルの、ACQUISITION_TYPEの値が見つかりません。"
-            )
-        else:
-            return cls._member_map_[name]
 
 
 # Pythonで任意の日付がその月の第何週目かを取得
@@ -76,38 +52,56 @@ class HolidayAcquire:
 
     def __post_init__(self):
         target_user = db.session.query(User).filter(User.STAFFID == self.id).first()
-        # いらないかも
+        user_contract = (
+            db.session.query(StaffJobContract)
+            .filter(StaffJobContract.STAFFID == self.id)
+            .order_by(StaffJobContract.START_DAY.asc())
+            .first()
+        )
         if target_user.INDAY is None:
-            TypeError("M_STAFFINFO.INDAYの値がありません。")
+            self.in_day: datetime = datetime.combine(
+                user_contract.START_DAY, datetime.min.time()
+            )
+        elif target_user.INDAY is not None:
+            #     if isinstance(target_user.INDAY, datetime):
+            self.in_day = target_user.INDAY
+        #     elif isinstance(target_user.INDAY, date):
+        #         self.in_day = datetime.combine(target_user.INDAY, datetime.min.time())
+        #     else:
+        #         # エラー処理
+        #         raise TypeError(f"ID{self.id}: 入職日がありません。")
         else:
-            self.in_day: datetime = target_user.INDAY
+            raise TypeError(f"ID{self.id}: 入職日がありません。")
 
-        # 勤務時間 holiday_base_time: float
-        holiday_base_time = (
+        # 契約休暇時間 holiday_base_time: float
+        contract_holiday_time = (
+            db.session.query(StaffHolidayContract.HOLIDAY_TIME)
+            .filter(StaffHolidayContract.STAFFID == self.id)
+            .first()
+        )
+        alternate_time = (
             db.session.query(
                 RecordPaidHoliday.BASETIMES_PAIDHOLIDAY,
             )
             .filter(self.id == RecordPaidHoliday.STAFFID)
             .first()
         )
-        # いらないかも part2
-        # if holiday_base_time is None:
-        #     raise TypeError(
-        #         "M_RECORD_PAIDHOLIDAYの、BASETIMES_PAIDHOLIDAYの値がありません。"
-        #     )
-        # with open("holiday_err.log", "a") as f:
-        #     # pass
-        #     f.write("M_RECORD_PAIDHOLIDAYの、BASETIMES_PAIDHOLIDAYの値が0です。")
-        """
-            Subject: 該当ID抽出に発生すると思われる例外②
-            """
-        if holiday_base_time.BASETIMES_PAIDHOLIDAY == 0:
-            # print(
-            raise ValueError(
-                "M_RECORD_PAIDHOLIDAYの、BASETIMES_PAIDHOLIDAYの値が0です。"
+        if user_contract.CONTRACT_CODE == 2:
+            self.holiday_base_time = (
+                contract_holiday_time.HOLIDAY_TIME
+                if contract_holiday_time.HOLIDAY_TIME is not None
+                else alternate_time.BASETIMES_PAIDHOLIDAY
             )
         else:
-            self.holiday_base_time: float = holiday_base_time.BASETIMES_PAIDHOLIDAY
+            contract_obj = db.session.get(Contract, user_contract.CONTRACT_CODE)
+            self.holiday_base_time = contract_obj.WORKTIME
+
+        if self.holiday_base_time is None:
+            raise TypeError("ID{self.id}: 契約休暇時間の値がありません。")
+            # with open("holiday_err.log", "a") as f:
+            #     f.write(
+            #         f"{self.id}: D_HOLIDAY_HOSTORY.HOLIDAY_TIME及び、M_RECORD_PAIDHOLIDAY.BASETIMES_PAIDHOLIDAYの値を確認してください。\n"
+            #     )
 
     # 勤務形態 acquisition_key: ['A', 'B', 'C', 'D', 'E']
     def get_acquisition_key(self) -> str:
@@ -336,13 +330,43 @@ class HolidayAcquire:
             return holiday_pair
 
     """
-    2年遡っての有効日数、使ってないかも
+    入職日から次回付与日までの年休付与日数を取得
+    @Param
+        work_count: int 勤務日数
+    @Return
+        holiday_pair: OrderedDict<date, int>
+    """
+
+    def acquire_holidays_dict(self, work_count: int) -> OrderedDict[date, int]:
+        base_day = self.convert_base_day(self.in_day)
+        day_list = [self.in_day.date()] + self.get_acquisition_list(base_day)
+        holiday_pair = self.acquire_inday_holidays()
+
+        for i, acquisition_day in enumerate(
+            AcquisitionType.name(divide_acquire_type(work_count)).under5y
+        ):
+            if i == len(day_list) - 1:
+                break
+            else:
+                holiday_pair[day_list[i + 1]] = acquisition_day
+
+        return holiday_pair
+
+    """
+    2年遡っての有効時間
+    @Param
+        work_count: int 勤務日数
     @Return
         : float
         """
 
-    def get_sum_holiday(self) -> float:
-        holiday_dict = self.plus_next_holidays()
+    def get_sum_holiday(self, work_count: int = 0) -> float:
+        holiday_dict = (
+            self.acquire_holidays_dict(work_count)
+            if work_count > 0
+            else self.plus_next_holidays()
+        )
+        print(f"ID{self.id}: 付与日数リスト: {holiday_dict}")
         holiday_list = []
         # holiday_dict.valuesは取得付与日数リスト
         for holiday in holiday_dict.values():
@@ -355,8 +379,7 @@ class HolidayAcquire:
             else sum(holiday_list[:-1])
         )
 
-        # acquisition_obj = HolidayAcquire(self.id)
-        # 残り総合計時間
+        # 総合計時間
         sum_times: float = default_sum_holiday * (self.holiday_base_time)
         return sum_times
 

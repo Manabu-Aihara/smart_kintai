@@ -1,9 +1,9 @@
-from datetime import datetime
 from dataclasses import dataclass
 from typing import TypeVar, List, Callable, Union
 
 from sqlalchemy import or_
 
+from .database_base import session
 
 T = TypeVar("T")
 # table: T
@@ -28,7 +28,7 @@ class NoZeroTable:
         for arg in args:
             filters.append(getattr(self.table, arg) == 0)
 
-        datetime_query = self.table.query.filter(or_(*filters)).all()
+        datetime_query = session.query(self.table).filter(or_(*filters)).all()
         return datetime_query
 
     # 同日付が存在するオブジェクトを抽出
@@ -50,14 +50,14 @@ class NoZeroTable:
                 # db.session.commit()
 
 
-def toggle_notification_type(table, arg: Union[str, int]) -> Union[int, str]:
+def toggle_notification_type(table: T, arg: Union[str, int]) -> Union[int, str]:
     # 数値を内容名に置き換える
     if isinstance(arg, int):
-        content_value = table.query.get(arg)
+        content_value = session.get(table, arg)
         return content_value.NAME
     # 内容名を数値に置き換える
     elif isinstance(arg, str):
-        content_value = table.query.filter(table.NAME == arg).first()
+        content_value = session.query(table).filter(table.NAME == arg).first()
         return content_value.CODE
     else:
         raise TypeError("intかstrのどちらかです")

@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from datetime import date
 
-from sqlalchemy import and_
+from sqlalchemy import and_, func
 
 from . import db
 from .models import (
@@ -236,17 +236,13 @@ class AttendanceQuery:
     # Query[(User, int)]
     def get_distinct_user_query(self):
         user_filters = self._get_filter()[1:] + self._get_job_filter()[0:3]
-        # if work_type == "1":
-        #     user_filters.append(StaffJobContract.CONTRACT_CODE != 2)
-        # elif work_type == "2":
-        #     user_filters.append(StaffJobContract.CONTRACT_CODE == 2)
         # サブクエリでSTAFFIDごとの最新のSTART_DAYを取得
         # subquery = (
         #     db.session.query(
         #         StaffJobContract.STAFFID,
         #         func.max(StaffJobContract.START_DAY).label("max_start_day"),
-        #     ).group_by(StaffJobContract.STAFFID)
-        #     .filter(*user_filters)
+        #     )
+        #     .group_by(StaffJobContract.STAFFID)
         #     .subquery()
         # )
 
@@ -259,7 +255,7 @@ class AttendanceQuery:
             #     & (StaffJobContract.START_DAY == subquery.c.max_start_day),
             # )
             .join(User, User.STAFFID == StaffJobContract.STAFFID)
-            .filter(*user_filters)
+            .filter(and_(*user_filters))
             .order_by(StaffJobContract.START_DAY.desc())
         )
         return user_order_query
