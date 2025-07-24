@@ -1,4 +1,5 @@
 import enum
+from typing import Optional
 
 
 class WorkdayType(enum.Enum):
@@ -14,17 +15,18 @@ class WorkdayType(enum.Enum):
 
 
 # 出勤日数から、付与タイプを導く
-def divide_acquire_type(count: int) -> str:
+def divide_acquire_type(count: int) -> Optional[str]:
     for char in ["B", "C", "D", "E"]:
         if count in list(WorkdayType.name(char).value):
-            print(f"original subject divide: {char}")
+            print(f"Acquisition type divide: {char}")
             return char
         elif count >= 217:
             char = "A"
-            print(f"original subject divide: {char}")
+            print(f"Acquisition type divide: {char}")
             return char
         elif count < 48:
-            raise ValueError(f"original subject: 出勤日数は{count} です。")
+            # raise ValueError(f"Acquisition type: 出勤日数は{count} です。")
+            return None
 
 
 # コンストラクタを作って、その引数に、各項目に与えた値の
@@ -34,6 +36,7 @@ def divide_acquire_type(count: int) -> str:
 # https://note.com/yucco72/n/ne69ea7fb26e7
 class AcquisitionType(enum.Enum):
     A = (list(range(10, 12)) + list(range(12, 20, 2)), 20)  # 以降20 年間勤務日数>=217
+    # A = ([10, 11, 12, 14, 16, 18], 20)  # 以降20 年間勤務日数>=217
     B = ([7, 8, 9, 10, 12, 13], 15)  # 以降15 年間勤務日数range(169, 216)
     C = ([5, 6, 6, 8, 9, 10], 11)  # 以降11 年間勤務日数range(121, 168)
     D = ([3, 4, 4, 5, 6, 6], 7)  # 以降7 年間勤務日数range(73, 120)
@@ -46,13 +49,11 @@ class AcquisitionType(enum.Enum):
 
     # 例: AからAcquisition.Aを引き出す
     @classmethod
-    def name(cls, name: str) -> str:
+    def name(cls, name: Optional[str]) -> str:
         """
         Subject: 該当ID抽出に発生すると思われる例外①
         """
         if name is None:
-            raise KeyError(
-                "M_RECORD_PAIDHOLIDAYテーブルの、ACQUISITION_TYPEの値が見つかりません。"
-            )
+            raise KeyError("勤務日数に対する、付与タイプが見つかりません。")
         else:
             return cls._member_map_[name]

@@ -28,7 +28,12 @@ from .models import User, Attendance, StaffLogin
 # from . import routes_attendance
 # from . import kinmu_index
 from . import routes_approvals, routes_admin
-from . import routes_attendance2, routes_calc_month_data, routes_leave_to_clerk
+from . import (
+    routes_attendance2,
+    routes_calc_month_data,
+    routes_leave_to_clerk,
+    routes_holiday_related,
+)
 
 
 """***** ログイン後最初のページ *****"""

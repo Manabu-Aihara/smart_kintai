@@ -1,0 +1,51 @@
+import pytest
+from app.holiday_calculation import HolidayCalculate
+
+
+@pytest.fixture
+def holiday_calculate(app_context):
+    # holiday_base_time など必要な初期化値は適宜調整
+    return HolidayCalculate(id=194)
+
+
+@pytest.mark.skip
+def test_print_acquisition_data(holiday_calculate):
+    base_day = holiday_calculate.convert_base_day(holiday_calculate.in_day)
+    print(
+        f"Acqisition list: {holiday_calculate.get_acquisition_list(base_day)}"
+    )  # デバッグ用
+    # from_list, to_list = holiday_calculate.print_acquisition_data()
+    # recent_from = from_list[-3:-1]
+    # recent_to = to_list[-3:-1]
+    # print(f"Recent from: {recent_from}, Recent to: {recent_to}")  # デバッグ用
+
+
+def test_acquire_holidays_dict(holiday_calculate):
+    q1_result = holiday_calculate.acquire_holidays_dict(180)
+    q2_result = holiday_calculate.acquire_holidays_dict(180)
+    print(f"Q1 Result: {q1_result}, Q2 Result: {q2_result}")  # デバッグ用
+
+
+# @pytest.mark.skip
+def test_get_sum_holiday(monkeypatch, holiday_calculate):
+    # 例: 直近2期間分の勤務日数が180日、220日だった場合
+    work_counts = [180, 180]
+
+    # count_workdayをモック
+    monkeypatch.setattr(holiday_calculate, "count_workdays", lambda: work_counts)
+
+    # 期待される付与区分・付与日数はacquisition_type.pyのロジックに合わせて決定
+    # 例: 180→B区分, 220→A区分
+    # ここでは例として単純に合計日数を計算
+    result = holiday_calculate.get_valid_holidays()
+    assert sum(result) == 17  # 実際は具体的な期待値で比較
+
+    # 期待値の詳細なassert例（acquisition_type.pyの内容に合わせて調整）
+    # assert result == (B区分の2年目日数 + A区分の3年目日数) * 8.0
+
+
+# 出勤日数カウント(半年未満)
+@pytest.mark.skip
+def test_count_workday_half(holiday_calculate):
+    test_count = holiday_calculate.count_workday_half_year()
+    print(f"出勤日数カウント: {test_count}")

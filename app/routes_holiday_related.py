@@ -1,31 +1,37 @@
 import requests
-from flask import jsonify
+import re
+
+from flask import jsonify, make_response
 
 from . import app
+from .carry_over_lib import calculate_carry_over_all
+from .holiday_logging import HolidayLogger
 
 
-@app.route("/get-member-leave/<shozoku_code>")
-def get_member_leave(shozoku_code):
-    url = f"http://127.0.0.1:8001/frame-data/{shozoku_code}"
+@app.route("/carry-over/<shozoku_code>", methods=["GET"])
+def get_carry_over(shozoku_code):
+    url = f"http://0.0.0.0:8001/frame-data/{shozoku_code}"
     try:
         response = requests.get(url)
         response.raise_for_status()
-        api_data = response.json()  # dict形式で取得
+        api_data_dict = response.json()  # dict形式（この時点で）で取得
 
-        members = api_data.get("members", [])
         result = []
-        for member in members:
-            # 必要な項目だけ抽出
+        for key, item in api_data_dict.items():
+            staff_id: str = re.sub(r"(\d{1,4}): (.+)", r"\1", key)
+            print(f"Staff ID: {staff_id} / item: {item}")
             extracted = {
-                # "name": member.get("name"),
-                "workday_count": member.get("実働日数"),
-                "annual_leave_full": member.get("年休（全日）"),
-                "annual_leave_half": member.get("年休（半日）"),
-                "hourly_leave": member.get("時間休"),
-                "half_hour_leave": member.get("中抜け"),
+                "staff_id": int(staff_id),
+                "contract_vacation_hours": item.get("契約休暇（時間）"),
+                "leave_full": item.get("年休（全日）"),
+                "leave_half": item.get("年休（半日）"),
+                "hourly_leave": item.get("時間休"),
+                "half_hour_leave": item.get("中抜け"),
             }
             result.append(extracted)
 
-        return jsonify(result)
+        carry_over_data = calculate_carry_over_all(result)
+        return make_response(jsonify(carry_over_data))
+        # return jsonify(carry_over_data)
     except requests.RequestException as e:
         return jsonify({"error": str(e)}), 500
