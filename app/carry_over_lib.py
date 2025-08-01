@@ -34,7 +34,7 @@ def get_concerned_users(staff_id: int):
     user_base_day: datetime = HolidayCalculate.convert_base_day(
         holiday_calculator.in_day
     )
-    if user_base_day.month != base_from.month:
+    if user_base_day.month == base_from.month:  # 本番は==にします
         concerned_user_list.append(staff_id)
 
     return concerned_user_list
@@ -73,44 +73,33 @@ def calc_leave_sum_days(api_data: Dict[str, float]) -> float:
     return sum_leave_days
 
 
-def error_handler(func):
-    def wrapper(*args, **kwargs):
-        try:
-            return func(*args, **kwargs)
-        except TypeError as e:
-            logger = HolidayLogger.get_logger("ERROR", "-err")
-            logger.error(f"ID{args}: {e}", exc_info=False)
-            # return float("nan")  # ← ここを追加
-
-    return wrapper
-
-
-"""
-2年消滅ルールに対応した年休繰り越し日数を計算
-"""
-
-
-def calculate_carry_over(api_data_list, staff_id):
+def calculate_prev_carry(api_prev_data_list) -> Dict[int, dict]:
     """
-    年休繰り越し計算: 複数契約（契約変更）にも対応
-    :param api_data_list: List[dict] APIデータリスト（mock_api_data形式）
-    :param staff_id: int
-    :return: float 繰り越し日数
+    全staff_id分の繰り越し日数を一括計算
+    :param api_prev_data_list: List[dict]
+    :return: dict {staff_id: carry_over}
     """
-    # 付与日数: HolidayCalculate.get_valid_holidays の合計
-    hc = HolidayCalculate(id=staff_id)
-    grant_sum = sum(hc.get_valid_holidays())
-    used_sum = 0.0
-    for data in api_data_list:
-        if data["staff_id"] != staff_id:
-            continue
-        # 使用日数 = calc_leave_sum_daysで換算
-        used_sum += calc_leave_sum_days(data)
-    carry_over = grant_sum - used_sum
-    return carry_over
+    staff_data = defaultdict(list)
+    # staff_idごとにデータをまとめる
+    for data in api_prev_data_list:
+        staff_data[data["staff_id"]].append(data)
+
+    prev_result_dict = {}
+    for staff_id, items in staff_data.items():
+        hc = HolidayCalculate(id=staff_id)
+        if staff_id in get_concerned_users(staff_id):
+            grant = hc.get_valid_holidays()[0]
+            used_sum = sum(calc_leave_sum_days(d) for d in items)
+            prev_result_dict[staff_id] = grant - used_sum
+            used_sum = sum(calc_leave_sum_days(d) for d in items)
+            # result[f"{staff_id}"] = grant_sum - used_sum
+            prev_result_dict[staff_id] = {"付与日数": grant, "使用日数": used_sum}
+        else:
+            print(f"ID{staff_id}: 対象外のユーザー({hc.in_day})です。")
+
+    return prev_result_dict
 
 
-@error_handler
 def calculate_carry_over_all(api_data_list) -> Dict[int, dict]:
     """
     全staff_id分の繰り越し日数を一括計算
@@ -126,11 +115,20 @@ def calculate_carry_over_all(api_data_list) -> Dict[int, dict]:
     for staff_id, items in staff_data.items():
         hc = HolidayCalculate(id=staff_id)
         if staff_id in get_concerned_users(staff_id):
-            grant_sum = sum(hc.get_valid_holidays())
+            # workday_count_list = (
+            #     hc.get_valid_holidays()[:-1]
+            #     if len(hc.get_valid_holidays()) == 4
+            #     else hc.get_valid_holidays()
+            # )
+            workday_count_list = hc.get_valid_holidays()
+            grant_sum = sum(workday_count_list)
             print(f"ID{staff_id}: 付与日数: {grant_sum}")
             used_sum = sum(calc_leave_sum_days(d) for d in items)
             # result[f"{staff_id}"] = grant_sum - used_sum
-            result[staff_id] = {"付与日数": grant_sum, "使用日数": used_sum}
+            result[staff_id] = {
+                "付与日数": grant_sum,
+                "使用日数": used_sum,
+            }
         else:
             print(f"ID{staff_id}: 対象外のユーザー({hc.in_day})です。")
             # result[staff_id] = {

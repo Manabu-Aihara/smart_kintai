@@ -1,5 +1,5 @@
 import enum
-from typing import Optional
+from typing import Optional, Union
 
 
 class WorkdayType(enum.Enum):
@@ -25,7 +25,8 @@ def divide_acquire_type(count: int) -> Optional[str]:
             print(f"Acquisition type divide: {char}")
             return char
         elif count < 48:
-            # raise ValueError(f"Acquisition type: 出勤日数は{count} です。")
+            # raise KeyError(f" 勤務日数 {count} に対する、付与タイプが見つかりません。")
+            print(f"Acquisition type divide: {char}")
             return None
 
 
@@ -41,6 +42,7 @@ class AcquisitionType(enum.Enum):
     C = ([5, 6, 6, 8, 9, 10], 11)  # 以降11 年間勤務日数range(121, 168)
     D = ([3, 4, 4, 5, 6, 6], 7)  # 以降7 年間勤務日数range(73, 120)
     E = ([1, 2, 2, 2, 3, 3], 3)  # 以降3 年間勤務日数range(48, 72)
+    F = ([0, 0, 0, 0, 0, 0], 0)
 
     def __init__(self, under5y: list, onward: int):
         super().__init__()
@@ -54,6 +56,10 @@ class AcquisitionType(enum.Enum):
         Subject: 該当ID抽出に発生すると思われる例外①
         """
         if name is None:
-            raise KeyError("勤務日数に対する、付与タイプが見つかりません。")
+            # raise KeyError("勤務日数に対する、付与タイプが見つかりません。")
+            return cls.F
         else:
+            # print(
+            #     f"Enum summary: {cls._member_map_[name]}{type(cls._member_map_[name])}"
+            # )
             return cls._member_map_[name]
