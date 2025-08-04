@@ -1,6 +1,6 @@
 from datetime import datetime
 from enum import IntEnum
-from typing import List, Tuple
+from typing import List
 
 from flask import render_template, redirect, request
 from flask_login import current_user
@@ -17,7 +17,8 @@ from .approval_contact import (
     SkypeRelatedException,
     check_skype_account,
 )
-from .holiday_acquisition import HolidayAcquire
+from .holiday_time_approve import HolidayTimeApprove
+from .holiday_day_count import HolidayDayCount
 
 """
     戻り値に代入される変数名は、必ずstf_login！！
@@ -81,7 +82,7 @@ def get_notification_list(STAFFID):
     )
 
     # 年休エリア
-    holiday_obj = HolidayAcquire(STAFFID)
+    holiday_obj = HolidayDayCount(STAFFID)
     start_list, end_list = holiday_obj.print_acquisition_data()
     try:
         holiday_obj.print_remains()
@@ -397,7 +398,7 @@ def insert_pay_log(staff_id: int, id: int) -> None:
     else:
         time_rest_flag: bool = False
 
-    holiday_obj = HolidayAcquire(staff_id)
+    holiday_obj = HolidayTimeApprove(staff_id)
     notify_time_else = holiday_obj.get_notification_rests(id)
 
     if isinstance(notify_time_else, float):

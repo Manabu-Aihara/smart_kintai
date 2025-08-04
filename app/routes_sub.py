@@ -19,7 +19,7 @@ from app.auth_middleware import (
 from app.models_tt import TodoOrm, EventORM
 from app.models import RecordPaidHoliday, Team, User
 from app.models_aprv import PaidHolidayLog
-from app.holiday_acquisition import HolidayAcquire
+from .holiday_time_approve import HolidayTimeApprove
 
 # 絶対こっち
 origins = [
@@ -276,7 +276,7 @@ def get_target_user_list(base_month: str) -> List[RecordPaidHoliday]:
 
     month_target_list = []
     for holiday_info in holiday_info_list:
-        holiday_acquire_obj = HolidayAcquire(holiday_info.STAFFID)
+        holiday_acquire_obj = HolidayTimeApprove(holiday_info.STAFFID)
         if holiday_acquire_obj.convert_base_day().month == int(base_month):
             month_target_list.append(holiday_info)
 
@@ -290,7 +290,7 @@ def input_holiday_remains(month):
     # 入力必要項目は、残り日数、可能なら内時間休 -> D_PAIDHOLIDAY_LOG
     remain_exist_list = []
     for target_user in get_target_user_list(month):
-        holiday_acquire_obj = HolidayAcquire(target_user.STAFFID)
+        holiday_acquire_obj = HolidayTimeApprove(target_user.STAFFID)
         try:
             remain_exist_list.append(
                 holiday_acquire_obj.print_remains() / target_user.WORK_TIME

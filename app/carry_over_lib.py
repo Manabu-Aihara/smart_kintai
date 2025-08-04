@@ -3,16 +3,7 @@ from datetime import date, datetime
 from typing import Tuple, Dict
 from collections import defaultdict
 
-from .acquisition_type import AcquisitionType
-from .holiday_calculation import HolidayCalculate
-from .holiday_logging import HolidayLogger
-
-
-# 付与タイプ（A〜E）から付与日数リスト（under5y, onward）を返す
-# 例: get_grant_days_by_type('A', under5y=True) -> [10, 12, 14, 16, 18, 20]
-def get_grant_days_by_type(acquire_type: str, under5y: bool = True):
-    acq = AcquisitionType.name(acquire_type)
-    return acq.under5y if under5y else acq.onward
+from .holiday_day_count import HolidayDayCount
 
 
 def config_from_to_holiday() -> Tuple[date, date]:
@@ -30,8 +21,8 @@ def config_from_to_holiday() -> Tuple[date, date]:
 def get_concerned_users(staff_id: int):
     concerned_user_list = []
     base_from, base_to = config_from_to_holiday()
-    holiday_calculator = HolidayCalculate(staff_id)
-    user_base_day: datetime = HolidayCalculate.convert_base_day(
+    holiday_calculator = HolidayDayCount(staff_id)
+    user_base_day: datetime = HolidayDayCount.convert_base_day(
         holiday_calculator.in_day
     )
     if user_base_day.month == base_from.month:  # 本番は==にします
@@ -86,7 +77,7 @@ def calculate_prev_carry(api_prev_data_list) -> Dict[int, dict]:
 
     prev_result_dict = {}
     for staff_id, items in staff_data.items():
-        hc = HolidayCalculate(id=staff_id)
+        hc = HolidayDayCount(id=staff_id)
         if staff_id in get_concerned_users(staff_id):
             grant = hc.get_valid_holidays()[0]
             used_sum = sum(calc_leave_sum_days(d) for d in items)
@@ -113,14 +104,14 @@ def calculate_carry_over_all(api_data_list) -> Dict[int, dict]:
 
     result = {}
     for staff_id, items in staff_data.items():
-        hc = HolidayCalculate(id=staff_id)
+        hc = HolidayDayCount(id=staff_id)
         if staff_id in get_concerned_users(staff_id):
-            # workday_count_list = (
-            #     hc.get_valid_holidays()[:-1]
-            #     if len(hc.get_valid_holidays()) == 4
-            #     else hc.get_valid_holidays()
-            # )
-            workday_count_list = hc.get_valid_holidays()
+            workday_count_list = (
+                hc.get_valid_holidays()[1:]
+                if len(hc.get_valid_holidays()) == 3
+                else hc.get_valid_holidays()
+            )
+            # workday_count_list = hc.get_valid_holidays()
             grant_sum = sum(workday_count_list)
             print(f"ID{staff_id}: 付与日数: {grant_sum}")
             used_sum = sum(calc_leave_sum_days(d) for d in items)

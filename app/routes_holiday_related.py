@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import List
 import requests
 import re
 
@@ -44,6 +44,6 @@ def get_carry_over(shozoku_code):
         #     base_dict_result = {}
         # if prev_dict_result is None:
         #     prev_dict_result = {}
-        return jsonify(base_dict_result, prev_dict_result)
+        return jsonify(base_dict_result)
     except requests.RequestException as e:
         return jsonify({"error": str(e)}), 500

@@ -1,11 +1,11 @@
 import pytest
-from app.holiday_calculation import HolidayCalculate
+from app.holiday_day_count import HolidayDayCount
 
 
 @pytest.fixture
-def holiday_calculate(app_context):
+def holiday_calculate(db_session):
     # holiday_base_time など必要な初期化値は適宜調整
-    return HolidayCalculate(id=147)
+    return HolidayDayCount(id=117)
 
 
 # @pytest.mark.skip
