@@ -3,9 +3,11 @@ import requests
 import re
 
 from flask import jsonify, make_response
+from apscheduler.schedulers.background import BackgroundScheduler
 
 from . import app
 from .carry_over_lib import calculate_carry_over_all, calculate_prev_carry
+from .acquisition_holidays_lib import acquire_holidays_from_now, get_concerned_members
 
 
 def retrieve_api_data(url: str) -> List[dict]:
@@ -47,3 +49,26 @@ def get_carry_over(shozoku_code):
         return jsonify(base_dict_result)
     except requests.RequestException as e:
         return jsonify({"error": str(e)}), 500
+
+
+def output_html():
+    for concerned_staff in get_concerned_members():
+        result_info_dict = acquire_holidays_from_now(concerned_staff)
+        html = "<html><body>"
+        html += f"In Day: {result_info_dict.get('in_day')}<br>"
+        html += f"Recent Work Count: {result_info_dict.get('recent_work_count')}<br>"
+        html += f"From Now On Grant: {result_info_dict.get('from_now_on_grant')}<br>"
+        html += "</body></html>"
+
+
+@app.route("/confirm-grant-holidays", methods=["GET"])
+def grant_holidays_appointed_day():
+    scheduler = BackgroundScheduler()
+    # 4月1日と10月1日に年休を付与するジョブを登録
+    # scheduler.add_job(
+    #     grant_paid_leave,
+    #     "cron",
+    #     month="4,10",
+    #     day="1",
+    #     hour="9",
+    #     minute="0",

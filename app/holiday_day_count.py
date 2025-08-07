@@ -1,6 +1,6 @@
 from datetime import date
-from dataclasses import dataclass
-from typing import List, Tuple
+from dataclasses import dataclass, field
+from typing import List, Tuple, Dict
 from collections import OrderedDict
 from monthdelta import monthmod
 from dateutil.relativedelta import relativedelta
@@ -127,10 +127,10 @@ class HolidayDayCount(HolidayBase):
             Attendance.WORKDAY >= overall_start,
             Attendance.WORKDAY <= overall_end,
             Attendance.NOTIFICATION.notin_(n_absence_list),
+            # Attendance.STARTTIME == '00:00'の場合、除かれる
             # Attendance.NOTIFICATIONが"3"または"5", "9"の場合は、
             # Attendance.STARTTIME != "00:00"の条件を適用しない
             # → つまり、NOTIFICATIONが"3"または"5", "9"なら除外条件なし、それ以外は除外条件あり
-            # 「Attendance.STARTTIME == '00:00'」の場合、
             # 「NOTIFICATIONが'3'または'5', "9"のときは適応」
             or_(
                 Attendance.NOTIFICATION.in_(["3", "5", "9"]),
@@ -159,6 +159,31 @@ class HolidayDayCount(HolidayBase):
 
         print(f"Work count: {work_counts}")
         return work_counts
+
+    def count_recent_workdays(self) -> int:
+        from_list, to_list = self.print_acquisition_data()
+
+        n_absence_list: List[str] = ["8", "17", "18", "19", "20"]
+
+        filters = [
+            Attendance.STAFFID == self.id,
+            Attendance.WORKDAY >= from_list[-2],
+            Attendance.WORKDAY <= to_list[-2],
+            Attendance.NOTIFICATION.notin_(n_absence_list),
+            # Attendance.STARTTIME == '00:00'の場合、除かれる
+            # Attendance.NOTIFICATIONが"3"または"5", "9"の場合は、
+            # Attendance.STARTTIME != "00:00"の条件を適用しない
+            # → つまり、NOTIFICATIONが"3"または"5", "9"なら除外条件なし、それ以外は除外条件あり
+            # 「NOTIFICATIONが'3'または'5', "9"のときは適応」
+            or_(
+                Attendance.NOTIFICATION.in_(["3", "5", "9"]),
+                and_(
+                    ~Attendance.NOTIFICATION.in_(["3", "5", "9"]),
+                    Attendance.STARTTIME != "00:00",
+                ),
+            ),
+        ]
+        return session.query(Attendance.WORKDAY).filter(*filters).count()
 
     """
     @Return
@@ -241,3 +266,13 @@ class HolidayDayCount(HolidayBase):
                 holiday_list.append(acquisition_days)  # 3個
 
         return holiday_list
+
+
+@dataclass
+class HolidayCountFactory:
+    _instances: Dict[int, "HolidayDayCount"] = field(default_factory=dict)
+
+    def get_instance(self, staff_id: int) -> "HolidayDayCount":
+        if staff_id not in self._instances:
+            self._instances[staff_id] = HolidayDayCount(staff_id)
+        return self._instances[staff_id]

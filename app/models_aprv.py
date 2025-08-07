@@ -82,7 +82,7 @@ class PaidHolidayLog(Base):
         index=True,
         nullable=False,
     )
-    REMAIN_TIMES = Column(Float, nullable=True)
+    REMAIN_DAYS = Column(Float, nullable=True)
     NOTIFICATION_id = Column(
         Integer, ForeignKey("D_NOTIFICATION_LIST.id"), index=True, nullable=True
     )

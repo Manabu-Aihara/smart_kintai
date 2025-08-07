@@ -83,6 +83,7 @@
           <thead class="st1">
             <tr>
               <th></th>
+              <th></th>
               {% for title_value in outer_value_dict.get("columns") %}
               <th class="text-center">
                 <div>{{ title_value }}</div>
@@ -98,7 +99,7 @@
               https://qiita.com/simonritchie/items/cc2021ac6860e92de25d#%E3%83%AB%E3%83%BC%E3%83%97%E3%81%AE%E7%8F%BE%E5%9C%A8%E3%81%AE%E3%82%A4%E3%83%B3%E3%83%87%E3%83%83%E3%82%AF%E3%82%B9%E7%95%AA%E5%8F%B7%E3%82%92%E5%8F%96%E5%BE%97%E3%81%99%E3%82%8B0
               #}
               {% if loop.index0 >= 6 %}
-              <td>
+              <td class="date">
                 {% if inner_value_dict["dow"] == "日" %}
                 {% set calendar_style = "color: red" %}
                 {% elif inner_value_dict["dow"] == "土" %}
@@ -110,10 +111,12 @@
                 <!-- 日付 -->
                 <span class="date" style="{{ calendar_style }}{{ anniversary_style }}">{{ inner_value_dict['date_DD']
                   }}</span>
+              </td>
+              <td>
                 <!-- 曜日 -->
                 <span class="youbi text-center" style="{{ calendar_style }}">{{ inner_value_dict["dow"]
                   }}</span>
-                <input type="text" name="id{{ outer_key }}{{ ns.cnt }}" value="{{ inner_value_dict['ID'] }}" />
+                <input type="hidden" name="id{{ outer_key }}{{ ns.cnt }}" value="{{ inner_value_dict['ID'] }}" />
               </td>
               <!-- </td> -->
               <!-- オンコール -->

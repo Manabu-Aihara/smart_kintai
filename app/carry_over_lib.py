@@ -20,6 +20,7 @@ def config_from_to_holiday() -> Tuple[date, date]:
 
 def get_concerned_users(staff_id: int):
     concerned_user_list = []
+
     base_from, base_to = config_from_to_holiday()
     holiday_calculator = HolidayDayCount(staff_id)
     user_base_day: datetime = HolidayDayCount.convert_base_day(
