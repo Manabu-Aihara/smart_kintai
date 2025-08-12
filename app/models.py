@@ -289,6 +289,11 @@ class StaffLogin(Base, UserMixin):
     def is_admin(self):
         return self.ADMIN
 
+    def get_id(self):
+        """明示しなくても動作する。デフォルトではself.idを返すので、注意!"""
+        """Flask-Loginで使用するユーザーIDを返す。STAFFIDを使用する"""
+        return str(self.STAFFID)
+
     def get_reset_token(self, expires_sec=1800):
         s = Serializer(app.config["SECRET_KEY"], expires_sec)
         return s.dumps({"user_id": self.STAFFID}).decode("utf-8")

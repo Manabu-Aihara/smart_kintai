@@ -189,28 +189,23 @@ form.form-bottom button.judgement {
   font-size: 2rem;
 }
 
-.outday-area p {
-  display: none;
+.holiday-info-container {
+  display: flex;
+  flex-wrap: wrap;
 }
-.outday-area p#outday-on {
-  color: chartreuse;
-}
-
-td.shadow-column1,
-td.shadow-column2 {
-  display: none;
-}
-
-.back-caution {
-  background-color: tomato;
-  margin: 0 5% 0 5%;
-}
-.back-caution .the-caution {
-  font-size: larger;
-  color: khaki;
+.holiday-info-container .holiday-info-title p {
+  display: inline-block;
+  margin-right: 3em;
   text-align: center;
 }
-.back-caution .caution-message {
-  color: cyan;
+.holiday-info-container .holiday-info-summary * {
+  display: inline-block;
+  margin: 0.5rem 1.5rem;
   text-align: center;
+}
+.holiday-info-container .holiday-info-summary p {
+  width: 6rem;
+}
+.holiday-info-container .holiday-info-summary input {
+  width: 5rem;
 }

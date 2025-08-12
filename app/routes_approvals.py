@@ -82,7 +82,7 @@ def get_notification_list(STAFFID):
     )
 
     # 年休エリア
-    holiday_obj = HolidayDayCount(STAFFID)
+    holiday_obj = HolidayTimeApprove(STAFFID)
     start_list, end_list = holiday_obj.print_acquisition_data()
     try:
         holiday_obj.print_remains()

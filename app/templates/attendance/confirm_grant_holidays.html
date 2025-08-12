@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <link rel="stylesheet" href="{{url_for('static', filename='css/approval-style.css')}}" />
+</head>
+
+<body>
+  <h3>{{ from_month }}月の付与予定日数一覧</h3>
+  <p>{{ today }}時点のものです。</p>
+  <div class="holiday-info-container">
+    <div class="holiday-info-title">
+      <p>Staff ID</p>
+      <p>入職日</p>
+      <p>ここ1年の勤務日数</p>
+      <p>次の付与予定日数</p>
+      <p>修正日数</p>
+      <p>追加繰越日数</p>
+    </div>
+    {% for staff_id, holidays_info in from_now_holidays.items() %}
+    <div class="holiday-info-summary">
+      <h3> {{ staff_id }}</h3>
+      <p>{{ holidays_info.get('in_day') }}</p>
+      <p>{{ holidays_info.get('recent_work_count') }}</p>
+      <p>{{ holidays_info.get('from_now_on_grant') }}</p>
+      <input type="text" name="repaired_holidays">
+      <input type="text" name="additional_carry_over">
+    </div>
+    {% endfor %}
+  </div>
+</body>
+
+</html>

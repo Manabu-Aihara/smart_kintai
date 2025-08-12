@@ -86,12 +86,6 @@ def post_access_token():
     return redirect(f"{cloud_site}/auth?token={token_dict['data']}")
 
 
-@app.route("/api/calc-table", methods=["GET"])
-@login_required
-def get_calc_dict():
-    return redirect("http://127.0.0.1:8001/frame-data/1")
-
-
 @app.route("/calc/auth", methods=["GET", "POST"])
 @login_required
 def post_to_token():

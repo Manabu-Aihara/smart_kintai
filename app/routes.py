@@ -5,22 +5,17 @@
 **********
 """
 
-import jpholiday
 import os
-from datetime import datetime, timedelta
-from decimal import Decimal, ROUND_HALF_UP
+from datetime import datetime
 
-from flask import render_template, flash, redirect, request, session
+from flask import render_template, flash, redirect, request
 from werkzeug.urls import url_parse
 from flask.helpers import url_for
 from flask_login.utils import login_required
 from flask_login import current_user, login_user
 from flask_login import logout_user
-from flask import abort
-from functools import wraps
-from werkzeug.security import generate_password_hash
 
-from . import app, db
+from . import app
 from .database_base import session
 from .forms import LoginForm
 from .models import User, Attendance, StaffLogin
@@ -40,10 +35,10 @@ from . import (
 
 
 @app.route("/")
-@app.route("/select_links", methods=["GET", "POST"])
+@app.route("/select_links", methods=["GET"])
 @login_required
 def select_links():
-    print(f"Login user: {current_user}")
+    print(f"Login user: {current_user.STAFFID}")  # デバッグ用
     # STAFFID = current_user.STAFFID
     stf_login = (
         session.query(StaffLogin)
@@ -77,7 +72,7 @@ def select_links():
 """***** ログイン・ログアウト処理 *****"""
 
 
-@app.route("/logout_mes", methods=["GET", "POST"])
+@app.route("/logout_mes", methods=["GET"])
 def logout_mes():
     return render_template("logout_mes.html")
 
@@ -94,6 +89,7 @@ def login():
             .filter(StaffLogin.STAFFID == form.STAFFID.data)
             .first()
         )
+        print(f"Login directly: {user.STAFFID}")
         if user is None or not user.check_password(form.PASSWORD.data):
             flash("ユーザ名かパスワードが違います")
             return redirect(url_for("login"))

@@ -66,6 +66,8 @@ class HolidayBase:
             raise TypeError(f"ID{self.id}: 入職日がありません。")
 
         # 契約休暇時間 holiday_base_time: float
+        """ 基本、契約休暇時間はAPIから取得する。
+            ここでは当面、届け出申請ページへの一時凌ぎ """
         contract_holiday_time = (
             session.query(StaffHolidayContract.HOLIDAY_TIME)
             .filter(StaffHolidayContract.STAFFID == self.id)
@@ -79,6 +81,7 @@ class HolidayBase:
             .filter(self.id == RecordPaidHoliday.STAFFID)
             .first()
         )
+        print(f"Object state: {user_contract}, {self.id}")
         if user_contract.CONTRACT_CODE == 2:
             self.holiday_base_time = (
                 contract_holiday_time.HOLIDAY_TIME
@@ -91,10 +94,10 @@ class HolidayBase:
 
         if self.holiday_base_time is None:
             raise TypeError(f"ID{self.id}: 契約休暇時間の値がありません。")
-            # with open("holiday_err.log", "a") as f:
-            #     f.write(
-            #         f"{self.id}: D_HOLIDAY_HOSTORY.HOLIDAY_TIME及び、M_RECORD_PAIDHOLIDAY.BASETIMES_PAIDHOLIDAYの値を確認してください。\n"
-            #     )
+        # with open("holiday_err.log", "a") as f:
+        #     f.write(
+        #         f"{self.id}: D_HOLIDAY_HOSTORY.HOLIDAY_TIME及び、M_RECORD_PAIDHOLIDAY.BASETIMES_PAIDHOLIDAYの値を確認してください。\n"
+        #     )
 
     """
     メソッド名の目安

@@ -1,6 +1,7 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from dataclasses import dataclass
 from typing import List, Tuple, Callable, Union
+from dateutil.relativedelta import relativedelta
 
 from sqlalchemy import and_
 
@@ -116,7 +117,7 @@ class HolidayTimeApprove(HolidayBase):
 
     def print_remains(self) -> float:
         last_remain = (
-            session.query(PaidHolidayLog.REMAIN_TIMES)
+            session.query(PaidHolidayLog.REMAIN_DAYS)
             .filter(self.id == PaidHolidayLog.STAFFID)
             .order_by(PaidHolidayLog.id.desc())
             .first()
@@ -125,3 +126,53 @@ class HolidayTimeApprove(HolidayBase):
             raise TypeError("まだ年休付与はありません。")
         else:
             return last_remain.REMAIN_TIMES
+
+    # 表示用: STARTDAY, ENDDAYのペア
+    def print_acquisition_data(self) -> Tuple[list[date], list[date]]:
+        base_day = self.convert_base_day(self.in_day)
+        day_list = [self.in_day.date()] + self.get_acquisition_list(base_day)
+
+        end_day_list = [
+            end_day + relativedelta(years=1, days=-1) for end_day in day_list
+        ]
+        end_day_list[0] = self.get_acquisition_list(base_day)[0] + relativedelta(
+            days=-1
+        )
+        return (day_list, end_day_list)
+
+    """
+    有休申請に対する、合計時間
+    @Param
+        time_flag: bool 時間休のみなら、True
+    @Return
+        : float
+        """
+
+    def sum_notify_times(self, time_flag=False) -> float:
+        from_list, to_list = self.print_acquisition_data()
+        filters = []
+        filters.append(NotificationList.STAFFID == self.id)
+        filters.append(NotificationList.START_DAY.between(from_list[-2], to_list[-2]))
+        if time_flag is True:
+            filters.append(PaidHolidayLog.TIME_REST_FLAG == 1)
+
+        noification_info_list = (
+            db.session.query(PaidHolidayLog.NOTIFICATION_id, NotificationList.STATUS)
+            .join(PaidHolidayLog, PaidHolidayLog.NOTIFICATION_id == NotificationList.id)
+            .filter(and_(*filters))
+            .all()
+        )
+
+        approval_time_list = list(
+            map(
+                lambda x: (
+                    self.get_notification_rests(x.NOTIFICATION_id)
+                    if x.STATUS == 1
+                    else 0
+                ),
+                noification_info_list,
+            )
+        )
+        # Trueの場合、時間休だけの総合計時間
+        # return noification_info_list
+        return sum(approval_time_list)

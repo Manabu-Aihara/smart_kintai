@@ -59,28 +59,29 @@ def mock_session(mocker, members):
 
     # sessionオブジェクト全体をモック化
     with patch("app.acquisition_holidays_lib.session", mock_session_instance):
-        member_count = mocker.patch(
-            "app.acquisition_holidays_lib.get_concerned_members",
-            return_value=members,
-        )
+        # member_count = mocker.patch(
+        #     "app.acquisition_holidays_lib.get_concerned_members",
+        #     return_value=members,
+        # )
         yield mock_session_instance
         # テストが終わったらモックを解放
         mock_session_instance.close()
 
-    assert member_count.called_once
+    # assert member_count.called_once
 
 
 def test_add_acquisition_db_commits_data(mock_session, mocker, members):
+    # こっちは失敗、実装でもテストでも、DBにアクセスしてしるから
     # member_count = mocker.patch(
     #     "app.acquisition_holidays_lib.get_concerned_members",
     #     side_effect=members,  # モックデータを返す
     # )
 
     # acquire_holidays_from_now関数をモック化（単純に値を返すだけ）
-    mocker.patch(
-        "app.acquisition_holidays_lib.acquire_holidays_from_now",
-        return_value=20,
-    )
+    # mocker.patch(
+    #     "app.acquisition_holidays_lib.acquire_holidays_from_now",
+    #     return_value=20,
+    # )
 
     # テスト対象の関数を実行
     add_acquisition_data()
@@ -97,16 +98,17 @@ def test_add_acquisition_db_commits_data(mock_session, mocker, members):
 
 
 def test_add_acquisition_db_rolls_back_on_error(mock_session, mocker, members):
+    # こっちは失敗、実装でもテストでも、DBにアクセスしてしるから
     # member_count = mocker.patch(
     #     "app.acquisition_holidays_lib.get_concerned_members",
     #     side_effect=members,  # モックデータを返す
     # )
 
     # acquire_holidays_from_now関数をモック化（単純に値を返すだけ）
-    mocker.patch(
-        "app.acquisition_holidays_lib.acquire_holidays_from_now",
-        return_value=20,
-    )
+    # mocker.patch(
+    #     "app.acquisition_holidays_lib.acquire_holidays_from_now",
+    #     return_value=20,
+    # )
 
     # session.commit() の実行時に例外を発生させるように設定
     mock_session.commit.side_effect = Exception("Database error")
