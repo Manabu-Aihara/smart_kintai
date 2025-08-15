@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <link rel="stylesheet" href="{{url_for('static', filename='css/approval-style.css')}}" />
+</head>
+
+<body>
+  <form method="post" action="/repair-holidays.do">
+    <div class="holiday-info-container">
+      <div class="holiday-info-title">
+        <div>更新対象</div>
+        <div></div>
+        <p>Staff ID</p>
+        <p>付与日数</p>
+        <p>追加繰越日数</p>
+      </div>
+      {% for paid_holiday_log in paid_holiday_log_list %}
+      <div class="holiday-info-summary">
+        <input type="checkbox" class="issue-check" name="update_target" value="{{ paid_holiday_log.id }}">
+        <input type="hidden" name="table_id" value="{{ paid_holiday_log.id }}" readonly>
+        <h3>{{ paid_holiday_log.STAFFID }}</h3>
+        <input type="text" class="remain-days" name="from_now_on_grant_{{ paid_holiday_log.id }}"
+          value="{{ paid_holiday_log.REMAIN_DAYS }}" readonly>
+        {% if paid_holiday_log.CARRY_FORWARD %}
+        <input type="text" class="carry-forward" name="additional_carry_over_{{ paid_holiday_log.id }}"
+          value="{{ paid_holiday_log.CARRY_FORWARD }}" readonly>
+        {% else %}
+        <input type="text" class="carry-forward" name="additional_carry_over_{{ paid_holiday_log.id }}" value="0"
+          readonly>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+    <input type="submit" value="付与日数を修正する">
+  </form>
+</body>
+<script>
+  const issueChecks = document.querySelectorAll('.issue-check');
+  const remainDays = document.querySelectorAll('.remain-days');
+  const carryForwards = document.querySelectorAll('.carry-forward');
+
+  // 付与日数を修正するボタンがクリックされたときの処理
+  // document.querySelector('input[type="submit"]').addEventListener('click', (event) => {
+  //   event.preventDefault();  // フォームのデフォルトの送信を防ぐ
+
+  // チェックされた行のデータを編集
+
+  issueChecks.forEach((check, index) => {
+    check.addEventListener('change', () => {
+      // チェックボックスの状態に応じて、対応する入力フィールドの読み取り専用属性を切り替える
+      if (!check.checked) {
+        remainDays[index].readOnly = true;
+        carryForwards[index].readOnly = true;
+      } else {
+        remainDays[index].readOnly = false;
+        remainDays[index].style.backgroundColor = "";
+        carryForwards[index].readOnly = false;
+        carryForwards[index].style.backgroundColor = "";
+      }
+    });
+  });
+  // });
+</script>
+
+</html>

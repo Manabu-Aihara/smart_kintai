@@ -106,7 +106,7 @@ def extract_retreat_users(
     return result_data_list
 
 
-@app.route("/users_list_page/<STAFFID>", methods=["GET", "POST"])
+@app.route("/users_list_page/<STAFFID>", methods=["GET"])
 @login_required
 def set_up_users_list(STAFFID):
     stf_login = db.session.get(StaffLogin, current_user.STAFFID)

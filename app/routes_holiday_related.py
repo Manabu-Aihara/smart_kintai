@@ -5,13 +5,18 @@ import re
 
 from flask import jsonify, make_response, render_template, request, redirect
 from flask_login import current_user
-from apscheduler.schedulers.background import BackgroundScheduler
+
+# from apscheduler.schedulers.background import BackgroundScheduler
 
 from . import app
 from .database_base import session
 from .models import User, Team
+from .models_aprv import PaidHolidayLog
 from .carry_over_lib import config_from_to_holiday, calculate_carry_over_all
-from .acquisition_holidays_lib import acquire_holidays_from_now
+from .acquisition_holidays_lib import (
+    acquire_holidays_from_now,
+    get_last_paid_holiday_logs,
+)
 
 
 @app.route("/select-for-carry-over", methods=["GET", "POST"])
@@ -67,29 +72,86 @@ def get_carry_over(shozoku_code):
         return jsonify({"error": str(e)}), 500
 
 
-# @app.route("/confirm-grant-holidays", methods=["GET"])
-def output_acquisition_html():
-    html = """
-<!DOCTYPE html><html><body>
-    """
-    for concerned_staff, result_info_dict in acquire_holidays_from_now().items():
-        html += f"<section><div>対象ID: {concerned_staff}</div>"
-        html += f"<div>入職日: {result_info_dict.get('in_day')}</div>"
-        html += (
-            f"<div>ここ1年の勤務日数: {result_info_dict.get('recent_work_count')}</div>"
+@app.route("/repair-holidays-form", methods=["GET"])
+def get_paid_holiday_list():
+    paid_holiday_log_list = get_last_paid_holiday_logs()
+    return render_template(
+        "attendance/paid_holiday_list_form.html",
+        paid_holiday_log_list=paid_holiday_log_list,
+    )
+
+
+@app.route("/repair-holidays.do", methods=["POST"])
+def repair_holidays():
+    update_target_list = []
+    from_now_on_grants = []
+    additional_carry_overs = []
+    # フォームからのデータを処理
+    for table_id in request.form.getlist("update_target"):
+        update_target_list.append(table_id)
+        from_now_on_grants.append(request.form.get(f"from_now_on_grant_{table_id}"))
+        additional_carry_overs.append(
+            request.form.get(f"additional_carry_over_{table_id}")
         )
-        html += f"<div>次の付与日数: {result_info_dict.get('from_now_on_grant')}</div></section>"
 
-    html += "<p>付与日数の計算は、勤務日数に基づいています。</p>"
-    html += "</body></html>"
-    return html
+    update_paid_logs = session.query(PaidHolidayLog).filter(
+        PaidHolidayLog.id.in_(update_target_list)
+    )
+
+    # ここでデータベースへの保存処理などを行う
+    try:
+        for update_target, grant_days, carry_over in zip(
+            update_paid_logs, from_now_on_grants, additional_carry_overs
+        ):
+            update_target.REMAIN_DAYS = float(grant_days)
+            update_target.CARRY_FORWARD = float(carry_over)
+            session.merge(update_target)
+            print(
+                f"Debug: Updating ID {update_target.id} with Staff ID {update_target.STAFFID}, "
+                f"Grant Days: {grant_days}, Carry Over: {carry_over}"
+            )
+        session.commit()
+    except Exception:
+        session.rollback()
+        raise
+    finally:
+        session.close()
+    return redirect("/repair-holidays-form")
 
 
-@app.route("/confirm-grant-holidays", methods=["GET"])
+@app.route("/confirm-grant-holidays", methods=["GET", "POST"])
 def confirm_grant_holidays():
     from_day, to_day = config_from_to_holiday()
     from_now_holidays = acquire_holidays_from_now()
     today = datetime.now().strftime("%Y年%m月%d日")
+
+    if request.method == "POST":
+        # フォームからのデータを処理
+        concerned_staff = request.form.getlist("staff_id")
+        from_now_on_grant = request.form.getlist("from_now_on_grant")
+        additional_carry_over = request.form.getlist("additional_carry_over")
+
+        # ここでデータベースへの保存処理などを行う
+        try:
+            for staff_id, grant_days, carry_over in zip(
+                concerned_staff, from_now_on_grant, additional_carry_over
+            ):
+                add_data = PaidHolidayLog(
+                    int(staff_id),
+                    float(grant_days),
+                    None,
+                    None,
+                    float(carry_over),
+                    None,
+                )
+                session.add(add_data)
+            session.commit()
+        except Exception:
+            session.rollback()
+            raise
+        finally:
+            session.close()
+        return redirect("/repair-holidays-form")
 
     return render_template(
         "attendance/confirm_grant_holidays.html",

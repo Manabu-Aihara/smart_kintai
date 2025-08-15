@@ -189,18 +189,19 @@ form.form-bottom button.judgement {
   font-size: 2rem;
 }
 
-.holiday-info-container {
+.holiday-info-container .holiday-info-title {
   display: flex;
   flex-wrap: wrap;
+  justify-content: space-evenly;
 }
-.holiday-info-container .holiday-info-title p {
-  display: inline-block;
-  margin-right: 3em;
-  text-align: center;
+.holiday-info-container .holiday-info-summary {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-evenly;
+  align-items: center;
 }
 .holiday-info-container .holiday-info-summary * {
-  display: inline-block;
-  margin: 0.5rem 1.5rem;
+  padding: 0.5rem 0;
   text-align: center;
 }
 .holiday-info-container .holiday-info-summary p {
@@ -208,4 +209,5 @@ form.form-bottom button.judgement {
 }
 .holiday-info-container .holiday-info-summary input {
   width: 5rem;
+  background-color: gray;
 }

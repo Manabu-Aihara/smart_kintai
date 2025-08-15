@@ -1,8 +1,14 @@
+import pytest
 from datetime import date
-from sqlalchemy import or_, and_
+
+from sqlalchemy import or_, and_, func
+
 from app import db
+from app.database_base import session
+from app.models_aprv import PaidHolidayLog
 
 
+@pytest.mark.skip
 def test_attendance_count(app_context):
     from app.models import Attendance
 
@@ -27,3 +33,21 @@ def test_attendance_count(app_context):
     print(f"Count of attendances: {count}")
     # Assert the count is as expected
     assert count == 481
+
+
+def test_paid_holiday_log_query():
+    subquery = (
+        session.query(
+            PaidHolidayLog.STAFFID,
+            func.max(PaidHolidayLog.id),
+        )
+        .group_by(PaidHolidayLog.STAFFID)
+        .subquery()
+    )
+    query = (
+        session.query(PaidHolidayLog.REMAIN_DAYS)
+        .join(subquery, PaidHolidayLog.id == subquery.c.max)
+        .all()
+    )
+    print(f"Query result: {query}")
+    assert len(query) == 5

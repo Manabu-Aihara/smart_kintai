@@ -127,11 +127,9 @@ class HolidayDayCount(HolidayBase):
             Attendance.WORKDAY >= overall_start,
             Attendance.WORKDAY <= overall_end,
             Attendance.NOTIFICATION.notin_(n_absence_list),
-            # Attendance.STARTTIME == '00:00'の場合、除かれる
-            # Attendance.NOTIFICATIONが"3"または"5", "9"の場合は、
-            # Attendance.STARTTIME != "00:00"の条件を適用しない
+            # 除外条件: Attendance.STARTTIME != '00:00'
+            # Attendance.NOTIFICATIONが"3"または"5", "9"の場合は、Attendance.STARTTIME != "00:00"の条件を適用しない
             # → つまり、NOTIFICATIONが"3"または"5", "9"なら除外条件なし、それ以外は除外条件あり
-            # 「NOTIFICATIONが'3'または'5', "9"のときは適応」
             or_(
                 Attendance.NOTIFICATION.in_(["3", "5", "9"]),
                 and_(
@@ -183,7 +181,10 @@ class HolidayDayCount(HolidayBase):
                 ),
             ),
         ]
-        return session.query(Attendance.WORKDAY).filter(*filters).count()
+        work_counts = session.query(Attendance.WORKDAY).filter(*filters).count()
+        # provisional
+        # work_counts = work_counts * 24 / 21
+        return work_counts
 
     """
     @Return

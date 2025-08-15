@@ -1,7 +1,7 @@
 from typing import Dict, Any
 from datetime import datetime
 
-from sqlalchemy import and_
+from sqlalchemy import and_, func
 
 from .database_base import session
 from .models import User
@@ -25,9 +25,12 @@ def acquire_holidays_from_now() -> Dict[int, Dict[str, Any]]:
         )
         if base_from.month == user_base_date.month:
             recent_work_count = holiday_count_obj.count_recent_workdays()
+            # 付与日と付与日数
             date_and_holidays = holiday_count_obj.acquire_holidays_dict(
                 recent_work_count
             )
+            # これからの付与日数
+            print(f"Acquisition date: {list(date_and_holidays.keys())[-1]}")
             from_now_on_holidays = list(date_and_holidays.values())[-1]
             from_now_on_acquire_dict[activate_staff.STAFFID] = {
                 "in_day": holiday_count_obj.in_day,
@@ -38,20 +41,18 @@ def acquire_holidays_from_now() -> Dict[int, Dict[str, Any]]:
     return from_now_on_acquire_dict
 
 
-def add_acquisition_data() -> None:
-    activate_staff_list = session.query(User.STAFFID).filter(User.DISPLAY == 0).all()
-    try:
-        for concerned_staff in activate_staff_list:
-            holiday_info_dict = acquire_holidays_from_now(concerned_staff)
-            from_now_on_holidays: int = holiday_info_dict.get("from_now_on_grant", 0)
-            print(f"Debug: {concerned_staff} → {from_now_on_holidays}日")
-            add_data = PaidHolidayLog(
-                concerned_staff, from_now_on_holidays, None, None, None, None
-            )
-            session.add(add_data)
-        session.commit()
-    except Exception:
-        session.rollback()
-        raise
-    finally:
-        session.close()
+def get_last_paid_holiday_logs():
+    subquery = (
+        session.query(
+            PaidHolidayLog.STAFFID,
+            func.max(PaidHolidayLog.id),
+        )
+        .group_by(PaidHolidayLog.STAFFID)
+        .subquery()
+    )
+    paid_holiday_log_list = (
+        session.query(PaidHolidayLog)
+        .join(subquery, PaidHolidayLog.id == subquery.c.max)
+        .all()
+    )
+    return paid_holiday_log_list

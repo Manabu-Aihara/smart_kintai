@@ -125,7 +125,7 @@ class HolidayTimeApprove(HolidayBase):
         if last_remain is None:
             raise TypeError("まだ年休付与はありません。")
         else:
-            return last_remain.REMAIN_TIMES
+            return last_remain.REMAIN_DAYS
 
     # 表示用: STARTDAY, ENDDAYのペア
     def print_acquisition_data(self) -> Tuple[list[date], list[date]]:

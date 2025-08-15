@@ -1,24 +1,25 @@
-<!DOCTYPE html>
-<html>
+{% extends 'base.html' %}
+{% block title %}Select Team for Carry Over{% endblock %}
+{% block content %}
 
-<head>
-    <title>Select team to display</title>
-</head>
-
-<body>
-    <p>現在{{ user_info.LKANA }}さんが利用中です</p>
-    <form method="post" action="/select-for-carry-over">
-        <p>所属No.を選択してください</p>
-        <select name="team_number">
-            {% for team_num in team_list %}
-            <option value="{{ team_num.CODE }}">{{ team_num.SHORTNAME }}</option>
-            {% endfor %}
-            <!-- <input type="text" name="form_token" id="uuid-area" value="{#{ new_token }#}" /> -->
-        </select>
-        <input type="submit" value="表示">
-    </form>
-    <!-- <button class="generate-uuid">トークン</a> -->
-    <div><a href="{{ url_for('confirm_grant_holidays') }}">Next grant holidays</a></div>
-</body>
-
-</html>
+<p>現在{{ user_info.LKANA }}さんが利用中です</p>
+<form method="post" action="/select-for-carry-over">
+  <p>所属No.を選択してください</p>
+  <select name="team_number">
+    {% for team_num in team_list %}
+    <option value="{{ team_num.CODE }}">{{ team_num.SHORTNAME }}</option>
+    {% endfor %}
+    <!-- <input type="text" name="form_token" id="uuid-area" value="{#{ new_token }#}" /> -->
+  </select>
+  <input type="submit" value="表示">
+</form>
+<!-- <button class="generate-uuid">トークン</a> -->
+<div class="box-design13 area-blue">
+  <ul class="btn-list btn-list--link">
+    <li class="btn"><a href="{{ url_for('get_paid_holiday_list') }}">Paid Holiday
+        List</a></li>
+    <li class="btn"><a href="{{ url_for('confirm_grant_holidays') }}">Next grant
+        holidays</a></li>
+  </ul>
+</div>
+{% endblock %}
