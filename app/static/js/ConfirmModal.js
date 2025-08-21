@@ -1,19 +1,19 @@
-const noticeForm = document.getElementById('approval');
+const noticeForm = document.getElementById('delete-user');
 const confirmModal = document.getElementById('confirm-modal');
 
 const hideModal = () => {
-    confirmModal.style.visibility = "hidden";
+  confirmModal.style.visibility = "hidden";
 }
 
-const appareModal = () => {
-  setTimeout(function(){
+const appearModal = () => {
+  setTimeout(function () {
     confirmModal.style.visibility = "visible";
     // confirmModal.style.opacity = "1";
   }, 300);
 }
 
-const appareButton = document.getElementsByClassName('btn-ask')[0];
-appareButton.addEventListener('click', appareModal);
+const appearButton = document.getElementById('ask-delete');
+appearButton.addEventListener('click', appearModal);
 const submitButton = document.getElementById('on-submit');
 submitButton.addEventListener('click', () => {
   noticeForm.submit();

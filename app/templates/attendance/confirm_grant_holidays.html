@@ -19,7 +19,7 @@
       </div>
       {% for staff_id, holidays_info in from_now_holidays.items() %}
       <div class="holiday-info-summary">
-        <input type="text" name="staff_id" value="{{ staff_id }}" readonly>
+        <input type="text" name="staff_id" value="{{ staff_id }}">
         <p>{{ holidays_info.get('in_day') }}</p>
         <p>{{ holidays_info.get('recent_work_count') }}</p>
         <input type="text" name="from_now_on_grant" value="{{ holidays_info.get('from_now_on_grant') }}">
@@ -29,6 +29,15 @@
     </div>
     <input type="submit" value="付与日数を確定する">
   </form>
+  <div id="back-wrap">
+    <input type="button" value="戻る" id="btnBack" class="btn">
+  </div>
 </body>
+<script>
+  const btnBack = document.getElementById('btnBack');
+  btnBack.addEventListener('click', function () {
+    location.pathname = '/select-for-carry-over';
+  });
+</script>
 
 </html>

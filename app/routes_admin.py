@@ -169,7 +169,7 @@ def make_contract_type(
 
 
 @app.route(
-    "/admin/edit_user_history/<STAFFID>/<post_type>/<int:ProcFlag>",
+    "/admin/edit-user-history/<STAFFID>/<post_type>/<int:ProcFlag>",
     methods=["GET", "POST"],
 )
 @login_required
@@ -255,7 +255,9 @@ def user_create_admin():
         STAFFID = form.staffid.data
         PASSWORD = form.password.data
         ADMIN = form.admin.data
-        existing_username = StaffLogin.query.filter_by(STAFFID=STAFFID).first()
+        existing_username = (
+            db.session.query(StaffLogin).filter_by(STAFFID=STAFFID).first()
+        )
         if existing_username:
             mes = "この社員番号は既に存在します。"
             flash("この社員番号は既に存在します。", "warning")
@@ -304,7 +306,7 @@ def get_role_context(db_obj) -> Dict[str, str]:
 
 
 # ***** ユーザ編集（リスト）ページ *****#
-@app.route("/admin/edit_list_user", methods=["GET", "POST"])
+@app.route("/admin/edit-list-user", methods=["GET", "POST"])
 @login_required
 @admin_login_required
 def edit_list_user():
@@ -358,8 +360,8 @@ def edit_list_user():
 
     """ ここまで """
 
-    if request.method == "POST":
-        return redirect(url_for("edit_data_user", STAFFID=STAFFID))
+    # if request.method == "POST":
+    #     return redirect(url_for("edit_data_user", STAFFID=STAFFID))
 
     return render_template(
         "admin/edit_list_user.html",
@@ -373,22 +375,22 @@ def edit_list_user():
 
 
 # ***** ユーザ編集ページ *****#
-@app.route("/admin/edit_data_user/<STAFFID>/<int:intFlg>", methods=["GET", "POST"])
+@app.route("/admin/edit-data-user/<STAFFID>/<int:intFlg>", methods=["GET", "POST"])
 @login_required
 @admin_login_required
 def edit_data_user(STAFFID, intFlg):
     stf_login = (
-        session.query(StaffLogin)
+        db.session.query(StaffLogin)
         .filter(StaffLogin.STAFFID == current_user.STAFFID)
         .first()
     )
     form = AddDataUserForm()
-    target_user = User(STAFFID)
-    rp_holiday = RecordPaidHoliday(STAFFID)
-    sys_info = session.get(SystemInfo, STAFFID)
+    target_user = db.session.get(User, STAFFID)
+    rp_holiday = db.session.get(RecordPaidHoliday, STAFFID)
+    sys_info = db.session.get(SystemInfo, STAFFID)
     display_form = DisplayForm()
 
-    print(f"Form detail: {form.__dict__}")
+    # print(f"Form detail: {form.__dict__}")
     if form.validate_on_submit():
         if form.department.data == 0:
             DEPARTMENT_CODE = 0
@@ -405,10 +407,10 @@ def edit_data_user(STAFFID, intFlg):
         else:
             CONTRACT_CODE = form.contract.data
 
-        if form.JobType.data == 0:
+        if form.job_type.data == 0:
             JOBTYPE_CODE = 0
         else:
-            JOBTYPE_CODE = form.JobType.data
+            JOBTYPE_CODE = form.job_type.data
 
         if form.post_code.data == 0:
             POST_CODE = 0
@@ -541,7 +543,7 @@ def edit_data_user(STAFFID, intFlg):
         form.department.data = target_user.DEPARTMENT_CODE
         form.team.data = target_user.TEAM_CODE
         form.contract.data = target_user.CONTRACT_CODE
-        form.JobType.data = target_user.JOBTYPE_CODE
+        form.job_type.data = target_user.JOBTYPE_CODE
         form.post_code.data = target_user.POST_CODE
         form.lname.data = target_user.LNAME
         form.fname.data = target_user.FNAME
@@ -620,42 +622,30 @@ def edit_data_user(STAFFID, intFlg):
     )
 
 
-@app.route("/admin/delete-user/<STAFFID>")
+@app.route("/admin/delete-user/<STAFFID>", methods=["POST"])
 @login_required
 @admin_login_required
 def user_delete_admin(STAFFID):
-    stf_login = (
-        session.query(StaffLogin)
-        .filter(StaffLogin.STAFFID == current_user.STAFFID)
+
+    # Attendances = Attendance.query.filter_by(STAFFID=STAFFID).all()
+    user_login = (
+        db.session.query(StaffLogin).filter(StaffLogin.STAFFID == STAFFID).first()
+    )
+    user_holiday_info = (
+        db.session.query(RecordPaidHoliday)
+        .filter(RecordPaidHoliday.STAFFID == STAFFID)
         .first()
     )
-    Attendances = Attendance.query.filter_by(STAFFID=STAFFID).all()
-    stls = StaffLogin.query.filter_by(STAFFID=STAFFID).all()
-    rp_holiday = RecordPaidHoliday.query.get(STAFFID)
-    usrs = User.query.get(STAFFID)
-    sys_info = SystemInfo.query.get(STAFFID)
+    user_system_info = (
+        db.session.query(SystemInfo).filter(SystemInfo.STAFFID == STAFFID).first()
+    )
+    user_info = db.session.query(User).filter(User.STAFFID == STAFFID).first()
 
-    if Attendances:
-        for sh in Attendances:
-            db.session.delete(sh)
-            db.session.commit()
-
-    if stls:
-        for st in stls:
-            db.session.delete(st)
-            db.session.commit()
-
-    if rp_holiday:
-        db.session.delete(rp_holiday)
-        db.session.commit()
-
-    if sys_info:
-        db.session.delete(sys_info)
-        db.session.commit()
-
-    if usrs:
-        db.session.delete(usrs)
-        db.session.commit()
+    db.session.delete(user_info)
+    db.session.delete(user_system_info)
+    db.session.delete(user_holiday_info)
+    db.session.delete(user_login)
+    db.session.commit()
 
     flash("ユーザを削除しました", "info")
     return redirect(url_for("home_admin"))

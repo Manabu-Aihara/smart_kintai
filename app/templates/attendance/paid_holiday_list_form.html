@@ -9,7 +9,7 @@
   <form method="post" action="/repair-holidays.do">
     <div class="holiday-info-container">
       <div class="holiday-info-title">
-        <div>更新対象</div>
+        <p>更新対象</p>
         <div></div>
         <p>Staff ID</p>
         <p>付与日数</p>
@@ -18,7 +18,7 @@
       {% for paid_holiday_log in paid_holiday_log_list %}
       <div class="holiday-info-summary">
         <input type="checkbox" class="issue-check" name="update_target" value="{{ paid_holiday_log.id }}">
-        <input type="hidden" name="table_id" value="{{ paid_holiday_log.id }}" readonly>
+        <input type="text" class="hidden-id" name="table_id" value="{{ paid_holiday_log.id }}">
         <h3>{{ paid_holiday_log.STAFFID }}</h3>
         <input type="text" class="remain-days" name="from_now_on_grant_{{ paid_holiday_log.id }}"
           value="{{ paid_holiday_log.REMAIN_DAYS }}" readonly>
@@ -34,6 +34,9 @@
     </div>
     <input type="submit" value="付与日数を修正する">
   </form>
+  <div id="back-wrap">
+    <input type="button" value="戻る" id="btnBack" class="btn">
+  </div>
 </body>
 <script>
   const issueChecks = document.querySelectorAll('.issue-check');
@@ -61,6 +64,10 @@
     });
   });
   // });
+  const btnBack = document.getElementById('btnBack');
+  btnBack.addEventListener('click', function () {
+    location.pathname = '/select-for-carry-over';
+  });
 </script>
 
 </html>

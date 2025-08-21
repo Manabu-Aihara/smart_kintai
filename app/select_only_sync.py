@@ -14,12 +14,12 @@ def get_panda_url(sql_module: str = "pymysql"):
             "mysql_module": sql_module,
             "user": os.getenv("DB_USER"),
             "password": os.getenv("DB_PASSWORD"),
-            "host": os.getenv("DB_HOST"),
-            "port": os.getenv("DB_PORT"),
-            "db_name": os.getenv("DB_NAME"),
-            # "host": "127.0.0.1",
-            # "port": "3307",
-            # "db_name": "panda",
+            # "host": os.getenv("DB_HOST"),
+            # "port": os.getenv("DB_PORT"),
+            # "db_name": os.getenv("DB_NAME"),
+            "host": "127.0.0.1",
+            "port": "3307",
+            "db_name": "panda",
         }
     )
 

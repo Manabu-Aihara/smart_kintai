@@ -8,6 +8,18 @@
   <a href="{{url_for('home_admin')}}" class="btn btn-success">管理者ホームに戻る</a>　　　
   <!-- <a href="{#{ url_for('users_nenkyu') }#}" class="btn btn-success">ユーザ年休検索画面に戻る</a> -->
 </div>
+<div class="delete-area" style="text-align: right;">
+  <button class="btn btn-danger" id="ask-delete">ユーザ削除</button>
+  <form method="POST" action="{{ url_for('user_delete_admin', STAFFID=STAFFID) }}" id="delete-user">
+    <div id="confirm-modal" style="visibility: hidden;">
+      <p>ID{{ STAFFID }}を削除します。本当に宜しいですか？</p>
+      <div class="submit-area">
+        <span><input type="button" value=" OK " id="on-submit" /></span>
+        <span><input type="button" value=" Cancel " id="on-hide" /></span>
+      </div>
+    </div>
+  </form>
+</div>
 <hr />
 <div class="disp">
   <div class="container base-w">
@@ -33,7 +45,7 @@
         <br>
         {{ wtf.form_field(form.contract) }}
         <br>
-        {{ wtf.form_field(form.jobtype) }}
+        {{ wtf.form_field(form.job_type) }}
         <br>
         {{ wtf.form_field(form.post_code) }}
         <br>
@@ -104,4 +116,5 @@
     </div>
   </div>
 </div>
+<script src="/static/js/ConfirmModal.js"></script>
 {% endblock %}

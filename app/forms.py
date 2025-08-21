@@ -23,6 +23,7 @@ from .models import (
     Team,
     Contract,
 )
+
 # from . import routes_attendance_option
 
 
@@ -121,7 +122,7 @@ class AddDataUserForm(FlaskForm):
         coerce=int,
         validators=[Optional()],
     )
-    JobType = SelectField(
+    job_type = SelectField(
         "職種",
         choices=[(syokusyus[0], syokusyus[1]) for syokusyus in syokusyu],
         coerce=int,

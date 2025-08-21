@@ -2,7 +2,8 @@
 {% block title %}Select Team for Carry Over{% endblock %}
 {% block content %}
 
-<p>現在{{ user_info.LKANA }}さんが利用中です</p>
+<h3>2年分遡った、繰り越し計算に必要なデータを表示します。</h3>
+<p>現在{{ user_info.LKANA }}さんが利用中です。</p>
 <form method="post" action="/select-for-carry-over">
   <p>所属No.を選択してください</p>
   <select name="team_number">
@@ -16,7 +17,7 @@
 <!-- <button class="generate-uuid">トークン</a> -->
 <div class="box-design13 area-blue">
   <ul class="btn-list btn-list--link">
-    <li class="btn"><a href="{{ url_for('get_paid_holiday_list') }}">Paid Holiday
+    <li class="btn"><a href="{{ url_for('get_paid_holiday_list') }}">Paid Holidays
         List</a></li>
     <li class="btn"><a href="{{ url_for('confirm_grant_holidays') }}">Next grant
         holidays</a></li>

@@ -54,6 +54,7 @@ class User(Base):
     DISTANCE = Column(Float, index=True, nullable=True)
     REMARK = Column(String(100), index=True, nullable=True)
     DISPLAY = Column(Boolean, index=True, nullable=False)
+    system = relationship("SystemInfo", backref="M_STAFFINFO")
     login = relationship("StaffLogin", backref="M_STAFFINFO")
     job_contract = relationship("StaffJobContract", backref="M_STAFFINFO")
     holiday_contract = relationship("StaffHolidayContract", backref="M_STAFFINFO")
@@ -81,6 +82,9 @@ class SystemInfo(Base):
     PAY_PASS = Column(String(50), index=True, nullable=True)
     KANAMIC_PASS = Column(String(50), index=True, nullable=True)
     ZOOM_PASS = Column(String(50), index=True, nullable=True)
+
+    def __init__(self, STAFFID):
+        self.STAFFID = STAFFID
 
 
 class CollateralTemplate(Base):
@@ -375,19 +379,35 @@ class RecordPaidHoliday(Base):  # 年休関連
         index=True,
         nullable=False,
     )
-    LAST_DATEGRANT = Column(DateTime, index=True, nullable=True)  # 今回付与年月日
-    NEXT_DATEGRANT = Column(DateTime, index=True, nullable=True)  # 次回付与年月日
-    USED_PAIDHOLIDAY = Column(Float, index=True, nullable=True)  # 使用日数
-    REMAIN_PAIDHOLIDAY = Column(Float, index=True, nullable=True)  # 残日数
+    LAST_DATEGRANT = Column(
+        DateTime, index=True, nullable=True
+    )  # 今回付与年月日 ← HolidayDayCountにより、算出できる
+    NEXT_DATEGRANT = Column(
+        DateTime, index=True, nullable=True
+    )  # 次回付与年月日 ← HolidayDayCountにより、算出できる
+    USED_PAIDHOLIDAY = Column(
+        Float, index=True, nullable=True
+    )  # 使用日数 ← 頻繁に変更が発生するため、PaidHolidayLogに移行が良い
+    REMAIN_PAIDHOLIDAY = Column(
+        Float, index=True, nullable=True
+    )  # 残日数 ← 頻繁に変更が発生するため、PaidHolidayLogに移行が良い
     TEAM_CODE = Column(Integer, index=True, nullable=True)
     CONTRACT_CODE = Column(Integer, index=True, nullable=True)
-    LAST_CARRIEDOVER = Column(Float, index=True, nullable=True)  # 前回繰越日数
+    LAST_CARRIEDOVER = Column(
+        Float, index=True, nullable=True
+    )  # 前回繰越日数 ← 1年に一回変更あるため、PaidHolidayLogに移行が良いか
     ATENDANCE_YEAR = Column(
         Integer, index=True, nullable=True
-    )  # 年間出勤日数（年休べース）
-    WORK_TIME = Column(Float, index=True, nullable=True)  # 職員勤務時間
-    BASETIMES_PAIDHOLIDAY = Column(Float, index=True, nullable=True)  # 規定の年休時間
-    ACQUISITION_TYPE = Column(String(1))  # 年休付与タイプ
+    )  # 年間出勤日数（年休べース） ← 1年に一回変更あるため、PaidHolidayLogに移行が良いか
+    WORK_TIME = Column(
+        Float, index=True, nullable=True
+    )  # 職員勤務時間 ← 契約変更の場合あり
+    BASETIMES_PAIDHOLIDAY = Column(
+        Float, index=True, nullable=True
+    )  # 規定の年休時間 ← 契約変更の場合あり
+    ACQUISITION_TYPE = Column(
+        String(1)
+    )  # 年休付与タイプ ← ATENDANCE_YEARにより、変更される
     holiday_log = relationship("PaidHolidayLog", backref="M_RECORD_PAIDHOLIDAY")
 
     def __init__(self, STAFFID):
