@@ -6,7 +6,6 @@ from monthdelta import monthmod
 from dateutil.relativedelta import relativedelta
 
 from . import db
-from .database_base import session
 from .models import (
     StaffHolidayContract,
     StaffJobContract,
@@ -49,9 +48,9 @@ class HolidayBase:
 
     def __post_init__(self):
         print(f"ID{self.id}: HolidayCalculateクラスのインスタンスを作成しました。")
-        target_user = session.get(User, self.id)
+        target_user = db.session.get(User, self.id)
         user_contract = (
-            session.query(StaffJobContract)
+            db.session.query(StaffJobContract)
             .filter(StaffJobContract.STAFFID == self.id)
             .order_by(StaffJobContract.START_DAY.asc())
             .first()
@@ -69,13 +68,13 @@ class HolidayBase:
         """ 基本、契約休暇時間はAPIから取得する。
             ここでは当面、届け出申請ページへの一時凌ぎ """
         contract_holiday_time = (
-            session.query(StaffHolidayContract.HOLIDAY_TIME)
+            db.session.query(StaffHolidayContract.HOLIDAY_TIME)
             .filter(StaffHolidayContract.STAFFID == self.id)
             .order_by(StaffHolidayContract.START_DAY.desc())
             .first()
         )
         alternate_time = (
-            session.query(
+            db.session.query(
                 RecordPaidHoliday.BASETIMES_PAIDHOLIDAY,
             )
             .filter(self.id == RecordPaidHoliday.STAFFID)
@@ -89,7 +88,7 @@ class HolidayBase:
                 else alternate_time.BASETIMES_PAIDHOLIDAY
             )
         else:
-            contract_obj = session.get(Contract, user_contract.CONTRACT_CODE)
+            contract_obj = db.session.get(Contract, user_contract.CONTRACT_CODE)
             self.holiday_base_time = contract_obj.WORKTIME
 
         if self.holiday_base_time is None:

@@ -1,29 +1,19 @@
 from datetime import datetime
-from sqlalchemy import (
-    Boolean,
-    Column,
-    ForeignKey,
-    Integer,
-    String,
-    Float,
-    DateTime,
-    Date,
-    Time,
-)
-from sqlalchemy.orm import relationship
 
-from .database_base import Base
+from . import db
 
 
-class Approval(Base):
+class Approval(db.Model):
     __tablename__ = "M_APPROVAL"
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    STAFFID = Column(
-        Integer, ForeignKey("M_STAFFINFO.STAFFID"), index=True, nullable=False
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    STAFFID = db.Column(
+        db.Integer, db.ForeignKey("M_STAFFINFO.STAFFID"), index=True, nullable=False
     )
-    TEAM_CODE = Column(Integer, ForeignKey("M_TEAM.CODE"), index=True, nullable=False)
-    TYPE = Column(String(10), index=True, nullable=False)
-    GROUPNAME = Column(String(50), nullable=False)
+    TEAM_CODE = db.Column(
+        db.Integer, db.ForeignKey("M_TEAM.CODE"), index=True, nullable=False
+    )
+    TYPE = db.Column(db.String(10), index=True, nullable=False)
+    GROUPNAME = db.Column(db.String(50), nullable=False)
 
     def __init__(self, STAFFID):
         self.STAFFID = STAFFID
@@ -31,24 +21,24 @@ class Approval(Base):
         # self.GROUPNAME = GROUPNAME
 
 
-class NotificationList(Base):
+class NotificationList(db.Model):
     __tablename__ = "D_NOTIFICATION_LIST"
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    STAFFID = Column(
-        Integer, ForeignKey("M_STAFFINFO.STAFFID"), index=True, nullable=False
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    STAFFID = db.Column(
+        db.Integer, db.ForeignKey("M_STAFFINFO.STAFFID"), index=True, nullable=False
     )
-    NOTICE_DAYTIME = Column(DateTime(), index=True, default=datetime.now())
-    N_CODE = Column(
-        Integer, ForeignKey("M_NOTIFICATION.CODE"), index=True, nullable=False
+    NOTICE_DAYTIME = db.Column(db.DateTime(), index=True, default=datetime.now())
+    N_CODE = db.Column(
+        db.Integer, db.ForeignKey("M_NOTIFICATION.CODE"), index=True, nullable=False
     )
-    STATUS = Column(Integer, index=True, nullable=False, default=0)
-    START_DAY = Column(Date)
-    START_TIME = Column(Time, nullable=True)
-    END_DAY = Column(Date, nullable=True)
-    END_TIME = Column(Time, nullable=True)
-    REMARK = Column(String(255))
+    STATUS = db.Column(db.Integer, index=True, nullable=False, default=0)
+    START_DAY = db.Column(db.Date)
+    START_TIME = db.Column(db.Time, nullable=True)
+    END_DAY = db.Column(db.Date, nullable=True)
+    END_TIME = db.Column(db.Time, nullable=True)
+    REMARK = db.Column(db.String(255))
 
-    paid_holiday_log = relationship("PaidHolidayLog", backref="D_NOTIFICATION_LIST")
+    paid_holiday_log = db.relationship("PaidHolidayLog", backref="D_NOTIFICATION_LIST")
 
     def __init__(
         self,
@@ -71,24 +61,24 @@ class NotificationList(Base):
         self.REMARK = REMARK
 
 
-class PaidHolidayLog(Base):
+class PaidHolidayLog(db.Model):
     __tablename__ = "D_PAIDHOLIDAY_LOG"
-    id = Column(
-        Integer, primary_key=True, autoincrement=True, index=True, nullable=False
+    id = db.Column(
+        db.Integer, primary_key=True, autoincrement=True, index=True, nullable=False
     )
-    STAFFID = Column(
-        Integer,
-        ForeignKey("M_RECORD_PAIDHOLIDAY.STAFFID"),
+    STAFFID = db.Column(
+        db.Integer,
+        db.ForeignKey("M_RECORD_PAIDHOLIDAY.STAFFID"),
         index=True,
         nullable=False,
     )
-    REMAIN_DAYS = Column(Float, nullable=True)
-    NOTIFICATION_id = Column(
-        Integer, ForeignKey("D_NOTIFICATION_LIST.id"), index=True, nullable=True
+    REMAIN_DAYS = db.Column(db.Float, nullable=True)
+    NOTIFICATION_id = db.Column(
+        db.Integer, db.ForeignKey("D_NOTIFICATION_LIST.id"), index=True, nullable=True
     )
-    TIME_REST_FLAG = Column(Boolean, nullable=True)
-    CARRY_FORWARD = Column(Float, nullable=True)
-    REMARK = Column(String(256), nullable=True)
+    TIME_REST_FLAG = db.Column(db.Boolean, nullable=True)
+    CARRY_FORWARD = db.Column(db.Float, nullable=True)
+    REMARK = db.Column(db.String(256), nullable=True)
 
     def __init__(
         self,

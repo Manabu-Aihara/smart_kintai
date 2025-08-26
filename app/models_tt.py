@@ -1,14 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import (
-    Column,
-    ForeignKey,
-    Integer,
-    String,
-    Date,
-)
-
-from .database_base import Base
+from . import db
 
 # ImportError: cannot import name 'Team' from partially initialized module
 # 'app.Bases' (most likely due to a circular import)
@@ -22,15 +14,15 @@ from .database_base import Base
 #     from app.Bases import StaffLoggin
 
 
-class TodoOrm(Base):
+class TodoOrm(db.Model):
     __tablename__ = "T_TODO"
 
-    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    staff_id = Column(Integer)
-    group_id = Column(Integer, ForeignKey("M_TEAM.CODE"), nullable=False)
-    summary = Column(String(50), index=True, nullable=True)
-    # owner = Column(String(20), index=True, nullable=True)
-    done = Column(String(25), index=True, nullable=True)
+    id = db.Column(db.Integer, primary_key=True, index=True, autoincrement=True)
+    staff_id = db.Column(db.Integer)
+    group_id = db.Column(db.Integer, db.ForeignKey("M_TEAM.CODE"), nullable=False)
+    summary = db.Column(db.String(50), index=True, nullable=True)
+    # owner = db.Column(db.String(20), index=True, nullable=True)
+    done = db.Column(db.String(25), index=True, nullable=True)
 
     def __init__(self, staff_id):
         self.staff_id = staff_id
@@ -45,17 +37,19 @@ class TodoOrm(Base):
         }
 
 
-class EventORM(Base):
+class EventORM(db.Model):
     __tablename__ = "T_TIMELINE_EVENT"
 
-    id = Column(Integer, primary_key=True, index=True)
-    staff_id = Column(Integer, ForeignKey("M_LOGGININFO.STAFFID"), nullable=False)
-    group_id = Column(Integer, ForeignKey("M_TEAM.CODE"), nullable=False)
-    start_time = Column(Date(), nullable=False)
-    end_time = Column(Date(), nullable=False)
-    title = Column(String(25), index=True, nullable=False)
-    summary = Column(String(50), nullable=True)
-    progress = Column(String(25), index=True, nullable=True)
+    id = db.Column(db.Integer, primary_key=True, index=True)
+    staff_id = db.Column(
+        db.Integer, db.ForeignKey("M_LOGGININFO.STAFFID"), nullable=False
+    )
+    group_id = db.Column(db.Integer, db.ForeignKey("M_TEAM.CODE"), nullable=False)
+    start_time = db.Column(db.Date(), nullable=False)
+    end_time = db.Column(db.Date(), nullable=False)
+    title = db.Column(db.String(25), index=True, nullable=False)
+    summary = db.Column(db.String(50), nullable=True)
+    progress = db.Column(db.String(25), index=True, nullable=True)
 
     # def __init__(self, team: Team):
     #     self.team = team

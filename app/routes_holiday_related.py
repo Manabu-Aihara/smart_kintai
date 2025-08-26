@@ -8,8 +8,7 @@ from flask_login import current_user
 
 # from apscheduler.schedulers.background import BackgroundScheduler
 
-from . import app
-from .database_base import session
+from . import app, db
 from .models import User, Team
 from .models_aprv import PaidHolidayLog
 from .carry_over_lib import config_from_to_holiday, calculate_carry_over_all
@@ -23,9 +22,11 @@ from .acquisition_holidays_lib import (
 def select_for_carry_over():
     # ここで必要な処理を実装
     user_info = (
-        session.query(User.LKANA).filter(User.STAFFID == current_user.STAFFID).first()
+        db.session.query(User.LKANA)
+        .filter(User.STAFFID == current_user.STAFFID)
+        .first()
     )
-    team_list = session.query(Team).all()
+    team_list = db.session.query(Team).all()
 
     if request.method == "POST":
         return redirect(f"/carry-over/{request.form.get('team_number')}")
@@ -94,7 +95,7 @@ def repair_holidays():
             request.form.get(f"additional_carry_over_{table_id}")
         )
 
-    update_paid_logs = session.query(PaidHolidayLog).filter(
+    update_paid_logs = db.session.query(PaidHolidayLog).filter(
         PaidHolidayLog.id.in_(update_target_list)
     )
 
@@ -105,17 +106,17 @@ def repair_holidays():
         ):
             update_target.REMAIN_DAYS = float(grant_days)
             update_target.CARRY_FORWARD = float(carry_over)
-            session.merge(update_target)
+            db.session.merge(update_target)
             print(
                 f"Debug: Updating ID {update_target.id} with Staff ID {update_target.STAFFID}, "
                 f"Grant Days: {grant_days}, Carry Over: {carry_over}"
             )
-        session.commit()
+        db.session.commit()
     except Exception:
-        session.rollback()
+        db.session.rollback()
         raise
     finally:
-        session.close()
+        db.session.close()
     return redirect("/repair-holidays-form")
 
 
@@ -144,13 +145,13 @@ def confirm_grant_holidays():
                     float(carry_over),
                     None,
                 )
-                session.add(add_data)
-            session.commit()
+                db.session.add(add_data)
+            db.session.commit()
         except Exception:
-            session.rollback()
+            db.session.rollback()
             raise
         finally:
-            session.close()
+            db.session.close()
         return redirect("/repair-holidays-form")
 
     return render_template(

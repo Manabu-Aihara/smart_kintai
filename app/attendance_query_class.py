@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from datetime import date
 
-from sqlalchemy import and_, func
+from sqlalchemy import and_
 
 from . import db
 from .models import (

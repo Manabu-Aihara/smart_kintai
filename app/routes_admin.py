@@ -8,23 +8,17 @@
 import os
 import datetime
 from datetime import datetime, timedelta, date
-from decimal import Decimal, ROUND_HALF_UP
 from functools import wraps
 from typing import List, Dict, TypeVar, Union
-from dateutil.relativedelta import relativedelta
-from monthdelta import monthmod
 
 from flask import render_template, flash, redirect, request, session
 from flask.helpers import url_for
 from flask_login.utils import login_required
-from flask_login import current_user, login_user, logout_user
+from flask_login import current_user
 from flask import abort
-from sqlalchemy import and_, or_
-from werkzeug.urls import url_parse
 from werkzeug.security import generate_password_hash
 
 from . import app, db
-from .database_base import session
 from .forms import (
     AdminUserCreateForm,
     ResetPasswordForm,
@@ -245,7 +239,7 @@ def edit_user_history(STAFFID, post_type: str, ProcFlag: int):
 @admin_login_required
 def user_create_admin():
     stf_login = (
-        session.query(StaffLogin)
+        db.session.query(StaffLogin)
         .filter(StaffLogin.STAFFID == current_user.STAFFID)
         .first()
     )

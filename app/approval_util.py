@@ -3,7 +3,7 @@ from typing import TypeVar, List, Callable, Union
 
 from sqlalchemy import or_
 
-from .database_base import session
+from . import db
 
 T = TypeVar("T")
 # table: T
@@ -28,7 +28,7 @@ class NoZeroTable:
         for arg in args:
             filters.append(getattr(self.table, arg) == 0)
 
-        datetime_query = session.query(self.table).filter(or_(*filters)).all()
+        datetime_query = db.session.query(self.table).filter(or_(*filters)).all()
         return datetime_query
 
     # 同日付が存在するオブジェクトを抽出
@@ -46,18 +46,18 @@ class NoZeroTable:
                 if getattr(pickup_obj, one_val).strftime("%H:%M:%S") == "00:00:00":
                     setattr(pickup_obj, one_val, None)
                     # print(f"Noneを期待：　{getattr(pickup_obj, one_val)}")
-                # db.session.merge(pickup_obj)
-                # db.session.commit()
+                # db.db.session.merge(pickup_obj)
+                # db.db.session.commit()
 
 
 def toggle_notification_type(table: T, arg: Union[str, int]) -> Union[int, str]:
     # 数値を内容名に置き換える
     if isinstance(arg, int):
-        content_value = session.get(table, arg)
+        content_value = db.session.get(table, arg)
         return content_value.NAME
     # 内容名を数値に置き換える
     elif isinstance(arg, str):
-        content_value = session.query(table).filter(table.NAME == arg).first()
+        content_value = db.session.query(table).filter(table.NAME == arg).first()
         return content_value.CODE
     else:
         raise TypeError("intかstrのどちらかです")

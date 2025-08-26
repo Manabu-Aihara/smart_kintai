@@ -3,7 +3,7 @@ from datetime import datetime
 
 from sqlalchemy import and_, func
 
-from .database_base import session
+from . import db
 from .models import User
 from .models_aprv import PaidHolidayLog
 from .holiday_day_count import HolidayDayCount
@@ -13,7 +13,7 @@ from .carry_over_lib import config_from_to_holiday
 def acquire_holidays_from_now() -> Dict[int, Dict[str, Any]]:
     from_now_on_acquire_dict = {}
     activate_staff_list = (
-        session.query(User.STAFFID)
+        db.session.query(User.STAFFID)
         .filter(and_(User.DISPLAY == 0, User.STAFFID != 10000))
         .all()
     )
@@ -43,7 +43,7 @@ def acquire_holidays_from_now() -> Dict[int, Dict[str, Any]]:
 
 def get_last_paid_holiday_logs():
     subquery = (
-        session.query(
+        db.session.query(
             PaidHolidayLog.STAFFID,
             func.max(PaidHolidayLog.id),
         )

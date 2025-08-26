@@ -1,5 +1,5 @@
 import enum
-from typing import Optional, Union
+from typing import Optional
 
 
 class WorkdayType(enum.Enum):

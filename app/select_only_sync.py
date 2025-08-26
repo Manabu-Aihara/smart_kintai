@@ -56,16 +56,3 @@ def get_count_table(
         )
         .first()
     )
-
-
-async def get_query_from_date(year_and_month: str) -> List[TableOfCount]:
-    counter_data_list = (
-        read_session.query(TableOfCount)
-        .filter(TableOfCount.YEAR_MONTH == year_and_month)
-        .all()
-    )
-    # result_query_list = []
-    # for counter_data in counter_data_list:
-    #     result_query_list.append(counter_data)
-
-    return counter_data_list

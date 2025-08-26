@@ -12,10 +12,10 @@
   <p id="shadow-today">{{ today }}</p>
   <p id="outday-on">退職された方 表示中</p>
 </div> -->
-<!-- <select id="display-toggle">
-  <option value="">表示</option>
-  <option value="">非表示</option>
-</select> -->
+<select id="display-toggle">
+  <option value="表示">表示</option>
+  <option value="非表示">非表示</option>
+</select>
 <!-- <div class="back-caution">
     <p class="the-caution">CAUTION!</p>ID{{ cause_users }}
     <p class="caution-message">{{ exception }}</p>
@@ -44,9 +44,11 @@
       <tbody class="users-info">
         {% for info in info_list %}
         <tr class="user-info-row">
-          <form method="POST" action="{{ url_for('edit_data_user', STAFFID=info['staff_id'], intFlg=1)}}">
-            <td><button type="submit" class="btn btn-warning">情報編集</button></td>
-          </form>
+          <td>
+            <form method="POST" action="{{ url_for('edit_data_user', STAFFID=info['staff_id'], intFlg=1)}}">
+              <button type="submit" class="btn btn-warning">情報編集</button>
+            </form>
+          </td>
           <td>{{ info["staff_id"] }}</td>
           <td>{{ info["family_name"] }}</td>
           <td>{{ info["first_name"] }}</td>
@@ -73,8 +75,8 @@
           <td>{{ info["post"] }}</td>
 
           <td>{{ info["inday"] }}</td>
-          <!-- <td class="shadow-item">{{ info["display"] }}</td> -->
-          <td class="shadow-item">{{ info["outday"] }}</td>
+          <td class="shadow-item">{{ info["display"] }}</td>
+          <!-- <td class="shadow-item">{{ info["outday"] }}</td> -->
         </tr>
         {% endfor %}
       </tbody>
@@ -83,5 +85,5 @@
 </div>
 
 <br><br><br><br>
-<script src="/static/js/OutdayToggle.js"></script>
+<script src="/static/js/DisplayToggle.js"></script>
 {% endblock %}

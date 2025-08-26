@@ -8,7 +8,6 @@ from dateutil.relativedelta import relativedelta
 from sqlalchemy import or_, and_
 
 from . import db
-from .database_base import session
 from .models import Attendance
 from .holiday_base import HolidayBase, get_calendar_nth_dow
 from .acquisition_type import divide_acquire_type, AcquisitionType
@@ -138,7 +137,7 @@ class HolidayDayCount(HolidayBase):
                 ),
             ),
         ]
-        all_attendance = session.query(Attendance.WORKDAY).filter(*filters).all()
+        all_attendance = db.session.query(Attendance.WORKDAY).filter(*filters).all()
 
         # Python側で各期間ごとにカウント（2つか3つになる（2025年7月25日そう判断））
         work_counts = []
@@ -181,7 +180,7 @@ class HolidayDayCount(HolidayBase):
                 ),
             ),
         ]
-        work_counts = session.query(Attendance.WORKDAY).filter(*filters).count()
+        work_counts = db.session.query(Attendance.WORKDAY).filter(*filters).count()
         # provisional
         # work_counts = work_counts * 24 / 21
         return work_counts

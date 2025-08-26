@@ -6,7 +6,6 @@ from dateutil.relativedelta import relativedelta
 from sqlalchemy import and_
 
 from . import db
-from .database_base import session
 from app.models_aprv import NotificationList, PaidHolidayLog
 from .holiday_base import HolidayBase
 
@@ -57,7 +56,7 @@ class HolidayTimeApprove(HolidayBase):
 
         # start_day, end_day, start_time, end_time = (
         notify_datetimes = (
-            session.query(
+            db.session.query(
                 NotificationList.START_DAY,
                 NotificationList.END_DAY,
                 NotificationList.START_TIME,
@@ -117,7 +116,7 @@ class HolidayTimeApprove(HolidayBase):
 
     def print_remains(self) -> float:
         last_remain = (
-            session.query(PaidHolidayLog.REMAIN_DAYS)
+            db.session.query(PaidHolidayLog.REMAIN_DAYS)
             .filter(self.id == PaidHolidayLog.STAFFID)
             .order_by(PaidHolidayLog.id.desc())
             .first()
@@ -157,7 +156,7 @@ class HolidayTimeApprove(HolidayBase):
             filters.append(PaidHolidayLog.TIME_REST_FLAG == 1)
 
         noification_info_list = (
-            db.session.query(PaidHolidayLog.NOTIFICATION_id, NotificationList.STATUS)
+            db.db.session.query(PaidHolidayLog.NOTIFICATION_id, NotificationList.STATUS)
             .join(PaidHolidayLog, PaidHolidayLog.NOTIFICATION_id == NotificationList.id)
             .filter(and_(*filters))
             .all()

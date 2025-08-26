@@ -130,7 +130,7 @@ def output_attendance(STAFFID, reference_flag, selected_date):
     print(f"Anniversary: {holiday_index}")
 
     # 申請: M_NOTIFICATIONとindexの紐づけ
-    notification_items = [db.session.get(Notification, i) for i in range(1, 21)]
+    notification_items = db.session.query(Notification).all()
     exclude_list = [3, 5, 7, 8, 17, 18, 19, 20]
     notification_pm_list = [
         n for i, n in enumerate(notification_items, 1) if i not in exclude_list
@@ -791,7 +791,7 @@ def input_attendance(STAFFID):
     for twin_attendance in tuple(zip(called_attendance_list, update_exist_list)):
         for i, clm_name in enumerate(twin_attendance[0].__table__.c.keys()):
             print(f"Column Data: {clm_name} {twin_attendance[1][i]}")
-            # id、日付がの順番が関連付けられてなかったら必要
+            # id、日付の順番が関連付けられてなかったら必要
             if clm_name != "id":
                 setattr(twin_attendance[0], clm_name, twin_attendance[1][i])
         db.session.merge(twin_attendance[0])

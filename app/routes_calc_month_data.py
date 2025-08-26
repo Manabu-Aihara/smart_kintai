@@ -1,4 +1,4 @@
-from typing import List, Dict, Tuple, TypeVar
+from typing import Dict, Tuple, TypeVar
 import syslog
 from datetime import date, datetime
 import time
@@ -15,7 +15,8 @@ from sqlalchemy.orm import Query
 from pandas import Series
 
 from . import app, db
-from .database_base import session
+
+# from .database_base import session
 from .calc_work_classes3 import (
     CalcTimeFactory,
 )
@@ -25,7 +26,7 @@ from .attendance_query_class import AttendanceQuery
 from .attendance_util import get_month_workday, convert_null_role
 from .attendance_calc import calc_attendance_of_term
 from .async_db_lib import merge_count_table
-from .select_only_sync import get_query_from_date, get_count_table
+from .select_only_sync import get_count_table
 
 
 """
@@ -84,7 +85,7 @@ def get_day_term(
 @login_required
 async def get_calc_month_table(startday: str, worktype: str, selected_date: str):
     stf_login = (
-        session.query(StaffLogin)
+        db.session.query(StaffLogin)
         .filter(StaffLogin.STAFFID == current_user.STAFFID)
         .first()
     )
@@ -126,6 +127,7 @@ async def get_calc_month_table(startday: str, worktype: str, selected_date: str)
         contract_distinct_user_query = contract_distinct_user_query.filter(
             User.TEAM_CODE == jimu_usr.TEAM_CODE
         )
+        # 退職者（今月を除く）を除く
         outday_conditional_users = get_more_condition_users(
             contract_distinct_user_query
         )
@@ -270,6 +272,7 @@ async def calcurate_month_data2(startday: str, worktype: str):
             )
         )
 
+    # 退職者（今月を除く）を除く
     target_users = get_more_condition_users(contract_distinct_user_query)
     for target_user, contract_code in target_users:
         calc_data_dict = collect_calculation_attend(
