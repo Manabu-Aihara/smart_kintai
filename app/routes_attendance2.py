@@ -124,7 +124,7 @@ def output_attendance(STAFFID, reference_flag, selected_date):
     from_date = date(selected_year, selected_month, 1)
     last_day_of_month = calendar.monthrange(selected_year, selected_month)[1]
     to_date = date(selected_year, selected_month, last_day_of_month)
-    print(f"Date: {from_date}-{to_date}")
+    print(f"Date: {from_date}〜{to_date}")
 
     holiday_index = new_calendar_obj.get_jp_holidays_num()
     print(f"Anniversary: {holiday_index}")

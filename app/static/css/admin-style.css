@@ -9,6 +9,17 @@
   height: 100%;
 }
 
+.admin-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin: 5% 10%;
+}
+.admin-wrapper a.btn {
+  width: 50%;
+  text-align: center;
+}
+
 #list-container {
   max-height: 100vh;
   overflow: auto;
@@ -62,4 +73,31 @@ td.shadow-column2 {
 .back-caution .caution-message {
   color: cyan;
   text-align: center;
+}
+
+.delete-area #confirm-modal {
+  background-color: aliceblue;
+  color: black;
+  padding: 20px;
+  border-radius: 5px;
+  text-align: center;
+}
+.delete-area #confirm-modal .submit-area span {
+  margin: 0 10px;
+}
+.delete-area #confirm-modal .submit-area span #on-submit {
+  background-color: darkcyan;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+.delete-area #confirm-modal .submit-area span #on-hide {
+  background-color: rgb(240, 230, 95);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
 }

@@ -55,6 +55,9 @@ class HolidayBase:
             .order_by(StaffJobContract.START_DAY.asc())
             .first()
         )
+        if user_contract is None:
+            raise TypeError(f"ID{self.id}: 契約情報がありません。")
+
         if target_user.INDAY is None:
             self.in_day: datetime = datetime.combine(
                 user_contract.START_DAY, datetime.min.time()
@@ -81,18 +84,22 @@ class HolidayBase:
             .first()
         )
         print(f"Object state: {user_contract}, {self.id}")
-        if user_contract.CONTRACT_CODE == 2:
-            self.holiday_base_time = (
-                contract_holiday_time.HOLIDAY_TIME
-                if contract_holiday_time is not None
-                else alternate_time.BASETIMES_PAIDHOLIDAY
-            )
-        else:
-            contract_obj = db.session.get(Contract, user_contract.CONTRACT_CODE)
-            self.holiday_base_time = contract_obj.WORKTIME
+        try:
+            if user_contract.CONTRACT_CODE == 2:
+                self.holiday_base_time = (
+                    contract_holiday_time.HOLIDAY_TIME
+                    if contract_holiday_time is not None
+                    else alternate_time.BASETIMES_PAIDHOLIDAY
+                )
+            else:
+                contract_obj = db.session.get(Contract, user_contract.CONTRACT_CODE)
+                self.holiday_base_time = contract_obj.WORKTIME
 
-        if self.holiday_base_time is None:
-            raise TypeError(f"ID{self.id}: 契約休暇時間の値がありません。")
+            if self.holiday_base_time is None:
+                raise TypeError(f"ID{self.id}: 契約休暇時間の値がありません。")
+        except TypeError as e:
+            print(e)
+            pass
         # with open("holiday_err.log", "a") as f:
         #     f.write(
         #         f"{self.id}: D_HOLIDAY_HOSTORY.HOLIDAY_TIME及び、M_RECORD_PAIDHOLIDAY.BASETIMES_PAIDHOLIDAYの値を確認してください。\n"

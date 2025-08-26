@@ -75,15 +75,18 @@ def home_admin():
 @admin_login_required
 def users_list_admin():
     stf_login = (
-        session.query(StaffLogin)
+        db.session.query(StaffLogin)
         .filter(StaffLogin.STAFFID == current_user.STAFFID)
         .first()
     )
-    users = StaffLogin.query.all()
-    us = User.query.all()
+    login_users = db.session.query(StaffLogin).all()
+    user_list = db.session.query(User).all()
 
     return render_template(
-        "admin/users_list_admin.html", users=users, us=us, stf_login=stf_login
+        "admin/users_list_admin.html",
+        logins=login_users,
+        users=user_list,
+        stf_login=stf_login,
     )
 
 
@@ -94,7 +97,7 @@ T = TypeVar("T")
         : int 
         : str 労働時間か休暇時間ページか
         : StaffJobContract | StaffHolidayContract 契約労働テーブルか契約休暇テーブル
-    @Return
+    @Return 
         : list<StaffJobContract | StaffHolidayContract>
     """
 
@@ -170,7 +173,7 @@ def make_contract_type(
 @admin_login_required
 def edit_user_history(STAFFID, post_type: str, ProcFlag: int):
     stf_login = (
-        session.query(StaffLogin)
+        db.session.query(StaffLogin)
         .filter(StaffLogin.STAFFID == current_user.STAFFID)
         .first()
     )
@@ -259,6 +262,7 @@ def user_create_admin():
             return render_template("admin/user-create-admin.html", form=form, mes=mes)
         stl = StaffLogin(STAFFID, PASSWORD, ADMIN)
         usr = User(STAFFID)
+        usr.DISPLAY = 0
         rp_holiday = RecordPaidHoliday(STAFFID=STAFFID)
         sys_info = SystemInfo(STAFFID=STAFFID)
 
@@ -305,13 +309,13 @@ def get_role_context(db_obj) -> Dict[str, str]:
 @admin_login_required
 def edit_list_user():
     stf_login = (
-        session.query(StaffLogin)
+        db.session.query(StaffLogin)
         .filter(StaffLogin.STAFFID == current_user.STAFFID)
         .first()
     )
 
     """ 2024/7/23 修正分 """
-    user_infos = session.query(User).all()
+    user_infos = db.session.query(User).all()
     # user_infos = (
     #     db.session.query(User, StaffJobContract.JOBTYPE_CODE, StaffJobContract.CONTRACT_CODE)
     #     .outerjoin(StaffJobContract, StaffJobContract.STAFFID == User.STAFFID)
@@ -651,13 +655,13 @@ def user_delete_admin(STAFFID):
 @admin_login_required
 def reset_token(STAFFID):
     stf_login = (
-        session.query(StaffLogin)
+        db.session.query(StaffLogin)
         .filter(StaffLogin.STAFFID == current_user.STAFFID)
         .first()
     )
     STAFFID = STAFFID
-    Attendances = Attendance.query.filter_by(STAFFID=STAFFID).all()
-    u = User.query.get(STAFFID)
+    Attendances = db.session.query(Attendance).filter_by(STAFFID=STAFFID).all()
+    u = db.session.get(User, STAFFID)
 
     hid_a = ""
     hid_b = "hidden"
@@ -682,7 +686,7 @@ def reset_token(STAFFID):
             HASHED_PASSWORD = generate_password_hash(form.PASSWORD.data)
             ADMIN = form.ADMIN.data
 
-            StaffLogin.query.filter_by(STAFFID=STAFFID).update(
+            db.session.query(StaffLogin).filter_by(STAFFID=STAFFID).update(
                 dict(PASSWORD_HASH=HASHED_PASSWORD, ADMIN=ADMIN)
             )
             db.session.commit()

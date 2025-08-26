@@ -161,41 +161,6 @@ class AttendanceQuery:
             .order_by(Attendance.STAFFID, Attendance.WORKDAY)
         )
 
-    # 対象年月日の職種や契約時間をスタッフごとに纏める(サブクエリ)
-    def _get_sub_clerk_query(self):
-        return (
-            db.session.query(
-                StaffHolidayContract.STAFFID, StaffHolidayContract.HOLIDAY_TIME
-            )
-            .filter(
-                StaffHolidayContract.START_DAY <= self.filter_to_day,
-                StaffHolidayContract.END_DAY >= self.filter_to_day,
-            )
-            .subquery()
-        )
-
-    @db_error_handler
-    def get_clerical_attendance(self, part_timer_flag: bool):
-        clerk_filters = self._get_filter()[1:] + self._get_job_filter(part_timer_flag)
-
-        sub_clerk_query = self._get_sub_clerk_query()
-        return (
-            db.session.query(
-                Attendance,
-                User.FNAME,
-                User.LNAME,
-                StaffJobContract.JOBTYPE_CODE,
-                StaffJobContract.CONTRACT_CODE,
-                StaffJobContract.PART_WORKTIME,
-                # Contract.WORKTIME,
-                sub_clerk_query.c.HOLIDAY_TIME,
-            )
-            # .join(Contract, Contract.CONTRACT_CODE == StaffJobContract.CONTRACT_CODE)
-            .outerjoin(sub_clerk_query, sub_clerk_query.c.STAFFID == User.STAFFID)
-            .filter(and_(*clerk_filters))
-            .order_by(Attendance.STAFFID, Attendance.WORKDAY)
-        )
-
     def get_perfect_contract_attendance(self):
         base_filters = self._get_filter()
 

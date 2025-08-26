@@ -156,7 +156,7 @@ class HolidayTimeApprove(HolidayBase):
             filters.append(PaidHolidayLog.TIME_REST_FLAG == 1)
 
         noification_info_list = (
-            db.db.session.query(PaidHolidayLog.NOTIFICATION_id, NotificationList.STATUS)
+            db.session.query(PaidHolidayLog.NOTIFICATION_id, NotificationList.STATUS)
             .join(PaidHolidayLog, PaidHolidayLog.NOTIFICATION_id == NotificationList.id)
             .filter(and_(*filters))
             .all()

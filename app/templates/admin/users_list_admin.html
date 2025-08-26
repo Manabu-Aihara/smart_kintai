@@ -1,9 +1,9 @@
 {% extends 'home.html' %} {% block child_content %}
 <h3>　　　社員リスト画面</h3>
-<br/>
+<br />
 <div class="text-center">
     <a href="{{url_for('home_admin')}}" class="btn btn-success">管理者ホームに戻る</a>　　　
-    <a href="{{ url_for('users_nenkyu') }}" class="btn btn-success">ユーザ年休検索画面に戻る</a>
+    <!-- <a href="{#{ url_for('users_nenkyu') }#}" class="btn btn-success">ユーザ年休検索画面に戻る</a> -->
 </div>
 <br><br>
 <p>{{ msg }}</p>
@@ -20,21 +20,24 @@
             </tr>
         </thead>
         <tbody>
+            {% for login in logins %}
             {% for user in users %}
-            {% for u in us %} 
-            {% if user.STAFFID == u.STAFFID %}       
+            {% if login.STAFFID == user.STAFFID %}
             <tr>
-                <td>{{ user.STAFFID }}</td>
-                <td>{{ user.ADMIN }}</td>
-                <td>{{ u.LNAME }}{{ u.FNAME }}</td>
+                <td>{{ login.STAFFID }}</td>
+                <td>{{ login.ADMIN }}</td>
+                <td>{{ user.LNAME }}{{ user.FNAME }}</td>
                 <td>
-                    <a href="{{ url_for( 'users_detail', STAFFID=user.STAFFID) }}" class="btn btn-info btn-xs" type="submit">社員打刻編集</a>
+                    <a href="{{ url_for( 'users_detail', STAFFID=user.STAFFID) }}" class="btn btn-info btn-xs"
+                        type="submit">社員打刻編集</a>
                 </td>
                 <td>
-                    <a href="{{ url_for('reset_token', STAFFID=user.STAFFID) }}" class="btn btn-warning btn-xs" type="submit">パスワード編集</a>
+                    <a href="{{ url_for('reset_token', STAFFID=user.STAFFID) }}" class="btn btn-warning btn-xs"
+                        type="submit">パスワード編集</a>
                 </td>
                 <td>
-                    <a href="{{ url_for('user_delete_admin', STAFFID=user.STAFFID) }}" class="btn btn-danger btn-xs" type="submit">削除</a>
+                    <a href="{{ url_for('user_delete_admin', STAFFID=user.STAFFID) }}" class="btn btn-danger btn-xs"
+                        type="submit">削除</a>
                 </td>
             </tr>
             {% endif %}

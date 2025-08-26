@@ -11,12 +11,12 @@
       {% endfor %} {% endif %} {% endwith %}
     </div>
   </div>
-  <a href="{{ url_for('user_create_admin') }}" class="btn btn-gr">ユーザの新規作成</a>
-  <br><br>
-  <a href="{{ url_for('edit_list_user') }}" class="btn btn-purple">ユーザ個人データ編集</a>
-  <br><br>
-  <a href="{{ url_for('users_list_admin') }}" class="btn btn-warning">ユーザリスト画面（ユーザ削除・打刻編集・パスワード編集）</a>
-  <br><br>
+  <div class="admin-wrapper">
+    <div><a href="{{ url_for('user_create_admin') }}" class="btn btn-gr btn-lg">ユーザの新規作成</a></div>
+    <div><a href="{{ url_for('edit_list_user') }}" class="btn btn-purple btn-lg">ユーザ個人データ編集</a></div>
+    <!-- <a href="{{ url_for('users_list_admin') }}" class="btn btn-warning">ユーザリスト画面（ユーザ削除・打刻編集・パスワード編集）</a> -->
+    <div><a href="{{ url_for('select_for_carry_over') }}" class="btn btn-outline-secondary btn-lg">年休関連</a></div>
+  </div>
   <!-- 2025/2/3 追加 -->
   {% import "bootstrap/wtf.html" as wtf %}
   <div style="margin: 2%;">

@@ -12,7 +12,7 @@ def config_from_to_holiday() -> Tuple[date, date]:
     to_day4 = date(year=today.year, month=3, day=31)
     from_day10 = date(year=(today.year - 2), month=10, day=1)
     to_day10 = date(year=today.year, month=9, day=30)
-    if today.month in [4, 5, 6, 7, 8, 9]:
+    if today.month in [5, 6, 7, 8, 9, 10]:
         return from_day10, to_day10
     else:
         return from_day4, to_day4

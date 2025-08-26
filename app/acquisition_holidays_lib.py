@@ -51,7 +51,7 @@ def get_last_paid_holiday_logs():
         .subquery()
     )
     paid_holiday_log_list = (
-        session.query(PaidHolidayLog)
+        db.session.query(PaidHolidayLog)
         .join(subquery, PaidHolidayLog.id == subquery.c.max)
         .all()
     )

@@ -2,10 +2,10 @@
 {% block title %}Select Team for Carry Over{% endblock %}
 {% block content %}
 
-<h3>2年分遡った、繰り越し計算に必要なデータを表示します。</h3>
 <p>現在{{ user_info.LKANA }}さんが利用中です。</p>
+<h3>2年分遡った、繰り越し計算に必要なデータを表示します。</h3>
 <form method="post" action="/select-for-carry-over">
-  <p>所属No.を選択してください</p>
+  <p>所属を選択してください</p>
   <select name="team_number">
     {% for team_num in team_list %}
     <option value="{{ team_num.CODE }}">{{ team_num.SHORTNAME }}</option>
@@ -15,12 +15,8 @@
   <input type="submit" value="表示">
 </form>
 <!-- <button class="generate-uuid">トークン</a> -->
-<div class="box-design13 area-blue">
-  <ul class="btn-list btn-list--link">
-    <li class="btn"><a href="{{ url_for('get_paid_holiday_list') }}">Paid Holidays
-        List</a></li>
-    <li class="btn"><a href="{{ url_for('confirm_grant_holidays') }}">Next grant
-        holidays</a></li>
-  </ul>
-</div>
+<p class="boundary-p"></p>
+<div class="holiday-panel"><a href="{{ url_for('get_paid_holiday_list') }}">年休記録修正</a></div>
+<p class="boundary-p">下記リンクは主に<strong>3月31日</strong>、及び<strong>9月30日</strong>用です</p>
+<div class="next-grant-panel"><a href="{{ url_for('confirm_grant_holidays') }}">次回の年休付与</a></div>
 {% endblock %}
