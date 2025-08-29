@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block app_content %}
+
+<h3>{{ title }}</h3>
+
+<p>{{ exception }}</p>
+<div class="move-or-back">
+    <input type="button" value="戻る" id="btnBack" class="btn btn-gr">
+    <input type="button" value="ユーザー情報編集画面へ" id="btnMove" class="btn btn-warning">
+</div>
+<script>
+    let btnBack = document.getElementById('btnBack');
+    btnBack.addEventListener('click', function () {
+        history.back();
+    });
+    let btnMove = document.getElementById('btnMove');
+    btnMove.addEventListener('click', function () {
+        location.pathname = '/admin/edit-list-user'
+    });
+
+</script>
+{% endblock %}

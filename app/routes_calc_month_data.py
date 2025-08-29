@@ -224,9 +224,13 @@ def collect_calculation_attend(
         group_list = list(groups)
 
         calculation_instance = calc_time_factory.get_instance(staff_id=staff_id)
-        calculation_series = calc_attendance_of_term(
-            calculation_instance, group_list, staff_id
-        )
+        try:
+            calculation_series = calc_attendance_of_term(
+                calculation_instance, group_list, staff_id
+            )
+        except ValueError as e:
+            raise e
+
         # キー名は、契約期間の最終勤務日
         start_day_key_list.append(calculation_series.name)
 
@@ -275,45 +279,53 @@ async def calcurate_month_data2(startday: str, worktype: str):
     # 退職者（今月を除く）を除く
     target_users = get_more_condition_users(contract_distinct_user_query)
     for target_user, contract_code in target_users:
-        calc_data_dict = collect_calculation_attend(
-            target_user.STAFFID, from_day, to_day
-        )
+        try:
+            calc_data_dict = collect_calculation_attend(
+                target_user.STAFFID, from_day, to_day
+            )
+        except ValueError as e:
+            return render_template(
+                "error/exception04.html",
+                title="集計における、必要情報の不足",
+                exception=e,
+            )
+
         for key, value in calc_data_dict.items():
             print(f"Series value work count: {value['実働日数']} {key}")
             count_table_obj = TableOfCount(target_user.STAFFID)
             making_id = (
                 f"{startday}-{y_and_m}-{target_user.STAFFID}-{value['契約形態']}"
             )
-            count_table_obj.id = making_id
-            count_table_obj.CONTRACT_CODE = value["契約形態"]
-            count_table_obj.YEAR_MONTH = y_and_m
-            count_table_obj.SUM_WORKTIME = value["実働時間計"]
-            count_table_obj.SUM_WORKTIME_10 = value["実働時間計（１０進法）"]
-            count_table_obj.SUM_REAL_WORKTIME = value["リアル実働時間"]
-            count_table_obj.WORKDAY_COUNT = value["実働日数"]
-            count_table_obj.OVERTIME = value["時間外"]
-            count_table_obj.OVERTIME_10 = value["時間外（１０進法）"]
-            count_table_obj.HOLIDAY_WORK = value["祝日手当時間"]
-            count_table_obj.HOLIDAY_WORK_10 = value["祝日手当時間（１０進法）"]
-            count_table_obj.ONCALL = value["オンコール平日担当回数"]
-            count_table_obj.ONCALL_HOLIDAY = value["オンコール土日担当回数"]
-            count_table_obj.ONCALL_COUNT = value["オンコール対応件数"]
-            count_table_obj.ENGEL_COUNT = value["エンゼルケア対応件数"]
-            count_table_obj.NENKYU = value["年休（全日）"]
-            count_table_obj.NENKYU_HALF = value["年休（半日）"]
-            count_table_obj.TIKOKU = value["遅刻"]
-            count_table_obj.SOUTAI = value["早退"]
-            count_table_obj.KEKKIN = value["欠勤"]
-            count_table_obj.SYUTTYOU = value["出張（全日）"]
-            count_table_obj.SYUTTYOU_HALF = value["出張（半日）"]
-            count_table_obj.REFLESH = value["リフレッシュ休暇"]
-            count_table_obj.MILEAGE = value["走行距離"]
-            count_table_obj.TIMEOFF = value["時間休"]
-            count_table_obj.HALFWAY_THROUGH = value["中抜け"]
+        count_table_obj.id = making_id
+        count_table_obj.CONTRACT_CODE = value["契約形態"]
+        count_table_obj.YEAR_MONTH = y_and_m
+        count_table_obj.SUM_WORKTIME = value["実働時間計"]
+        count_table_obj.SUM_WORKTIME_10 = value["実働時間計（１０進法）"]
+        count_table_obj.SUM_REAL_WORKTIME = value["リアル実働時間"]
+        count_table_obj.WORKDAY_COUNT = value["実働日数"]
+        count_table_obj.OVERTIME = value["時間外"]
+        count_table_obj.OVERTIME_10 = value["時間外（１０進法）"]
+        count_table_obj.HOLIDAY_WORK = value["祝日手当時間"]
+        count_table_obj.HOLIDAY_WORK_10 = value["祝日手当時間（１０進法）"]
+        count_table_obj.ONCALL = value["オンコール平日担当回数"]
+        count_table_obj.ONCALL_HOLIDAY = value["オンコール土日担当回数"]
+        count_table_obj.ONCALL_COUNT = value["オンコール対応件数"]
+        count_table_obj.ENGEL_COUNT = value["エンゼルケア対応件数"]
+        count_table_obj.NENKYU = value["年休（全日）"]
+        count_table_obj.NENKYU_HALF = value["年休（半日）"]
+        count_table_obj.TIKOKU = value["遅刻"]
+        count_table_obj.SOUTAI = value["早退"]
+        count_table_obj.KEKKIN = value["欠勤"]
+        count_table_obj.SYUTTYOU = value["出張（全日）"]
+        count_table_obj.SYUTTYOU_HALF = value["出張（半日）"]
+        count_table_obj.REFLESH = value["リフレッシュ休暇"]
+        count_table_obj.MILEAGE = value["走行距離"]
+        count_table_obj.TIMEOFF = value["時間休"]
+        count_table_obj.HALFWAY_THROUGH = value["中抜け"]
 
-            try:
-                await merge_count_table(count_table_obj, making_id)
-            except Exception as e:
-                print(e)
+        try:
+            await merge_count_table(count_table_obj, making_id)
+        except Exception as e:
+            print(e)
 
     return redirect(f"/month_calc_table/{startday}/{worktype}/{url_y_and_m}")

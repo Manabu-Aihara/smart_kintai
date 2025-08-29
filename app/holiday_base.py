@@ -47,20 +47,20 @@ class HolidayBase:
     # holiday_base_time: float
 
     def __post_init__(self):
-        print(f"ID{self.id}: HolidayCalculateクラスのインスタンスを作成しました。")
+        print(f"ID{self.id}: HolidayDayCountクラスのインスタンスを作成しました。")
         target_user = db.session.get(User, self.id)
-        user_contract = (
+        user_contracts = (
             db.session.query(StaffJobContract)
             .filter(StaffJobContract.STAFFID == self.id)
             .order_by(StaffJobContract.START_DAY.asc())
-            .first()
+            .all()
         )
-        if user_contract is None:
-            raise TypeError(f"ID{self.id}: 契約情報がありません。")
+        if len(user_contracts) == 0:
+            raise TypeError(f"ID{self.id}: 契約情報を確認してください。")
 
         if target_user.INDAY is None:
             self.in_day: datetime = datetime.combine(
-                user_contract.START_DAY, datetime.min.time()
+                user_contracts[0].START_DAY, datetime.min.time()
             )
         elif target_user.INDAY is not None:
             self.in_day = target_user.INDAY
@@ -70,6 +70,7 @@ class HolidayBase:
         # 契約休暇時間 holiday_base_time: float
         """ 基本、契約休暇時間はAPIから取得する。
             ここでは当面、届け出申請ページへの一時凌ぎ """
+        user_contract = user_contracts[-1]  # 最新の契約
         contract_holiday_time = (
             db.session.query(StaffHolidayContract.HOLIDAY_TIME)
             .filter(StaffHolidayContract.STAFFID == self.id)
@@ -84,22 +85,24 @@ class HolidayBase:
             .first()
         )
         print(f"Object state: {user_contract}, {self.id}")
-        try:
-            if user_contract.CONTRACT_CODE == 2:
-                self.holiday_base_time = (
-                    contract_holiday_time.HOLIDAY_TIME
-                    if contract_holiday_time is not None
-                    else alternate_time.BASETIMES_PAIDHOLIDAY
-                )
-            else:
-                contract_obj = db.session.get(Contract, user_contract.CONTRACT_CODE)
-                self.holiday_base_time = contract_obj.WORKTIME
+        # 属性がNoneでもオブジェクトはNoneではない可能性がある
+        # よってここは、通過しない → HolidayDayCountクラスの__post_init__でキャッチしない
+        # if user_contract is None:
+        #     raise TypeError(f"ID{self.id}: 契約情報がありません。")
+        # ↑ がなければ、AttributeError: 'NoneType' object has no attribute 'CONTRACT_CODE'
+        if user_contract.CONTRACT_CODE == 2:
+            self.holiday_base_time = (
+                contract_holiday_time.HOLIDAY_TIME
+                if contract_holiday_time is not None
+                else alternate_time.BASETIMES_PAIDHOLIDAY
+            )
+        else:
+            contract_obj = db.session.get(Contract, user_contract.CONTRACT_CODE)
+            self.holiday_base_time = contract_obj.WORKTIME
 
-            if self.holiday_base_time is None:
-                raise TypeError(f"ID{self.id}: 契約休暇時間の値がありません。")
-        except TypeError as e:
-            print(e)
-            pass
+        print(f"holiday_base_time: {self.holiday_base_time}")
+        if self.holiday_base_time is None:
+            raise TypeError(f"ID{self.id}: 契約有休時間の値がありません。")
         # with open("holiday_err.log", "a") as f:
         #     f.write(
         #         f"{self.id}: D_HOLIDAY_HOSTORY.HOLIDAY_TIME及び、M_RECORD_PAIDHOLIDAY.BASETIMES_PAIDHOLIDAYの値を確認してください。\n"

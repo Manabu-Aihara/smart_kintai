@@ -101,3 +101,11 @@ td.shadow-column2 {
   border-radius: 5px;
   cursor: pointer;
 }
+
+.move-or-back {
+  margin: 3%;
+}
+.move-or-back input[type=button] {
+  display: block;
+  margin: 5px 0;
+}

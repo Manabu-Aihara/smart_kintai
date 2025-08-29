@@ -195,7 +195,9 @@ def calc_attendance_of_term(
                 one_person_attendance.HOLIDAY,
             )
         else:
-            error_message = f"ID{staff_id} のD_HOLIDAY_HISTORYテーブル、及びM_RECORD_PAIDHOLIDAY.BASETIMES_PAIDHOLIDAYの値を確認してください"
+            error_message = (
+                f"ID{staff_id}: 有休時間が設定されていない可能性があります。"
+            )
             # 代替数値、変更の可能性あり
             alter_work_time = (
                 paid_holiday_time
@@ -204,7 +206,7 @@ def calc_attendance_of_term(
             )
             if job_contract.CONTRACT_CODE == 2 and holiday_contract is None:
                 if paid_holiday_time is None or paid_holiday_time == 0:
-                    raise IndexError(error_message)
+                    raise ValueError(error_message)
 
             setting_time.set_data(
                 alter_work_time,

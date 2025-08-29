@@ -3,7 +3,7 @@ from datetime import datetime
 import requests
 import re
 
-from flask import jsonify, make_response, render_template, request, redirect
+from flask import jsonify, render_template, request, redirect
 from flask_login import current_user
 
 # from apscheduler.schedulers.background import BackgroundScheduler
@@ -123,7 +123,14 @@ def repair_holidays():
 @app.route("/confirm-grant-holidays", methods=["GET", "POST"])
 def confirm_grant_holidays():
     from_day, to_day = config_from_to_holiday()
-    from_now_holidays = acquire_holidays_from_now()
+    try:
+        from_now_holidays = acquire_holidays_from_now()
+    except TypeError as e:
+        return render_template(
+            "error/exception04.html",
+            title="年休に関するエラー",
+            exception=e,
+        )
     today = datetime.now().strftime("%Y年%m月%d日")
 
     if request.method == "POST":

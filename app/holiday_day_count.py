@@ -20,7 +20,10 @@ class HolidayDayCount(HolidayBase):
     # id: int
 
     def __post_init__(self):
-        super().__post_init__()
+        try:
+            super().__post_init__()
+        except TypeError as e:
+            raise e
 
     """
     メソッド名の目安
