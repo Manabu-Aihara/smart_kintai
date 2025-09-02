@@ -6,9 +6,9 @@
   <div class="box-design13 area-blue">
     <h3 class="box-design13-ttl label-blue">出退勤</h3>
     <ul class="btn-list">
-      <!-- <li><a href="{#{ url_for('indextime', STAFFID=u.STAFFID, intFlg=1) }#}" class="btn btn-loyal btn-blue">出退勤入力</a>
+      <!-- <li><a href="{#{ url_for('indextime', STAFFID=usr.STAFFID, intFlg=1) }#}" class="btn btn-loyal btn-blue">出退勤入力</a>
       </li> -->
-      <li><a href="{{ url_for('output_attendance', STAFFID=u.STAFFID, reference_flag=1, selected_date=this_month) }}"
+      <li><a href="{{ url_for('output_attendance', STAFFID=usr.STAFFID, reference_flag=1, selected_date=this_month) }}"
           class="btn btn-loyal btn-orange">出退勤v2</a></li>
     </ul>
   </div>
@@ -19,7 +19,7 @@
       {% set condition_list = [3, 20, 201] %}
       {% for conditional_id in condition_list %}
       {% if stf_login.STAFFID == conditional_id %}
-      <li><a class="btn btn-loyal btn-green" href="{{ url_for('get_notification_list', STAFFID=u.STAFFID) }}">届出申請</a>
+      <li><a class="btn btn-loyal btn-green" href="{{ url_for('get_notification_list', STAFFID=usr.STAFFID) }}">届出申請</a>
       </li>
       <li>
         <a class="btn btn-loyal btn-orange" href="{{ url_for('clerk_select_page') }}">シン月別集計</a>

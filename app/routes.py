@@ -15,15 +15,15 @@ from flask_login.utils import login_required
 from flask_login import current_user, login_user
 from flask_login import logout_user
 
-from . import app
-from .database_base import session
+from . import app, db
 from .forms import LoginForm
 from .models import User, Attendance, StaffLogin
 
 # from . import routes_attendance
 # from . import kinmu_index
-from . import routes_approvals, routes_admin
 from . import (
+    routes_approvals,
+    routes_admin,
     routes_attendance2,
     routes_calc_month_data,
     routes_leave_to_clerk,
@@ -41,15 +41,15 @@ def select_links():
     print(f"Login user: {current_user.STAFFID}")  # デバッグ用
     # STAFFID = current_user.STAFFID
     stf_login = (
-        session.query(StaffLogin)
+        db.session.query(StaffLogin)
         .filter(StaffLogin.STAFFID == current_user.STAFFID)
         .first()
     )
 
     Attendances = (
-        session.query(Attendance).filter_by(STAFFID=current_user.STAFFID).all()
+        db.session.query(Attendance).filter_by(STAFFID=current_user.STAFFID).all()
     )
-    user = session.get(User, current_user.STAFFID)
+    user = db.session.get(User, current_user.STAFFID)
 
     team = user.TEAM_CODE  # この職員のチームコード
     jobtype = user.JOBTYPE_CODE  # この職員の職種
@@ -61,7 +61,7 @@ def select_links():
         title="Select link",
         STAFFID=current_user.STAFFID,
         Attendances=Attendances,
-        u=user,
+        usr=user,
         team=team,
         jobtype=jobtype,
         this_month=this_month,

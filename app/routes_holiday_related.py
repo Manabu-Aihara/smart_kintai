@@ -2,6 +2,7 @@ from typing import List
 from datetime import datetime
 import requests
 import re
+import os
 
 from flask import jsonify, render_template, request, redirect
 from flask_login import current_user
@@ -60,7 +61,8 @@ def retrieve_api_data(url: str) -> List[dict]:
 
 @app.route("/carry-over/<shozoku_code>", methods=["GET"])
 def get_carry_over(shozoku_code):
-    data_url = f"http://0.0.0.0:8001/frame-data/{shozoku_code}"
+    # data_url = f"http://0.0.0.0:8001/frame-data/{shozoku_code}"
+    data_url = f"{os.getenv('CLOUD_CALC_PAGE')}/frame-data/{shozoku_code}"
     # prev_data_url = f"http://0.0.0.0:8001/frame-prev-data/{shozoku_code}"
     try:
         two_years_data_dict = retrieve_api_data(data_url)
