@@ -16,13 +16,6 @@
         {{ wtf.form_field(form.PASSWORD) }}
         {{ wtf.form_field(form.PASSWORD2) }}
         <br>
-        <p>フォームAdminはこっちじゃない！</p>
-        {% if stf_login.ADMIN is true %}
-        {#{{ wtf.form_field(form.ADMIN) }}#}
-        {% endif %}
-
-        <br>
-
         {{ wtf.form_field(form.submit) }}
       </form>
     </div>

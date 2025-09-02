@@ -28,6 +28,7 @@ from . import (
     routes_calc_month_data,
     routes_leave_to_clerk,
     routes_holiday_related,
+    routes_attendance_option2,
 )
 
 
@@ -85,7 +86,7 @@ def login():
     form = LoginForm()
     if form.validate_on_submit():
         user = (
-            session.query(StaffLogin)
+            db.session.query(StaffLogin)
             .filter(StaffLogin.STAFFID == form.STAFFID.data)
             .first()
         )

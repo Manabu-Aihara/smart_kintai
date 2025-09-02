@@ -21,6 +21,7 @@ from werkzeug.security import generate_password_hash
 from . import app, db
 from .forms import (
     AdminUserCreateForm,
+    AdminUserUpdateForm,
     ResetPasswordForm,
     AddDataUserForm,
     SelectMonthForm,
@@ -383,10 +384,15 @@ def edit_data_user(STAFFID, intFlg):
         .first()
     )
     form = AddDataUserForm()
+    admin_check_form = AdminUserUpdateForm()
+    display_form = DisplayForm()
+
     target_user = db.session.get(User, STAFFID)
     rp_holiday = db.session.get(RecordPaidHoliday, STAFFID)
     sys_info = db.session.get(SystemInfo, STAFFID)
-    display_form = DisplayForm()
+    login_db_user = (
+        db.session.query(StaffLogin).filter(StaffLogin.STAFFID == STAFFID).first()
+    )
 
     # print(f"Form detail: {form.__dict__}")
     if form.validate_on_submit():
@@ -503,7 +509,7 @@ def edit_data_user(STAFFID, intFlg):
         target_user.DISTANCE = DISTANCE
         target_user.REMARK = REMARK
         """ 24/9/12 追加 """
-        print(f"Check: {display_form.display.data}")
+        print(f"Display check: {display_form.display.data}")
         target_user.DISPLAY = display_form.display.data
         db.session.commit()
 
@@ -531,6 +537,10 @@ def edit_data_user(STAFFID, intFlg):
         sys_info.PAY_PASS = PAY_PASS
         sys_info.KANAMIC_PASS = KANAMIC_PASS
         sys_info.ZOOM_PASS = ZOOM_PASS
+
+        login_db_user.ADMIN = admin_check_form.ADMIN.data
+        print(f"Admin check: {login_db_user.ADMIN}")
+
         db.session.commit()
 
         flash("ユーザ情報を編集しました", "info")
@@ -603,6 +613,9 @@ def edit_data_user(STAFFID, intFlg):
             form.house.data = target_user.HOUSE
 
         form.distance.data = target_user.DISTANCE
+
+        print(f"Admin data: {login_db_user}")
+        admin_check_form.ADMIN.data = login_db_user.ADMIN
         """ 24/9/12 追加 """
         display_form.display.data = target_user.DISPLAY
 
@@ -612,6 +625,7 @@ def edit_data_user(STAFFID, intFlg):
     return render_template(
         "admin/edit_data_user_diff.html",
         form=form,
+        admin_check_form=admin_check_form,
         disp_form=display_form,
         STAFFID=STAFFID,
         u=target_user,
