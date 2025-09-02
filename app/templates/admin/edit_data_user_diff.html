@@ -105,11 +105,11 @@
         <br>
         {{ wtf.form_field(form.remark) }}
         <br>
-
-        {# 下記と同じ
-        {{ wtf.quick_form(disp_form) }}
-        #}
+        {{ wtf.form_field(admin_check_form.ADMIN) }}
+        <br>
+        {# 下記と同じ {{ wtf.quick_form(disp_form) }} #}
         {{ wtf.form_field(disp_form.display) }}
+        <br>
         <button type="submit" class="btn btn-warning">　　保　　存　　</button>
       </form>
       <br><br><br><br><br>

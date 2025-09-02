@@ -1,7 +1,6 @@
 from typing import Dict, Any
 from datetime import datetime
 
-from flask import render_template
 from sqlalchemy import and_, func
 
 from . import db
@@ -33,7 +32,7 @@ def acquire_holidays_from_now() -> Dict[int, Dict[str, Any]]:
             )
         except TypeError as e:
             raise e
-        if base_from.month != user_base_date.month:
+        if base_from.month == user_base_date.month:
             recent_work_count = holiday_count_obj.count_recent_workdays()
             # 付与日と付与日数
             date_and_holidays = holiday_count_obj.acquire_holidays_dict(

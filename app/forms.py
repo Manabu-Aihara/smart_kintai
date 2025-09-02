@@ -49,7 +49,7 @@ class AdminUserUpdateForm(FlaskForm):
 class ResetPasswordForm(FlaskForm):
     PASSWORD = PasswordField("パスワード", validators=[DataRequired()])
     PASSWORD2 = PasswordField("パスワード確認", validators=[DataRequired()])
-    ADMIN = BooleanField("管理権限の付与")
+    # ADMIN = BooleanField("管理権限の付与")
     submit = SubmitField("　保　存　")
 
 

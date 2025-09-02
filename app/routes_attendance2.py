@@ -22,7 +22,7 @@ from .common_func import NoneCheck, TimeCheck, blankCheck
 from .attendance_util import get_month_workday
 
 # わかりにくいが、日付選択に使うため必要らしい
-from app import routes_attendance_option
+# from . import routes_attendance_option2
 
 """
     各契約日の初日-1（後に個数分配列にするため便利）の配列 + その月の最終日
