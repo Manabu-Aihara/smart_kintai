@@ -701,8 +701,7 @@ def input_attendance(STAFFID):
             print(f"On call: {oncall}")
             print(f"Engel: {engel_cnt}")
             print(f"Alcohol: {alc}")
-            if oncall == "on":
-                oncall_check = 1
+            oncall_check = oncall
             if oncall_cnt != "0":
                 oncall_cnt_value = oncall_cnt
             if engel_cnt != "0":
