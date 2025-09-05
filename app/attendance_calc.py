@@ -89,6 +89,11 @@ def calc_attendance_of_term(
     alternative_holiday = db.session.get(RecordPaidHoliday, staff_id)
     paid_holiday_time = alternative_holiday.BASETIMES_PAIDHOLIDAY
 
+    """ 25/9/5 休日オンコール追加 """
+    on_call_holiday_oneday_cnt: int = 0
+    on_call_holiday_daytime_cnt: int = 0
+    on_call_holiday_nighttime_cnt: int = 0
+
     for (
         one_person_attendance,
         job_contract,
@@ -102,18 +107,36 @@ def calc_attendance_of_term(
             else holiday_contract.HOLIDAY_TIME
         )
 
-        on_call_holiday_cnt += (
+        on_call_holiday_oneday_cnt += (
             1
-            if one_person_attendance.ONCALL != "0"
+            if not isinstance(one_person_attendance.ONCALL, type(None))
+            and one_person_attendance.ONCALL == "1"
             and one_person_attendance.WORKDAY.weekday() in [5, 6]
             else 0
         )
+        on_call_holiday_daytime_cnt += (
+            1
+            if not isinstance(one_person_attendance.ONCALL, type(None))
+            and one_person_attendance.ONCALL == "2"
+            and one_person_attendance.WORKDAY.weekday() in [5, 6]
+            else 0
+        )
+        on_call_holiday_nighttime_cnt += (
+            1
+            if not isinstance(one_person_attendance.ONCALL, type(None))
+            and one_person_attendance.ONCALL == "3"
+            and one_person_attendance.WORKDAY.weekday() in [5, 6]
+            else 0
+        )
+
         on_call_cnt += (
             1
-            if one_person_attendance.ONCALL != "0"
+            if not isinstance(one_person_attendance.ONCALL, type(None))
+            and one_person_attendance.ONCALL != ""
             and one_person_attendance.WORKDAY.weekday() not in [5, 6]
             else 0
         )
+
         on_call_correspond_cnt += (
             int(one_person_attendance.ONCALL_COUNT)
             if not isinstance(one_person_attendance.ONCALL_COUNT, type(None))
@@ -318,7 +341,9 @@ def calc_attendance_of_term(
             # disp_holiday_time,
             job_contract.CONTRACT_CODE,
             on_call_cnt,
-            on_call_holiday_cnt,
+            on_call_holiday_oneday_cnt,
+            on_call_holiday_daytime_cnt,
+            on_call_holiday_nighttime_cnt,
             on_call_correspond_cnt,
             engel_correspond_cnt,
             actual_time60,
@@ -346,7 +371,9 @@ def calc_attendance_of_term(
             # "契約休暇（時間）",
             "契約形態",
             "オンコール平日担当回数",
-            "オンコール土日担当回数",
+            "オンコール土日（1日）担当回数",
+            "オンコール土日（日中）担当回数",
+            "オンコール土日（夜間）担当回数",
             "オンコール対応件数",
             "エンゼルケア対応件数",
             "実働時間計",

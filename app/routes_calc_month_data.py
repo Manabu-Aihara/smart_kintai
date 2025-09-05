@@ -79,7 +79,7 @@ def get_day_term(
 
 
 @app.route(
-    "/month_calc_table/<startday>/<worktype>/<selected_date>",
+    "/month-calc-table/<startday>/<worktype>/<selected_date>",
     methods=["GET"],
 )
 @login_required
@@ -143,6 +143,7 @@ async def get_calc_month_table(startday: str, worktype: str, selected_date: str)
     # 永続化された集計結果
     null_checked_users = []
     count_month_list = []
+    oncall_holiday_dict = {}
     for outday_conditional_user, contract_code in outday_conditional_users:
         null_checked_users.append(convert_null_role(outday_conditional_user))
         # こちらの常勤・パート分けは、outday_conditional_userでやってる
@@ -151,6 +152,13 @@ async def get_calc_month_table(startday: str, worktype: str, selected_date: str)
                 outday_conditional_user.STAFFID, contract_code, year_month_arg
             )
         )
+        # count_table_obj = get_count_table(
+        #     outday_conditional_user.STAFFID, contract_code, year_month_arg
+        # )
+        # if count_table_obj.ONCALL_HOLIDAY != 0:
+        #     oncall_holiday_dict[
+        #         f"{outday_conditional_user.STAFFID}"
+        #     ] = count_table_obj.ONCALL_HOLIDAY
 
     # count_month_list = await get_query_from_date(year_month_arg)
     print(f"Count query length: {m}月 {len(count_month_list)}")
@@ -168,7 +176,7 @@ async def get_calc_month_table(startday: str, worktype: str, selected_date: str)
     syslog.syslog(pref_result)
 
     return render_template(
-        "attendance/calcuration_month.html",
+        "attendance/calculation_month.html",
         startday=startday,
         selected_date=selected_date,
         worktype=worktype,
@@ -243,15 +251,15 @@ def collect_calculation_attend(
 
 
 # 再集計ボタンクリック、DB使い分けのため非同期
-@app.route("/calcurate_data/<startday>/<worktype>", methods=["POST"])
+@app.route("/calculate-data/<startday>/<worktype>", methods=["POST"])
 @login_required
-async def calcurate_month_data2(startday: str, worktype: str):
+async def calculate_month_data2(startday: str, worktype: str):
     form_month = SelectMonthForm()
     selected_date: str
     if form_month.validate_on_submit():
         selected_date = request.form.get("year-month")  # 選択された日付
         print(f"Select form date: {selected_date}")
-        return redirect(f"/month_calc_table/{startday}/{worktype}/{selected_date}")
+        return redirect(f"/month-calc-table/{startday}/{worktype}/{selected_date}")
 
     print(f"Re-render date: {request.form.get('year-month')}")
     y, m = get_month_workday(request.form.get("year-month"))
@@ -308,7 +316,11 @@ async def calcurate_month_data2(startday: str, worktype: str):
         count_table_obj.HOLIDAY_WORK = value["祝日手当時間"]
         count_table_obj.HOLIDAY_WORK_10 = value["祝日手当時間（１０進法）"]
         count_table_obj.ONCALL = value["オンコール平日担当回数"]
-        count_table_obj.ONCALL_HOLIDAY = value["オンコール土日担当回数"]
+        count_table_obj.ONCALL_HOLIDAY_ONE_DAY = value["オンコール土日（1日）担当回数"]
+        count_table_obj.ONCALL_HOLIDAY_DAYTIME = value["オンコール土日（日中）担当回数"]
+        count_table_obj.ONCALL_HOLIDAY_NIGHTTIME = value[
+            "オンコール土日（夜間）担当回数"
+        ]
         count_table_obj.ONCALL_COUNT = value["オンコール対応件数"]
         count_table_obj.ENGEL_COUNT = value["エンゼルケア対応件数"]
         count_table_obj.NENKYU = value["年休（全日）"]
@@ -328,4 +340,4 @@ async def calcurate_month_data2(startday: str, worktype: str):
         except Exception as e:
             print(e)
 
-    return redirect(f"/month_calc_table/{startday}/{worktype}/{url_y_and_m}")
+    return redirect(f"/month-calc-table/{startday}/{worktype}/{url_y_and_m}")

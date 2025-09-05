@@ -123,7 +123,7 @@
                 <!-- <div class="custom-control custom-checkbox checkbox-lg">
                   <div class="form-control form-control-sm custom-control custom-checkbox checkbox-lg"> -->
                 <select name="oncall{{ outer_key }}{{ ns.cnt }}">
-                  {% for type in ["当番なし", "1日", "日中", "夜間"] %}
+                  {% for type in ["", "1日", "日中", "夜間"] %}
                   {% if inner_value_dict["oncall"]|int == loop.index0 %}
                   <option value="{{ loop.index0 }}" selected>{{ type }}</option>
                   {% else %}

@@ -1,16 +1,16 @@
 {% extends 'home.html' %}
 
 {% block child_content %}
-<h3>{{ job_form }}職員一覧画面（{{ startday }}日基準）　　　対象期間：　{{ FromDay }}　～　{{ ToDay }}</span></h3>
+<h3>{{ job_form }}職員一覧画面（{{ startday }}日基準） 対象期間：{{ FromDay }} ～ {{ ToDay }}</span></h3>
 <hr>
 <div>
-    <form method="post" action="{{ url_for('calcurate_month_data2', startday=startday, worktype=worktype) }}">
+    <form method="post" action="{{ url_for('calculate_month_data2', startday=startday, worktype=worktype) }}">
         {{ form_month.csrf_token }}
         <input type="text" id="select_month" class="h5" name="year-month" value="{{ y_and_m }}">
         {{ wtf.form_field(form_month.slct, class="btn btn-primary") }}
     </form>
     <p>{{ str_workday }}</p>
-    <form method="post" action="{{ url_for('calcurate_month_data2', startday=startday, worktype=worktype) }}">
+    <form method="post" action="{{ url_for('calculate_month_data2', startday=startday, worktype=worktype) }}">
         <input type="hidden" name="year-month" value="{{ y_and_m }}">
         <input type="submit" value="再集計">
     </form>
@@ -19,7 +19,7 @@
     <!-- <h4 style="color: red;">その月の最初の集計は、「再集計」ボタンを２度クリックしてください</h4> -->
 </div>
 <div class="text-center">
-    <a href="{{url_for('clerk_select_page')}}" class="btn btn-success">　戻　る　</a>
+    <a href="{{url_for('clerk_select_page')}}" class="btn btn-success"> 戻 る </a>
 </div>
 <br /><br>
 <!-- <div class="outday-area">
@@ -44,7 +44,9 @@
                     <th><small>社員ID</small></th>
                     <th><small>氏名</small></th>
                     <th><small>オンコール<br>平日担当回数</small></th>
-                    <th><small>オンコール<br>土日担当回数</small></th>
+                    <th><small>オンコール<br>土日（1日）担当回数</small></th>
+                    <th><small>オンコール<br>土日（日中）担当回数</small></th>
+                    <th><small>オンコール<br>土日（夜間）担当回数</small></th>
                     <th><small>オンコール<br>対応件数</small></th>
                     <th><small>エンゼルケア<br>対応件数</small></th>
                     <th><small>実働時間計</small></th>
@@ -73,39 +75,41 @@
             </thead>
             <tbody>
                 {% for user in conditional_users %}
-                {% for cnt_for_tbl in cnt_tbl_lst %}
-                {% if user.STAFFID == cnt_for_tbl.STAFFID %}
+                {% for tbl_of_cnt in cnt_tbl_lst %}
+                {% if user.STAFFID == tbl_of_cnt.STAFFID %}
                 <tr class="user-info-row">
                     <td><small>{{ user.department }}</small></td>
                     <td><small>{{ user.team }}</small></td>
                     <td><small>{{ user.job_type }}</small></td>
                     <td><small>{{ user.contract }}</small></td>
-                    <td><small>{{ cnt_for_tbl.STAFFID }}</small></td>
-                    <td><small>{{ user.LNAME }}　{{ user.FNAME }}</small></td>
-                    <td><small>{{ cnt_for_tbl.ONCALL }}</small></td>
-                    <td><small>{{ cnt_for_tbl.ONCALL_HOLIDAY }}</small></td>
-                    <td><small>{{ cnt_for_tbl.ONCALL_COUNT }}</small></td>
-                    <td><small>{{ cnt_for_tbl.ENGEL_COUNT }}</small></td>
-                    <td><small>{{ cnt_for_tbl.SUM_WORKTIME }}</small></td>
-                    <td><small>{{ cnt_for_tbl.SUM_WORKTIME_10 }}</small></td>
-                    <td><small>{{ cnt_for_tbl.SUM_REAL_WORKTIME }}</small></td>
-                    <td><small>{{ cnt_for_tbl.WORKDAY_COUNT }}</small></td>
-                    <td><small>{{ cnt_for_tbl.NENKYU }}</small></td>
-                    <td><small>{{ cnt_for_tbl.NENKYU_HALF }}</small></td>
-                    <td><small>{{ cnt_for_tbl.OVERTIME }}</small></td>
-                    <td><small>{{ cnt_for_tbl.OVERTIME_10 }}</small></td>
-                    <td><small>{{ cnt_for_tbl.TIKOKU }}</small></td>
-                    <td><small>{{ cnt_for_tbl.SOUTAI }}</small></td>
-                    <td><small>{{ cnt_for_tbl.KEKKIN }}</small></td>
-                    <td><small>{{ cnt_for_tbl.HOLIDAY_WORK }}</small></td>
-                    <td><small>{{ cnt_for_tbl.HOLIDAY_WORK_10 }}</small></td>
-                    <td><small>{{ cnt_for_tbl.SYUTTYOU }}</small></td>
-                    <td><small>{{ cnt_for_tbl.SYUTTYOU_HALF }}</small></td>
-                    <td><small>{{ cnt_for_tbl.REFLESH }}</small></td>
-                    <td><small>{{ cnt_for_tbl.MILEAGE }}</small></td>
-                    <td><small>{{ cnt_for_tbl.TIMEOFF }}</small></td>
-                    <td><small>{{ cnt_for_tbl.HALFWAY_THROUGH }}</small></td>
-                    <td><small>{{ cnt_for_tbl.TIMEOFF|int + cnt_for_tbl.HALFWAY_THROUGH|int }}</small></td>
+                    <td><small>{{ tbl_of_cnt.STAFFID }}</small></td>
+                    <td><small>{{ user.LNAME }} {{ user.FNAME }}</small></td>
+                    <td><small>{{ tbl_of_cnt.ONCALL }}</small></td>
+                    <td><small>{{ tbl_of_cnt.ONCALL_HOLIDAY_ONE_DAY }}</small></td>
+                    <td><small>{{ tbl_of_cnt.ONCALL_HOLIDAY_DAYTIME }}</small></td>
+                    <td><small>{{ tbl_of_cnt.ONCALL_HOLIDAY_NIGHTTIME }}</small></td>
+                    <td><small>{{ tbl_of_cnt.ONCALL_COUNT }}</small></td>
+                    <td><small>{{ tbl_of_cnt.ENGEL_COUNT }}</small></td>
+                    <td><small>{{ tbl_of_cnt.SUM_WORKTIME }}</small></td>
+                    <td><small>{{ tbl_of_cnt.SUM_WORKTIME_10 }}</small></td>
+                    <td><small>{{ tbl_of_cnt.SUM_REAL_WORKTIME }}</small></td>
+                    <td><small>{{ tbl_of_cnt.WORKDAY_COUNT }}</small></td>
+                    <td><small>{{ tbl_of_cnt.NENKYU }}</small></td>
+                    <td><small>{{ tbl_of_cnt.NENKYU_HALF }}</small></td>
+                    <td><small>{{ tbl_of_cnt.OVERTIME }}</small></td>
+                    <td><small>{{ tbl_of_cnt.OVERTIME_10 }}</small></td>
+                    <td><small>{{ tbl_of_cnt.TIKOKU }}</small></td>
+                    <td><small>{{ tbl_of_cnt.SOUTAI }}</small></td>
+                    <td><small>{{ tbl_of_cnt.KEKKIN }}</small></td>
+                    <td><small>{{ tbl_of_cnt.HOLIDAY_WORK }}</small></td>
+                    <td><small>{{ tbl_of_cnt.HOLIDAY_WORK_10 }}</small></td>
+                    <td><small>{{ tbl_of_cnt.SYUTTYOU }}</small></td>
+                    <td><small>{{ tbl_of_cnt.SYUTTYOU_HALF }}</small></td>
+                    <td><small>{{ tbl_of_cnt.REFLESH }}</small></td>
+                    <td><small>{{ tbl_of_cnt.MILEAGE }}</small></td>
+                    <td><small>{{ tbl_of_cnt.TIMEOFF }}</small></td>
+                    <td><small>{{ tbl_of_cnt.HALFWAY_THROUGH }}</small></td>
+                    <td><small>{{ tbl_of_cnt.TIMEOFF|int + tbl_of_cnt.HALFWAY_THROUGH|int }}</small></td>
                     <td><small>{{ user.post }}</small></td>
                     <td class="shadow-item">{{ user.OUTDAY }}</td>
                 </tr>
