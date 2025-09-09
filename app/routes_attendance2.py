@@ -75,9 +75,9 @@ def make_num_repeat(
 @app.route("/attendance/<STAFFID>/<reference_flag>/<selected_date>", methods=["GET"])
 @login_required
 def output_attendance(STAFFID, reference_flag, selected_date):
-    login_user = (
-        db.session.query(StaffLogin).filter(StaffLogin.STAFFID == STAFFID).first()
-    )
+    # login_user = (
+    #     db.session.query(StaffLogin).filter(StaffLogin.STAFFID == STAFFID).first()
+    # )
     if app.permanent_session_lifetime == 0:
         return redirect(url_for("logout_mes"))
 
@@ -99,7 +99,9 @@ def output_attendance(STAFFID, reference_flag, selected_date):
         "実働時間",
         "備考",
     ]
+    # attendance_all_columnsのうち、表示するもの
     attendance_columns_list = []
+    # 以下、各テンプレートごとの表示制御用、リストの添字はテンプレートの連番に対応
     display_oncall_list = []
     display_oncall_correspond_list = []
     display_engel_list = []
@@ -215,7 +217,7 @@ def output_attendance(STAFFID, reference_flag, selected_date):
     for i, template in enumerate(templates, 1):
         # 出退勤空の場合
         if len(attendance_queries.all()) == 0:
-            print("Pass 1")
+            print("Template pass 1")
             empty_list.append(make_num_repeat(template.TEMPLATE_NO, repeat_list, i))
             # 配列のdementionを1個除く
             group_by_data = sum(empty_list, [])
@@ -226,7 +228,7 @@ def output_attendance(STAFFID, reference_flag, selected_date):
             )
             == 0
         ):
-            print("Pass 2")
+            print("Template pass 2")
             empty_list.append(make_num_repeat(template.TEMPLATE_NO, repeat_list, i))
             # 変更初日以後のクエリー
             query = attendance_queries.filter(
@@ -242,7 +244,7 @@ def output_attendance(STAFFID, reference_flag, selected_date):
             )
             == 0
         ):
-            print("Pass 3")
+            print("Template pass 3")
             empty_list.append(make_num_repeat(template.TEMPLATE_NO, repeat_list, i))
             # 変更初日より前のクエリー
             query = attendance_queries.filter(
@@ -251,7 +253,7 @@ def output_attendance(STAFFID, reference_flag, selected_date):
             group_by_data = query + sum(empty_list, [])
         # 通常の出退勤データ有りの場合
         else:
-            print("Pass 4")
+            print("Template pass 4")
             # 0.Attendance, 1.D_JOB_HISTORY.JOBTYPE_CODE, 2.D_JOB_HISTORY.CONTRACT_CODE
             # 3.D_JOB_HISTORY.PART_WORKTIME, 4.KinmuTaisei.WORKTIME
             # 5.D_HOLIDAY_HISTORY.HOLIDAY_TIME, 6.M_TIMECARD_TEMPLATE.TEMPLATE_NO,
@@ -260,7 +262,9 @@ def output_attendance(STAFFID, reference_flag, selected_date):
     for idx, group_itr in groupby(
         group_by_data, lambda x: x[6] if not isinstance(x, int) else x[0]
     ):
-        print(f"Pass 5: {idx}")
+        print(f"Template number: {idx}")
+        # 前者: テンプレートナンバーリスト及び、項目名
+        # 後者: keyが日付、valueが各Attendanceの値（dict{項目名, 値}）
         attendance_data: Union[
             Dict[str, Union[list, str]], Dict[int, Dict[str, Any]]
         ] = {}  # 辞書型で初期化
@@ -499,8 +503,8 @@ def output_attendance(STAFFID, reference_flag, selected_date):
 
     # for key, value in attendance_table_dict.items():
     #     print(f"Key: {key} Value: {value}")
-    # for k, v in value.items():
-    #     print(f"Key: {k} Value: {v}")
+    #     for k, v in value.items():
+    #         print(f"Inner key: {k} Inner value: {v}")
     # これ何？
     reload_y = request.form.get("reload_h")
 
@@ -523,7 +527,6 @@ def output_attendance(STAFFID, reference_flag, selected_date):
         distance_sum=distance_sum,
         holiday_works=holiday_work10_rnd,
         reload_y=reload_y,
-        stf_login=login_user,
     )
 
 

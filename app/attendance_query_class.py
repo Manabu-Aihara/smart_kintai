@@ -1,7 +1,9 @@
 from dataclasses import dataclass
 from datetime import date
+from typing import Tuple
 
 from sqlalchemy import and_
+from sqlalchemy.orm import Query
 
 from . import db
 from .models import (
@@ -161,7 +163,9 @@ class AttendanceQuery:
             .order_by(Attendance.STAFFID, Attendance.WORKDAY)
         )
 
-    def get_perfect_contract_attendance(self):
+    def get_perfect_contract_attendance(
+        self,
+    ) -> Query[Tuple[Attendance, StaffJobContract, StaffHolidayContract, int]]:
         base_filters = self._get_filter()
 
         # with get_session() as session:
@@ -198,8 +202,7 @@ class AttendanceQuery:
 
         return queries_for_calc_member
 
-    # Query[(User, int)]
-    def get_distinct_user_query(self):
+    def get_distinct_user_query(self) -> Query[Tuple[User, int]]:
         user_filters = self._get_filter()[1:] + self._get_job_filter()[0:3]
         # サブクエリでSTAFFIDごとの最新のSTART_DAYを取得
         # subquery = (
@@ -212,7 +215,7 @@ class AttendanceQuery:
         # )
 
         # サブクエリとStaffJobContractを結合して、各STAFFIDの最新レコードを取得
-        user_order_query = (
+        return (
             db.session.query(User, StaffJobContract.CONTRACT_CODE)
             # .join(
             #     subquery,
@@ -223,7 +226,6 @@ class AttendanceQuery:
             .filter(and_(*user_filters))
             .order_by(StaffJobContract.START_DAY.desc())
         )
-        return user_order_query
 
     # デバッグ用のクエリ
     def debug_query(self):

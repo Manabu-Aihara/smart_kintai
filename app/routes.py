@@ -40,12 +40,11 @@ from . import (
 @login_required
 def select_links():
     print(f"Login user: {current_user.STAFFID}")  # デバッグ用
-    # STAFFID = current_user.STAFFID
-    stf_login = (
-        db.session.query(StaffLogin)
-        .filter(StaffLogin.STAFFID == current_user.STAFFID)
-        .first()
-    )
+    # stf_login = (
+    #     db.session.query(StaffLogin)
+    #     .filter(StaffLogin.STAFFID == current_user.STAFFID)
+    #     .first()
+    # )
 
     Attendances = (
         db.session.query(Attendance).filter_by(STAFFID=current_user.STAFFID).all()
@@ -66,7 +65,6 @@ def select_links():
         team=team,
         jobtype=jobtype,
         this_month=this_month,
-        stf_login=stf_login,
     )
 
 

@@ -22,7 +22,11 @@ app.permanent_session_lifetime = timedelta(minutes=360)
 @app.route("/reset_token_self", methods=["GET", "POST"])
 @login_required
 def reset_token_self():
-    stf_login = db.session.get(StaffLogin, current_user.STAFFID)
+    logined_staff = (
+        db.session.query(StaffLogin)
+        .filter(StaffLogin.STAFFID == current_user.STAFFID)
+        .first()
+    )
 
     user = db.session.get(User, current_user.STAFFID)
     correct_pass = ""
@@ -46,7 +50,7 @@ def reset_token_self():
             HASHED_PASSWORD = generate_password_hash(form.PASSWORD.data)
             # ADMIN = form.ADMIN.data
 
-            stf_login.PASSWORD_HASH = HASHED_PASSWORD
+            logined_staff.PASSWORD_HASH = HASHED_PASSWORD
             db.session.commit()
             flash("パスワードを変更しました。")
 
@@ -63,5 +67,4 @@ def reset_token_self():
         usr=user,
         correct_pass=correct_pass,
         uncorrect_pass=uncorrect_pass,
-        stf_login=stf_login,
     )

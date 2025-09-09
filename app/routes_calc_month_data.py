@@ -62,14 +62,27 @@ def get_more_condition_users(
     return result_query_list
 
 
+"""
+    1日からカウントするか、26日からカウントするかで、期間を決定する
+    @Params
+        : int start_day (1 or 26)
+        : int select_year
+        : int select_month
+    @Return
+        : Tuple[date, date]
+    """
+
+
 def get_day_term(
     start_day: int, select_year: int, select_month: int
 ) -> Tuple[date, date]:
     last_day = calendar.monthrange(select_year, select_month)[1]
     if start_day != 1:
         # 1日開始以外の場合
-        from_day = date(select_year, select_month, start_day) - relativedelta(months=1)
-        to_day = date(select_year, select_month, 25)
+        from_day = date(select_year, select_month, start_day) - relativedelta(
+            months=1
+        )  # 前月の26日
+        to_day = date(select_year, select_month, 25)  # 当月の25日
     else:
         # 1日開始の場合
         from_day = date(select_year, select_month, start_day)
@@ -84,11 +97,11 @@ def get_day_term(
 )
 @login_required
 async def get_calc_month_table(startday: str, worktype: str, selected_date: str):
-    stf_login = (
-        db.session.query(StaffLogin)
-        .filter(StaffLogin.STAFFID == current_user.STAFFID)
-        .first()
-    )
+    # stf_login = (
+    #     db.session.query(StaffLogin)
+    #     .filter(StaffLogin.STAFFID == current_user.STAFFID)
+    #     .first()
+    # )
     form_month = SelectMonthForm()
     str_workday = "月選択をしてください。"
 
@@ -143,24 +156,14 @@ async def get_calc_month_table(startday: str, worktype: str, selected_date: str)
     # 永続化された集計結果
     null_checked_users = []
     count_month_list = []
-    oncall_holiday_dict = {}
     for outday_conditional_user, contract_code in outday_conditional_users:
         null_checked_users.append(convert_null_role(outday_conditional_user))
         # こちらの常勤・パート分けは、outday_conditional_userでやってる
-        count_month_list.append(
-            get_count_table(
-                outday_conditional_user.STAFFID, contract_code, year_month_arg
-            )
+        count_table_obj = get_count_table(
+            outday_conditional_user.STAFFID, contract_code, year_month_arg
         )
-        # count_table_obj = get_count_table(
-        #     outday_conditional_user.STAFFID, contract_code, year_month_arg
-        # )
-        # if count_table_obj.ONCALL_HOLIDAY != 0:
-        #     oncall_holiday_dict[
-        #         f"{outday_conditional_user.STAFFID}"
-        #     ] = count_table_obj.ONCALL_HOLIDAY
+        count_month_list.append(count_table_obj)
 
-    # count_month_list = await get_query_from_date(year_month_arg)
     print(f"Count query length: {m}月 {len(count_month_list)}")
 
     date_type_today = datetime.today()
@@ -193,7 +196,6 @@ async def get_calc_month_table(startday: str, worktype: str, selected_date: str)
         conditional_users=null_checked_users,
         cnt_tbl_lst=count_month_list,
         today=today,
-        stf_login=stf_login,
     )
 
 

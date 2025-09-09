@@ -40,7 +40,7 @@ def pulldown_select_page(
 @app.route("/clerk_select_page", methods=["GET", "POST"])
 @login_required
 def clerk_select_page():
-    stf_login = db.session.get(StaffLogin, current_user.STAFFID)
+    # stf_login = db.session.get(StaffLogin, current_user.STAFFID)
     select_page: Dict[int, str] = {
         1: "オンコールチェック",
         2: "所属スタッフ出退勤確認",
@@ -69,7 +69,6 @@ def clerk_select_page():
         STAFFID=current_user.STAFFID,
         select_page=select_page,
         type_flg=newtype_flag,
-        stf_login=stf_login,
     )
 
 
@@ -109,7 +108,7 @@ def extract_retreat_users(
 @app.route("/users_list_page/<STAFFID>", methods=["GET"])
 @login_required
 def set_up_users_list(STAFFID):
-    stf_login = db.session.get(StaffLogin, current_user.STAFFID)
+    # stf_login = db.session.get(StaffLogin, current_user.STAFFID)
     # STAFFIDログインしてる人
     jimu_usr = db.session.get(User, STAFFID)
 
@@ -162,5 +161,4 @@ def set_up_users_list(STAFFID):
         this_month=this_month,
         cause_users=caution_id_list,
         exception=exception_message,
-        stf_login=stf_login,
     )
