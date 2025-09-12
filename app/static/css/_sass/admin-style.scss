@@ -1,0 +1,130 @@
+@charset 'utf-8';
+
+#back-wrap {
+  width: 70%;
+  height: 7vh;
+  margin-top: 3%;
+  text-align: right;
+
+  #btnBack {
+    width: 15%;
+    height: 100%;
+  }
+}
+
+// admin_home.html
+.admin-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin: 5% 10%;
+
+  a.btn {
+    width: 50%;
+    text-align: center;
+  }
+}
+
+#list-container {
+  max-height: 100vh;
+  overflow: auto;
+
+  ul#list-wrapper {
+    margin: 3% 10%;
+
+    li.last-update {
+      width: 80%;
+      list-style: none;
+      font-size: large;
+
+      span.full-name {
+        display: inline-block;
+        width: 30%;
+        text-align: center;
+      }
+
+      span.last-date {
+        display: inline-block;
+        width: 40%;
+      }
+    }
+
+    li.last-update:nth-child(even) {
+      background-color: lightblue;
+      opacity: 0.8;
+    }
+  }
+}
+
+
+.outday-area p {
+  display: none;
+}
+
+.outday-area p#outday-on {
+  color: chartreuse;
+}
+
+td.shadow-column1,
+td.shadow-column2 {
+  display: none;
+}
+
+.back-caution {
+  background-color: tomato;
+  margin: 0 5% 0 5%;
+}
+
+.back-caution .the-caution {
+  font-size: larger;
+  color: khaki;
+  text-align: center;
+}
+
+.back-caution .caution-message {
+  color: cyan;
+  text-align: center;
+}
+
+// edit_data_user_diff.html
+.delete-area #confirm-modal {
+  background-color: aliceblue;
+  color: black;
+  padding: 20px;
+  border-radius: 5px;
+  text-align: center;
+
+  .submit-area {
+    span {
+      margin: 0 10px;
+
+      #on-submit {
+        background-color: darkcyan;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+
+      #on-hide {
+        background-color: rgb(240, 230, 95);
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+    }
+  }
+}
+
+// exception04.html
+.move-or-back {
+  margin: 3%;
+
+  input[type="button"] {
+    display: block;
+    margin: 5px 0;
+  }
+}

@@ -652,9 +652,11 @@ def input_attendance(STAFFID):
         alcohol = request.form.get("alcohol" + str(temp_no) + str(i))  # アルコール
         remark = request.form.get("remark" + str(temp_no) + str(i))  # 備考
 
+        # 出退勤バリデーションチェック
         attendance_validate_obj = AttendanceValidate(
             start_time,
             finish_time,
+            oncall,
             notification,
             notification_pm,
             current_date=current_date,
@@ -693,6 +695,7 @@ def input_attendance(STAFFID):
                 and result_mileage != "0.0"
                 and result_mileage != ""
             )
+            or blankCheck(oncall) is not None
             or blankCheck(oncall_cnt) is not None
             or blankCheck(Notification_AM) is not None
             or blankCheck(Notification_PM) is not None

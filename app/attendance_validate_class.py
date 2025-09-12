@@ -6,6 +6,7 @@ from typing import List, Union, Tuple
 class AttendanceValidate:
     start_time: str
     end_time: str
+    oncall_number: str
     notification: str
     notification_pm: str
     # current_date: str = field(default=datetime.today().strftime("%Y年%m月%d日"))
@@ -124,9 +125,18 @@ class AttendanceValidate:
                 "日について一時的に" + self.success_message,
                 "pre-success",
             )
-        elif self.start_time != "00:00" and self.start_time >= self.end_time:
+
+        if self.start_time != "00:00" and self.start_time >= self.end_time:
             print("△Pass 5")
             return self.uncorrect_message, "warning"
+
+        # ここでオンコールのみの条件を追加 25/9/11
+        if (
+            self.start_time == "00:00"
+            and self.end_time == "00:00"
+            and self.oncall_number in ["1", "2", "3"]
+        ):
+            return self.success_message, "success"
 
         request_word = self.request_notification_type()
         print(f"△Debug: request_word from request_notification_type: {request_word}")

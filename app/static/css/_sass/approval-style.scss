@@ -1,0 +1,256 @@
+@charset 'utf-8';
+
+$item-center: 0 auto;
+
+@mixin flex-col($ratio, $distribute1: 0, $distribute2: 0) {
+  flex: $distribute1 $distribute2 $ratio;
+}
+
+@mixin clear-float() {
+  float: right;
+
+  &::after {
+    content: "";
+    clear: both;
+    display: block;
+  }
+}
+
+// select_links.html
+.container {
+  a.btn-notice {
+    background-color: lightgrey;
+    color: green;
+    margin: 1%;
+  }
+
+  input.btn-approval {
+    background-color: gray;
+    color: lightgreen;
+    margin: 1%;
+  }
+}
+
+// notification_list.html
+h3.h3-list {
+  text-align: center;
+}
+
+input.month-calender {
+  font-size: 1.7rem;
+}
+
+.to-notice-form {
+  text-align: center;
+
+  a.to-notice-button {
+    background-color: yellow;
+    box-shadow: 3px 3px 6px 0 rgba(0, 0, 0, .3);
+    color: blue;
+    font-size: 2rem;
+    width: 15%;
+  }
+}
+
+.status-ctl {
+  height: 6vw;
+
+  select#status {
+    font-size: 1.7rem;
+    vertical-align: middle;
+    width: 10%;
+    margin-right: 2%;
+  }
+
+  input#extract-status {
+    background-color: burlywood;
+    color: darkred;
+    box-shadow: 2px 2px 4px 0 rgba(0, 0, 0, .3);
+    width: 10%;
+    height: 50%;
+  }
+}
+
+.charge-back {
+  height: 4vw;
+  margin-top: 1%;
+
+  input {
+    width: 15%;
+    height: 90%;
+  }
+}
+
+#approval-site {
+  padding-top: 5%;
+
+  table.table-notification {
+    width: 90%;
+    margin-right: 0;
+  }
+}
+
+.holiday {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-around;
+  width: 40%;
+  height: 13vw;
+
+  .term-list {
+    width: 52%;
+    height: 3.5rem;
+  }
+
+  .remain {
+    border: 2px solid;
+    padding: 2%;
+    margin-top: 3.5rem;
+    height: 5em;
+  }
+}
+
+// approval_form.html & approval_confirm.html
+h3.notification-title {
+  text-align: center;
+}
+
+#worktime {
+  display: none;
+}
+
+form#approval {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  height: 35vw;
+  font-size: 1.7rem;
+  position: relative;
+
+  div:not(.remark) {
+    @include flex-col(25%);
+    padding: 0 1.5%;
+
+    p.p-day {
+      height: 4vw;
+    }
+
+    input {
+      width: 65%;
+    }
+  }
+
+  .remark {
+    width: 70%;
+    margin-left: 25%;
+
+    textarea {
+      width: 90%;
+      height: 65%;
+    }
+  }
+
+  input.btn-ask {
+    width: 25%;
+    background-color: lightgray;
+    box-shadow: 3px 3px 6px 0 rgba(0, 0, 0, .3);
+    margin-top: 2%;
+  }
+
+  #confirm-modal {
+    visibility: hidden;
+    background-color: darkturquoise;
+    width: 45%;
+    transition: visiblity 2s ease 2s;
+    box-shadow: 3px 3px 6px 0 rgba(0, 0, 0, .3);
+    padding: 4%;
+    position: absolute;
+    bottom: 100%;
+    right: 0%;
+
+    p {
+      text-align: center;
+    }
+
+    .submit-area {
+      text-align: center;
+
+      span input {
+        width: 30%;
+        margin: 3%;
+      }
+    }
+  }
+}
+
+.field-invalid::after {
+  content: "このフィールドは必須です。";
+  display: block;
+  color: red;
+}
+
+.field-invalid select,
+.field-invalid input {
+  border: 1px solid red;
+}
+
+// 承認詳細(approval_confirm.html)
+form.form-bottom {
+  height: 15vw;
+  margin-left: 20%;
+  font-size: 1.7rem;
+
+  textarea {
+    width: 90%;
+    height: 40%;
+  }
+
+  // .two-button { 
+  //   display: flex;
+  //   flex-wrap: wrap;
+  //   justify-content: space-evenly;
+  //   height: 20%;
+  //   margin-top: 2%;
+  button.judgement {
+    background-color: lightslategray;
+    width: 20%;
+  }
+
+  // }
+}
+
+.confirm-back {
+  height: 4vw;
+
+  input {
+    width: 15%;
+    height: 90%;
+  }
+}
+
+// approval_modal.html
+.modal {
+  display: flex;
+  visibility: hidden;
+  width: 40%;
+  height: 30%;
+  margin: auto;
+  background-color: aliceblue;
+
+  p {
+    margin: auto;
+    font-size: 2rem;
+  }
+}
+
+#back-wrap {
+  width: 70%;
+  height: 7vh;
+  margin-top: 3%;
+  text-align: right;
+
+  #btnBack {
+    width: 15%;
+    height: 100%;
+  }
+}

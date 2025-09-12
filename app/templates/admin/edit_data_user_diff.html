@@ -6,7 +6,9 @@
 <div class="text-center">
   <a href="{{url_for('edit_list_user')}}" class="btn btn-success">編集リスト画面に戻る</a>　　　
   <a href="{{url_for('home_admin')}}" class="btn btn-success">管理者ホームに戻る</a>　　　
-  <!-- <a href="{#{ url_for('users_nenkyu') }#}" class="btn btn-success">ユーザ年休検索画面に戻る</a> -->
+  <!-- to edit_user_history ProcFlag=0:参照のみ、1:編集モード -->
+  <a href="{{ url_for('edit_user_history', STAFFID=STAFFID, post_type=1, ProcFlag=0) }}" class="btn btn-success"> 契約情報
+  </a>
 </div>
 <div class="delete-area" style="text-align: right;">
   <button class="btn btn-danger" id="ask-delete">ユーザ削除</button>

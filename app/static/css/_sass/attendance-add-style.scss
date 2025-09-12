@@ -1,0 +1,19 @@
+@charset 'utf-8';
+
+#dl-pdf {
+  display: flex;
+  flex-wrap: wrap;
+
+  .title-name {
+    width: 100%;
+    margin: 0 auto;
+  }
+
+  .date-area {
+    width: 10%;
+  }
+
+  .table-area {
+    width: 90%;
+  }
+}
