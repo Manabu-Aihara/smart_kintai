@@ -20,6 +20,7 @@ from .attendance_validate_class import AttendanceValidate
 from .new_calendar import NewCalendar
 from .common_func import NoneCheck, TimeCheck, blankCheck
 from .attendance_util import get_month_workday
+from .attendance_logging import AttendanceLogger
 
 # わかりにくいが、日付選択に使うため必要らしい
 # from . import routes_attendance_option2
@@ -721,6 +722,11 @@ def input_attendance(STAFFID):
                 flag_insert = 0
                 flash(f"{current_date}{comment}", key)
 
+            # 出退勤保存ログ用
+            target_user = db.session.get(User, int(STAFFID))
+            updated_user = f"{target_user.LNAME} {target_user.FNAME}"
+            updated_month = work_date.month
+
         # 更新データ準備
         if attendance_id:
             if type(attendance_id) is None:
@@ -801,5 +807,13 @@ def input_attendance(STAFFID):
                 setattr(twin_attendance[0], clm_name, twin_attendance[1][i])
         db.session.merge(twin_attendance[0])
     db.session.commit()
+
+    if updated_user != "" and updated_month != 0:
+        # flash(
+        #     f"{updated_month}月分の出退勤を{updated_user}さんで保存しました。",
+        #     "attendance_log",
+        # )
+        logger = AttendanceLogger.get_logger(updated_month)
+        logger.info(updated_user)
 
     return redirect(f"/attendance/{STAFFID}/1/{selected_form_date}")

@@ -1,17 +1,10 @@
-"""
-**********
-勤怠システム
-2022/04版
-**********
-"""
-
 import os
 import datetime
-from datetime import datetime, timedelta, date
+from datetime import datetime, timedelta
 from functools import wraps
 from typing import List, Dict, TypeVar, Union
 
-from flask import render_template, flash, redirect, request, session
+from flask import render_template, flash, redirect, request
 from flask.helpers import url_for
 from flask_login.utils import login_required
 from flask_login import current_user
@@ -70,16 +63,17 @@ def home_admin():
     return render_template("admin/admin_home.html", form_month=form_month)
 
 
+# ここ使ってるの？
 # ***** ユーザリストページ *****#
 @app.route("/admin/users-list")
 @login_required
 @admin_login_required
 def users_list_admin():
-    stf_login = (
-        db.session.query(StaffLogin)
-        .filter(StaffLogin.STAFFID == current_user.STAFFID)
-        .first()
-    )
+    # stf_login = (
+    #     db.session.query(StaffLogin)
+    #     .filter(StaffLogin.STAFFID == current_user.STAFFID)
+    #     .first()
+    # )
     login_users = db.session.query(StaffLogin).all()
     user_list = db.session.query(User).all()
 
@@ -87,7 +81,7 @@ def users_list_admin():
         "admin/users_list_admin.html",
         logins=login_users,
         users=user_list,
-        stf_login=stf_login,
+        # stf_login=stf_login,
     )
 
 
@@ -173,11 +167,11 @@ def make_contract_type(
 @login_required
 @admin_login_required
 def edit_user_history(STAFFID, post_type: str, ProcFlag: int):
-    stf_login = (
-        db.session.query(StaffLogin)
-        .filter(StaffLogin.STAFFID == current_user.STAFFID)
-        .first()
-    )
+    # stf_login = (
+    #     db.session.query(StaffLogin)
+    #     .filter(StaffLogin.STAFFID == current_user.STAFFID)
+    #     .first()
+    # )
 
     # 保存ボタンが押下されたらDB登録
     if ProcFlag == 1:
@@ -227,7 +221,7 @@ def edit_user_history(STAFFID, post_type: str, ProcFlag: int):
         "admin/user_history_edit_diff.html",
         History=contract_info,
         StaffInfo=StaffInfo,
-        stf_login=stf_login,
+        # stf_login=stf_login,
         ListJob=ListJob,
         ListCon=ListCon,
         post_type=post_type,
@@ -242,11 +236,11 @@ def edit_user_history(STAFFID, post_type: str, ProcFlag: int):
 @login_required
 @admin_login_required
 def user_create_admin():
-    stf_login = (
-        db.session.query(StaffLogin)
-        .filter(StaffLogin.STAFFID == current_user.STAFFID)
-        .first()
-    )
+    # stf_login = (
+    #     db.session.query(StaffLogin)
+    #     .filter(StaffLogin.STAFFID == current_user.STAFFID)
+    #     .first()
+    # )
     mes = None
     form = AdminUserCreateForm()
     if form.validate_on_submit():
@@ -279,9 +273,7 @@ def user_create_admin():
     if form.errors:
         flash(form.errors, "danger")
 
-    return render_template(
-        "admin/user_create_admin.html", form=form, mes=mes, stf_login=stf_login
-    )
+    return render_template("admin/user_create_admin.html", form=form, mes=mes)
 
 
 """
@@ -309,13 +301,13 @@ def get_role_context(db_obj) -> Dict[str, str]:
 @login_required
 @admin_login_required
 def edit_list_user():
-    stf_login = (
-        db.session.query(StaffLogin)
-        .filter(StaffLogin.STAFFID == current_user.STAFFID)
-        .first()
-    )
+    # stf_login = (
+    #     db.session.query(StaffLogin)
+    #     .filter(StaffLogin.STAFFID == current_user.STAFFID)
+    #     .first()
+    # )
 
-    """ 2024/7/23 修正分 """
+    """2024/7/23 修正分"""
     user_infos = db.session.query(User).all()
     # user_infos = (
     #     db.session.query(User, StaffJobContract.JOBTYPE_CODE, StaffJobContract.CONTRACT_CODE)
@@ -368,7 +360,7 @@ def edit_list_user():
         today=today,
         cause_users=caution_id_list,
         exception=exception_message,
-        stf_login=stf_login,
+        # stf_login=stf_login,
         # intFlg=1,
     )
 
@@ -378,11 +370,11 @@ def edit_list_user():
 @login_required
 @admin_login_required
 def edit_data_user(STAFFID, intFlg):
-    stf_login = (
-        db.session.query(StaffLogin)
-        .filter(StaffLogin.STAFFID == current_user.STAFFID)
-        .first()
-    )
+    # stf_login = (
+    #     db.session.query(StaffLogin)
+    #     .filter(StaffLogin.STAFFID == current_user.STAFFID)
+    #     .first()
+    # )
     form = AddDataUserForm()
     admin_check_form = AdminUserUpdateForm()
     display_form = DisplayForm()
@@ -629,7 +621,7 @@ def edit_data_user(STAFFID, intFlg):
         disp_form=display_form,
         STAFFID=STAFFID,
         u=target_user,
-        stf_login=stf_login,
+        # stf_login=stf_login,
         intFlg=intFlg,
     )
 
@@ -663,16 +655,17 @@ def user_delete_admin(STAFFID):
     return redirect(url_for("home_admin"))
 
 
+# ここ使ってるの？
 # ***** ユーザパスワードリセット *****#
 @app.route("/admin/reset_password/<STAFFID>", methods=["GET", "POST"])
 @login_required
 @admin_login_required
 def reset_token(STAFFID):
-    stf_login = (
-        db.session.query(StaffLogin)
-        .filter(StaffLogin.STAFFID == current_user.STAFFID)
-        .first()
-    )
+    # stf_login = (
+    #     db.session.query(StaffLogin)
+    #     .filter(StaffLogin.STAFFID == current_user.STAFFID)
+    #     .first()
+    # )
     STAFFID = STAFFID
     Attendances = db.session.query(Attendance).filter_by(STAFFID=STAFFID).all()
     u = db.session.get(User, STAFFID)
@@ -719,11 +712,11 @@ def reset_token(STAFFID):
         u=u,
         hid_a=hid_a,
         hid_b=hid_b,
-        stf_login=stf_login,
+        # stf_login=stf_login,
     )
 
 
-@app.route("/select_last_change_date", methods=["POST"])
+@app.route("/select-last-change-date", methods=["POST"])
 @login_required
 @admin_login_required
 def post_select_month():
@@ -734,10 +727,10 @@ def post_select_month():
     # if request.method == "POST":
     select_month_value = request.form.get("target-month")
     # print(f"Last change month: {select_month_value}")
-    return redirect(f"/admin/last_save_date/{select_month_value}")
+    return redirect(f"/admin/last-save-date/{select_month_value}")
 
 
-@app.route("/admin/last_save_date/<select_date>", methods=["GET"])
+@app.route("/admin/last-save-date/<select_date>", methods=["GET"])
 @login_required
 @admin_login_required
 def get_save_date(select_date: str):
