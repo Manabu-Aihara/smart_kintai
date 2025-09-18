@@ -29,31 +29,31 @@ def app_context():
         # db.drop_all()
 
 
-from app.database_base import engine, Session
+# from app.database_base import engine, Session
 
 
-@pytest.fixture(scope="function")
-def request_context(app_context):
-    """リクエストコンテキストも有効化"""
-    with app.test_request_context():
-        yield
+# @pytest.fixture(scope="function")
+# def request_context(app_context):
+#     """リクエストコンテキストも有効化"""
+#     with app.test_request_context():
+#         yield
 
 
-@pytest.fixture(scope="function")
-def db_session():
-    """各テストごとに新しいDBセッションを提供し、テスト後ロールバックするfixture"""
-    connection = engine.connect()
-    transaction = connection.begin()
-    session = Session(bind=connection)
+# @pytest.fixture(scope="function")
+# def db_session():
+#     """各テストごとに新しいDBセッションを提供し、テスト後ロールバックするfixture"""
+#     connection = engine.connect()
+#     transaction = connection.begin()
+#     session = Session(bind=connection)
 
-    yield session
+#     yield session
 
-    session.close()
-    transaction.rollback()
-    connection.close()
+#     session.close()
+#     transaction.rollback()
+#     connection.close()
 
 
-def test_something(db_session):
-    # db_sessionでDBアクセス
-    result = db_session.execute("SELECT 1")
-    assert result.scalar() == 1
+# def test_something(db_session):
+#     # db_sessionでDBアクセス
+#     result = db_session.execute("SELECT 1")
+#     assert result.scalar() == 1

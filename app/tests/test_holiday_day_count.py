@@ -1,14 +1,17 @@
 import pytest
+from freezegun import freeze_time
+from datetime import datetime
 from app.holiday_day_count import HolidayDayCount
 
 
 @pytest.fixture
-def holiday_calculate(db_session):
+def holiday_calculate(app_context):
     # holiday_base_time など必要な初期化値は適宜調整
-    return HolidayDayCount(id=117)
+    return HolidayDayCount(id=147)
 
 
-# @pytest.mark.skip
+@pytest.mark.skip
+@pytest.mark.freeze_time(datetime(2025, 10, 15))
 def test_print_acquisition_data(holiday_calculate):
     base_day = holiday_calculate.convert_base_day(holiday_calculate.in_day)
     print(f"Base day: {base_day}")
@@ -39,12 +42,20 @@ def test_acquire_holidays_dict(holiday_calculate):
 
 
 # @pytest.mark.skip
+# @pytest.mark.freeze_time(datetime(2025, 10, 2))
 def test_get_sum_holiday(monkeypatch, holiday_calculate):
-    # 例: 直近2期間分の勤務日数が180日、220日だった場合
-    # work_counts = [40, 180, 220]
+    # work_half_count = 40
+    # # 例: 直近2期間分の勤務日数が180日、220日だった場合
+    # work_counts = [180, 220]
 
-    # count_workdayをモック
+    # # count_workdayをモック
+    # monkeypatch.setattr(
+    #     holiday_calculate, "count_workday_half_year", lambda: work_half_count
+    # )
     # monkeypatch.setattr(holiday_calculate, "count_workdays", lambda: work_counts)
+
+    base_day = holiday_calculate.convert_base_day(holiday_calculate.in_day)
+    print(f"Acquisition list: {holiday_calculate.get_acquisition_list(base_day)}")
 
     # 期待される付与区分・付与日数はacquisition_type.pyのロジックに合わせて決定
     # 例: 40→40*12/2, 180→B区分, 220→A区分

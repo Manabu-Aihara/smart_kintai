@@ -105,6 +105,7 @@ class HolidayDayCount(HolidayBase):
                 middle_in_day = from_list[0] + relativedelta(months=1)
                 recent_from = [middle_in_day.replace(day=1)] + from_list[1:-2]
                 recent_to = to_list[:-2]
+                print(f"Debug type: {recent_from}")
             else:
                 # print_acquisition_dataは、末尾は翌付与日からの範囲なので、2つ前まで
                 recent_from = from_list[:-2]
@@ -114,10 +115,6 @@ class HolidayDayCount(HolidayBase):
         elif len(self.get_acquisition_list(base_day)) > 4:
             recent_from = from_list[-5:-2]
             recent_to = to_list[-5:-2]
-
-        # print(
-        #     f"ID{self.id}: count_workday > : 勤務日数を取得します。期間: {recent_from[0]} ~ {recent_to[-1]}"
-        # )
 
         overall_start = recent_from[0]
         overall_end = to_list[-1]
@@ -146,7 +143,7 @@ class HolidayDayCount(HolidayBase):
         work_counts = []
         for i, (start, end) in enumerate(zip(recent_from, recent_to)):
             print(
-                f"ID{self.id}: count_workday > : 勤務日数を取得します。期間: {start} ~ {end}"
+                f"ID{self.id}: count_workday > : 勤務期間を取得します。期間: {start} ~ {end}"
             )
             count = sum(1 for (day,) in all_attendance if start <= day <= end)
             print(
@@ -233,11 +230,13 @@ class HolidayDayCount(HolidayBase):
         """
 
     def get_valid_holidays(self) -> List[int]:
+        base_day = self.convert_base_day(self.in_day)
+
         holiday_list = []
-        if len(self.get_acquisition_list(self.convert_base_day(self.in_day))) == 1:
+        if len(self.get_acquisition_list(base_day)) == 1:
             # 入職日年休付与以外受けていない人
             holiday_list = list(self.acquire_inday_holidays().values())  # 1個
-        elif len(self.get_acquisition_list(self.convert_base_day(self.in_day))) == 2:
+        elif len(self.get_acquisition_list(base_day)) == 2:
             # 入職日含め、付与2回受けている人
             work_counts_half_ajust = self.count_workday_half_year()
             holiday_list = list(self.acquire_inday_holidays().values())  # 入職日付与
@@ -247,7 +246,7 @@ class HolidayDayCount(HolidayBase):
             holiday_list.append(
                 list(self.acquire_holidays_dict(work_counts_half_ajust).values())[1]
             )  # 2個
-        elif len(self.get_acquisition_list(self.convert_base_day(self.in_day))) == 3:
+        elif len(self.get_acquisition_list(base_day)) == 3:
             # 入職日含め、付与3回受けている人
             work_counts_half_ajust = self.count_workday_half_year()
             work_counts = self.count_workdays()
@@ -258,11 +257,22 @@ class HolidayDayCount(HolidayBase):
                     -3 + idx
                 ]
                 holiday_list.append(acquisition_days)  # 3個
-        elif len(self.get_acquisition_list(self.convert_base_day(self.in_day))) > 3:
+        elif len(self.get_acquisition_list(base_day)) == 4:
             # 付与4回以上
+            work_counts_half_ajust = self.count_workday_half_year()
+            work_counts = self.count_workdays()
+            for idx, count in enumerate([work_counts_half_ajust] + work_counts[1:]):
+                print(f"Acquisition date/days >4: {self.acquire_holidays_dict(count)}")
+                acquisition_days = list(self.acquire_holidays_dict(count).values())[
+                    -4 + idx
+                ]
+                holiday_list.append(acquisition_days)  # 3個
+
+        elif len(self.get_acquisition_list(base_day)) >= 5:
+            # 付与5回以上
             work_counts = self.count_workdays()
             for idx, count in enumerate(work_counts):
-                print(f"Acquisition date/days >4: {self.acquire_holidays_dict(count)}")
+                print(f"Acquisition date/days >5: {self.acquire_holidays_dict(count)}")
                 acquisition_days = list(self.acquire_holidays_dict(count).values())[
                     -4 + idx
                 ]

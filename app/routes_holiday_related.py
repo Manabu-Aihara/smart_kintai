@@ -12,7 +12,10 @@ from flask_login import current_user
 from . import app, db
 from .models import User, Team
 from .models_aprv import PaidHolidayLog
-from .carry_over_lib import config_from_to_holiday, calculate_carry_over_all
+from .carry_over_lib import (
+    config_from_to_holiday,
+    calculate_carry_over_all,
+)
 from .acquisition_holidays_lib import (
     acquire_holidays_from_now,
     get_last_paid_holiday_logs,
@@ -64,13 +67,14 @@ def get_carry_over(shozoku_code):
     # data_url = f"http://0.0.0.0:8001/frame-data/{shozoku_code}"
     data_url = f"{os.getenv('CLOUD_CALC_PAGE')}/frame-data/{shozoku_code}"
     # prev_data_url = f"http://0.0.0.0:8001/frame-prev-data/{shozoku_code}"
+    # prev_data_url = f"{os.getenv('CLOUD_CALC_PAGE')}/frame-prev-data/{shozoku_code}"
     try:
         two_years_data_dict = retrieve_api_data(data_url)
         # prev_data_dict = retrieve_api_data(prev_data_url)
 
         base_dict_result = calculate_carry_over_all(two_years_data_dict)
-        # prev_dict_result = calculate_prev_carry(prev_data_dict)
-        return jsonify(base_dict_result)
+        # prev_dict_result = calculate_prev_carry(prev_data_dict) # prev_data_dict is commented out
+        return jsonify({"base_data": base_dict_result})
     except requests.RequestException as e:
         return jsonify({"error": str(e)}), 500
 
