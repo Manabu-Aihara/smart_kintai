@@ -7,11 +7,11 @@ from app.holiday_day_count import HolidayDayCount
 @pytest.fixture
 def holiday_calculate(app_context):
     # holiday_base_time など必要な初期化値は適宜調整
-    return HolidayDayCount(id=147)
+    return HolidayDayCount(id=249)
 
 
-@pytest.mark.skip
-@pytest.mark.freeze_time(datetime(2025, 10, 15))
+# @pytest.mark.skip
+# @pytest.mark.freeze_time(datetime(2025, 10, 15))
 def test_print_acquisition_data(holiday_calculate):
     base_day = holiday_calculate.convert_base_day(holiday_calculate.in_day)
     print(f"Base day: {base_day}")
@@ -25,7 +25,7 @@ def test_print_acquisition_data(holiday_calculate):
     print(f"Recent from: {recent_from}, Recent to: {recent_to}")  # デバッグ用
 
 
-@pytest.mark.skip
+# @pytest.mark.skip
 def test_count_workday_half_year(holiday_calculate):
     result = holiday_calculate.count_workday_half_year()
     print(f"From inday count: {result}")
@@ -41,7 +41,7 @@ def test_acquire_holidays_dict(holiday_calculate):
     )  # デバッグ用
 
 
-# @pytest.mark.skip
+@pytest.mark.skip
 # @pytest.mark.freeze_time(datetime(2025, 10, 2))
 def test_get_sum_holiday(monkeypatch, holiday_calculate):
     # work_half_count = 40

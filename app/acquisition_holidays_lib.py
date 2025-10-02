@@ -20,7 +20,14 @@ def acquire_holidays_from_now() -> Dict[int, Dict[str, Any]]:
     from_now_on_acquire_dict = {}
     activate_staff_list = (
         db.session.query(User.STAFFID)
-        .filter(and_(User.DISPLAY == 0, User.STAFFID != 10000))
+        .filter(
+            and_(
+                User.DISPLAY == 0,
+                User.STAFFID != 10000,
+                User.STAFFID != 224,
+                User.STAFFID != 246,
+            )
+        )
         .all()
     )
     base_from, base_to = config_from_to_holiday()

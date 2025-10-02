@@ -16,7 +16,7 @@
     <h3 class="box-design13-ttl label-green">届出</h3>
     <ul class="btn-list">
       {#% set condition_list = [20, 32, 201, 205] %#}
-      {% set condition_list = [3, 20, 201] %}
+      {% set condition_list = [3, 20, 31, 201] %}
       {% for conditional_id in condition_list %}
       {% if stf_login.STAFFID == conditional_id %}
       <li><a class="btn btn-loyal btn-green" href="{{ url_for('get_notification_list', STAFFID=usr.STAFFID) }}">届出申請</a>

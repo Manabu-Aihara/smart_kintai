@@ -157,34 +157,6 @@ class HolidayDayCount(HolidayBase):
         print(f"Work count: {work_counts}")
         return work_counts
 
-    def count_recent_workdays(self) -> int:
-        from_list, to_list = self.print_acquisition_data()
-
-        n_absence_list: List[str] = ["8", "17", "18", "19", "20"]
-
-        filters = [
-            Attendance.STAFFID == self.id,
-            Attendance.WORKDAY >= from_list[-2],
-            Attendance.WORKDAY <= to_list[-2],
-            Attendance.NOTIFICATION.notin_(n_absence_list),
-            # Attendance.STARTTIME == '00:00'の場合、除かれる
-            # Attendance.NOTIFICATIONが"3"または"5", "9"の場合は、
-            # Attendance.STARTTIME != "00:00"の条件を適用しない
-            # → つまり、NOTIFICATIONが"3"または"5", "9"なら除外条件なし、それ以外は除外条件あり
-            # 「NOTIFICATIONが'3'または'5', "9"のときは適応」
-            or_(
-                Attendance.NOTIFICATION.in_(["3", "5", "9"]),
-                and_(
-                    ~Attendance.NOTIFICATION.in_(["3", "5", "9"]),
-                    Attendance.STARTTIME != "00:00",
-                ),
-            ),
-        ]
-        work_counts = db.session.query(Attendance.WORKDAY).filter(*filters).count()
-        # provisional
-        # work_counts = work_counts * 24 / 21
-        return work_counts
-
     """
     @Return
         : int 入職月（場合によって+1）と基準月との差、2〜5
@@ -212,6 +184,8 @@ class HolidayDayCount(HolidayBase):
         return result_diff
 
     def count_workday_half_year(self) -> int:
+        # bug = "Empty" if len(self.count_workdays()) == 0 else self.count_workdays()
+        # print(f"Debug: {self.id} - {bug}")
         # 入職月〜基準月1日前の範囲を12ヶ月分にしたもの
         workday_half_result = self.count_workdays()[0] * (12 / self.get_diff_month())
         workday_half_result = round(workday_half_result)
@@ -222,6 +196,39 @@ class HolidayDayCount(HolidayBase):
         )
 
         return workday_half_result
+
+    def count_recent_workdays(self) -> int:
+        from_list, to_list = self.print_acquisition_data()
+
+        n_absence_list: List[str] = ["8", "17", "18", "19", "20"]
+
+        filters = [
+            Attendance.STAFFID == self.id,
+            Attendance.WORKDAY >= from_list[-2],
+            Attendance.WORKDAY <= to_list[-2],
+            Attendance.NOTIFICATION.notin_(n_absence_list),
+            # Attendance.STARTTIME == '00:00'の場合、除かれる
+            # Attendance.NOTIFICATIONが"3"または"5", "9"の場合は、
+            # Attendance.STARTTIME != "00:00"の条件を適用しない
+            # → つまり、NOTIFICATIONが"3"または"5", "9"なら除外条件なし、それ以外は除外条件あり
+            # 「NOTIFICATIONが'3'または'5', "9"のときは適応」
+            or_(
+                Attendance.NOTIFICATION.in_(["3", "5", "9"]),
+                and_(
+                    ~Attendance.NOTIFICATION.in_(["3", "5", "9"]),
+                    Attendance.STARTTIME != "00:00",
+                ),
+            ),
+        ]
+        work_counts = db.session.query(Attendance.WORKDAY).filter(*filters).count()
+        # provisional
+        # work_counts = work_counts * 24 / 21
+
+        base_day = self.convert_base_day(self.in_day)
+        if len(self.get_acquisition_list(base_day)) == 1:
+            work_counts = self.count_workday_half_year()
+
+        return work_counts
 
     """
     〜3年遡って付与された日数のリスト
