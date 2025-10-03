@@ -147,11 +147,11 @@ class HolidayBase:
     def get_acquisition_list(self, base_day: datetime) -> List[date]:
         holidays_get_list = []
         holidays_get_list.append(base_day.date())
-        self.base_day = base_day + relativedelta(months=12)
+        next_base_day = base_day + relativedelta(months=12)
         while base_day < datetime.today():
-            if datetime.today() + relativedelta(months=12) < self.base_day:
+            if datetime.today() + relativedelta(months=12) < next_base_day:
                 break
-            return holidays_get_list + self.get_acquisition_list(self.base_day)
+            return holidays_get_list + self.get_acquisition_list(next_base_day)
 
         return holidays_get_list
         # 次回付与日

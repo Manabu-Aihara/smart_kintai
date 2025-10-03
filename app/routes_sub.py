@@ -79,11 +79,9 @@ def post_access_token():
     print(f"First group number: {group_num}")
     token_dict = issue_token(user_num, group_num)
     # resp = make_response(jsonify(token_data))
-    # return redirect(f"http://localhost:5173/auth?token={token_dict['data']}")
-    # github_page = os.getenv("GIT_PROVIDE")
-    # return redirect(f"{github_page}/auth?token={token_dict['data']}")
-    cloud_site = os.getenv("CLOUD_TIMETABLE4")
-    return redirect(f"{cloud_site}/auth?token={token_dict['data']}")
+    return redirect(f"http://localhost:5173/auth?token={token_dict['data']}")
+    # cloud_site = os.getenv("CLOUD_TIMETABLE4")
+    # return redirect(f"{cloud_site}/auth?token={token_dict['data']}")
 
 
 @app.route("/calc/auth", methods=["GET", "POST"])
@@ -91,9 +89,9 @@ def post_access_token():
 def post_to_token():
     user_num, group_num = get_user_group_id(current_user.STAFFID)
     token_dict = issue_token(user_num, group_num)
-    # return redirect(f"http://0.0.0.0:8001/users/me?token={token_dict['data']}")
-    cloud_site = os.getenv("CLOUD_CALC_PAGE")
-    return redirect(f"{cloud_site}/users/me?token={token_dict['data']}")
+    return redirect(f"http://0.0.0.0:8001/users/me?token={token_dict['data']}")
+    # cloud_site = os.getenv("CLOUD_CALC_PAGE")
+    # return redirect(f"{cloud_site}/users/me?token={token_dict['data']}")
     # return redirect("https://hello-865742550561.asia-northeast1.run.app")
 
 

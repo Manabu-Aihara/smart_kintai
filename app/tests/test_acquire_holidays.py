@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import MagicMock, patch
 
-from app.database_base import session
+from app import db
 from app.models_aprv import PaidHolidayLog
 from app.acquisition_holidays_lib import acquire_holidays_from_now
 
@@ -49,13 +49,13 @@ def add_acquisition_data() -> None:
             add_data = PaidHolidayLog(
                 concerned_staff, from_now_on_holidays, None, None, None, None
             )
-            session.add(add_data)
-        session.commit()
+            db.session.add(add_data)
+        db.session.commit()
     except Exception:
-        session.rollback()
+        db.session.rollback()
         raise
     finally:
-        session.close()
+        db.session.close()
 
 
 # add_acquisition_data 関数が依存している session オブジェクトをモック化

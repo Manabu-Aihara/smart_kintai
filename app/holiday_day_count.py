@@ -94,7 +94,7 @@ class HolidayDayCount(HolidayBase):
         recent_from: List[date] = []
         recent_to: List[date] = []
         # 入職日〜3期間
-        if len(self.get_acquisition_list(base_day)) <= 4:
+        if len(self.get_acquisition_list(base_day)) < 4:
             if (
                 get_calendar_nth_dow(
                     self.in_day.year, self.in_day.month, self.in_day.day
@@ -105,19 +105,16 @@ class HolidayDayCount(HolidayBase):
                 middle_in_day = from_list[0] + relativedelta(months=1)
                 recent_from = [middle_in_day.replace(day=1)] + from_list[1:-2]
                 recent_to = to_list[:-2]
+                print(f"△Debug type: {recent_from}")
             else:
                 # print_acquisition_dataは、末尾は翌付与日からの範囲なので、2つ前まで
                 recent_from = from_list[:-2]
                 recent_to = to_list[:-2]
-                print(f"Debug type: {recent_from}")
+                print(f"▲Debug type: {recent_from}")
         # 4期間以上
-        elif len(self.get_acquisition_list(base_day)) > 4:
-            recent_from = from_list[-5:-2]
-            recent_to = to_list[-5:-2]
-
-        # print(
-        #     f"ID{self.id}: count_workday > : 勤務日数を取得します。期間: {recent_from[0]} ~ {recent_to[-1]}"
-        # )
+        elif len(self.get_acquisition_list(base_day)) >= 4:
+            recent_from = from_list[-4:-2]
+            recent_to = to_list[-4:-2]
 
         overall_start = recent_from[0]
         overall_end = to_list[-1]
@@ -146,7 +143,7 @@ class HolidayDayCount(HolidayBase):
         work_counts = []
         for i, (start, end) in enumerate(zip(recent_from, recent_to)):
             print(
-                f"ID{self.id}: count_workday > : 勤務日数を取得します。期間: {start} ~ {end}"
+                f"ID{self.id}: count_workday > : 勤務期間を取得します。期間: {start} ~ {end}"
             )
             count = sum(1 for (day,) in all_attendance if start <= day <= end)
             print(
@@ -158,34 +155,6 @@ class HolidayDayCount(HolidayBase):
         # logger.info(f"ID{self.id}: count: 勤務日数は{work_counts}日です。")
 
         print(f"Work count: {work_counts}")
-        return work_counts
-
-    def count_recent_workdays(self) -> int:
-        from_list, to_list = self.print_acquisition_data()
-
-        n_absence_list: List[str] = ["8", "17", "18", "19", "20"]
-
-        filters = [
-            Attendance.STAFFID == self.id,
-            Attendance.WORKDAY >= from_list[-2],
-            Attendance.WORKDAY <= to_list[-2],
-            Attendance.NOTIFICATION.notin_(n_absence_list),
-            # Attendance.STARTTIME == '00:00'の場合、除かれる
-            # Attendance.NOTIFICATIONが"3"または"5", "9"の場合は、
-            # Attendance.STARTTIME != "00:00"の条件を適用しない
-            # → つまり、NOTIFICATIONが"3"または"5", "9"なら除外条件なし、それ以外は除外条件あり
-            # 「NOTIFICATIONが'3'または'5', "9"のときは適応」
-            or_(
-                Attendance.NOTIFICATION.in_(["3", "5", "9"]),
-                and_(
-                    ~Attendance.NOTIFICATION.in_(["3", "5", "9"]),
-                    Attendance.STARTTIME != "00:00",
-                ),
-            ),
-        ]
-        work_counts = db.session.query(Attendance.WORKDAY).filter(*filters).count()
-        # provisional
-        # work_counts = work_counts * 24 / 21
         return work_counts
 
     """
@@ -215,6 +184,8 @@ class HolidayDayCount(HolidayBase):
         return result_diff
 
     def count_workday_half_year(self) -> int:
+        # bug = "Empty" if len(self.count_workdays()) == 0 else self.count_workdays()
+        # print(f"Debug: {self.id} - {bug}")
         # 入職月〜基準月1日前の範囲を12ヶ月分にしたもの
         workday_half_result = self.count_workdays()[0] * (12 / self.get_diff_month())
         workday_half_result = round(workday_half_result)
@@ -226,6 +197,39 @@ class HolidayDayCount(HolidayBase):
 
         return workday_half_result
 
+    def count_recent_workdays(self) -> int:
+        from_list, to_list = self.print_acquisition_data()
+
+        n_absence_list: List[str] = ["8", "17", "18", "19", "20"]
+
+        filters = [
+            Attendance.STAFFID == self.id,
+            Attendance.WORKDAY >= from_list[-2],
+            Attendance.WORKDAY <= to_list[-2],
+            Attendance.NOTIFICATION.notin_(n_absence_list),
+            # Attendance.STARTTIME == '00:00'の場合、除かれる
+            # Attendance.NOTIFICATIONが"3"または"5", "9"の場合は、
+            # Attendance.STARTTIME != "00:00"の条件を適用しない
+            # → つまり、NOTIFICATIONが"3"または"5", "9"なら除外条件なし、それ以外は除外条件あり
+            # 「NOTIFICATIONが'3'または'5', "9"のときは適応」
+            or_(
+                Attendance.NOTIFICATION.in_(["3", "5", "9"]),
+                and_(
+                    ~Attendance.NOTIFICATION.in_(["3", "5", "9"]),
+                    Attendance.STARTTIME != "00:00",
+                ),
+            ),
+        ]
+        work_counts = db.session.query(Attendance.WORKDAY).filter(*filters).count()
+        # provisional
+        # work_counts = work_counts * 24 / 21
+
+        base_day = self.convert_base_day(self.in_day)
+        if len(self.get_acquisition_list(base_day)) == 1:
+            work_counts = self.count_workday_half_year()
+
+        return work_counts
+
     """
     〜3年遡って付与された日数のリスト
     @Return
@@ -233,11 +237,13 @@ class HolidayDayCount(HolidayBase):
         """
 
     def get_valid_holidays(self) -> List[int]:
+        base_day = self.convert_base_day(self.in_day)
+
         holiday_list = []
-        if len(self.get_acquisition_list(self.convert_base_day(self.in_day))) == 1:
+        if len(self.get_acquisition_list(base_day)) == 1:
             # 入職日年休付与以外受けていない人
             holiday_list = list(self.acquire_inday_holidays().values())  # 1個
-        elif len(self.get_acquisition_list(self.convert_base_day(self.in_day))) == 2:
+        elif len(self.get_acquisition_list(base_day)) == 2:
             # 入職日含め、付与2回受けている人
             work_counts_half_ajust = self.count_workday_half_year()
             holiday_list = list(self.acquire_inday_holidays().values())  # 入職日付与
@@ -247,7 +253,7 @@ class HolidayDayCount(HolidayBase):
             holiday_list.append(
                 list(self.acquire_holidays_dict(work_counts_half_ajust).values())[1]
             )  # 2個
-        elif len(self.get_acquisition_list(self.convert_base_day(self.in_day))) == 3:
+        elif len(self.get_acquisition_list(base_day)) == 3:
             # 入職日含め、付与3回受けている人
             work_counts_half_ajust = self.count_workday_half_year()
             work_counts = self.count_workdays()
@@ -258,15 +264,26 @@ class HolidayDayCount(HolidayBase):
                     -3 + idx
                 ]
                 holiday_list.append(acquisition_days)  # 3個
-        elif len(self.get_acquisition_list(self.convert_base_day(self.in_day))) > 3:
+        elif len(self.get_acquisition_list(base_day)) >= 4:
             # 付与4回以上
+            # work_counts_half_ajust = self.count_workday_half_year()
             work_counts = self.count_workdays()
             for idx, count in enumerate(work_counts):
                 print(f"Acquisition date/days >4: {self.acquire_holidays_dict(count)}")
                 acquisition_days = list(self.acquire_holidays_dict(count).values())[
-                    -4 + idx
+                    -3 + idx
                 ]
-                holiday_list.append(acquisition_days)  # 3個
+                holiday_list.append(acquisition_days)  # 2個
+
+        # elif len(self.get_acquisition_list(base_day)) >= 5:
+        #     # 付与5回以上
+        #     work_counts = self.count_workdays()
+        #     for idx, count in enumerate(work_counts):
+        #         print(f"Acquisition date/days >5: {self.acquire_holidays_dict(count)}")
+        #         acquisition_days = list(self.acquire_holidays_dict(count).values())[
+        #             -3 + idx
+        #         ]
+        #         holiday_list.append(acquisition_days)  # 3個
 
         return holiday_list
 
