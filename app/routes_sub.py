@@ -89,9 +89,9 @@ def post_access_token():
 def post_to_token():
     user_num, group_num = get_user_group_id(current_user.STAFFID)
     token_dict = issue_token(user_num, group_num)
-    # return redirect(f"http://0.0.0.0:8001/users/me?token={token_dict['data']}")
-    cloud_site = os.getenv("CLOUD_CALC_PAGE")
-    return redirect(f"{cloud_site}/users/me?token={token_dict['data']}")
+    return redirect(f"http://0.0.0.0:8001/users/me?token={token_dict['data']}")
+    # cloud_site = os.getenv("CLOUD_CALC_PAGE")
+    # return redirect(f"{cloud_site}/users/me?token={token_dict['data']}")
     # return redirect("https://hello-865742550561.asia-northeast1.run.app")
 
 

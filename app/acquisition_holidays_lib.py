@@ -39,18 +39,26 @@ def acquire_holidays_from_now() -> Dict[int, Dict[str, Any]]:
             )
         except TypeError as e:
             raise e
+
         if base_from.month == user_base_date.month:
-            recent_work_count = holiday_count_obj.count_recent_workdays()
-            # 付与日と付与日数
-            date_and_holidays = holiday_count_obj.acquire_holidays_dict(
-                recent_work_count
+            work_counts: list[int] = holiday_count_obj.count_workdays()
+            # 一ヶ月の猶予を設ける
+            arg_work_count = (
+                work_counts[-2] if base_from.month in [4, 10] else work_counts[-1]
             )
+            # 付与日と付与日数
+            date_and_holidays = holiday_count_obj.acquire_holidays_dict(arg_work_count)
             # これからの付与日数
-            print(f"Acquisition date: {list(date_and_holidays.keys())[-1]}")
-            from_now_on_holidays = list(date_and_holidays.values())[-1]
+            print(f"Acquisition days: {list(date_and_holidays.values())[-1]}")
+            from_now_on_holidays = (
+                # 一ヶ月の猶予を設ける
+                list(date_and_holidays.values())[-2]
+                if base_from.month in [4, 10]
+                else list(date_and_holidays.values())[-1]
+            )
             from_now_on_acquire_dict[activate_staff.STAFFID] = {
                 "in_day": holiday_count_obj.in_day,
-                "recent_work_count": recent_work_count,
+                "recent_work_count": arg_work_count,
                 "from_now_on_grant": from_now_on_holidays,
             }
 

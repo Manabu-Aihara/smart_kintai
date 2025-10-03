@@ -32,8 +32,11 @@ def select_for_carry_over():
     )
     team_list = db.session.query(Team).all()
 
+    form_vacation_type = request.form.get("vacation_type")
     if request.method == "POST":
-        return redirect(f"/carry-over/{request.form.get('team_number')}")
+        return redirect(
+            f"/carry-over/{request.form.get('team_number')}/{form_vacation_type}"
+        )
 
     return render_template(
         "attendance/select_team_of_carry.html", user_info=user_info, team_list=team_list
@@ -62,10 +65,12 @@ def retrieve_api_data(url: str) -> List[dict]:
     return result
 
 
-@app.route("/carry-over/<shozoku_code>", methods=["GET"])
-def get_carry_over(shozoku_code):
-    # data_url = f"http://0.0.0.0:8001/frame-data/{shozoku_code}"
-    data_url = f"{os.getenv('CLOUD_CALC_PAGE')}/frame-data/{shozoku_code}"
+@app.route("/carry-over/<shozoku_code>/<vacation_type>", methods=["GET"])
+def get_carry_over(shozoku_code, vacation_type):
+    data_url = f"http://0.0.0.0:8001/frame-data/{shozoku_code}/{vacation_type}"
+    # data_url = (
+    #     f"{os.getenv('CLOUD_CALC_PAGE')}/frame-data/{shozoku_code}/{vacation_type}"
+    # )
     # prev_data_url = f"http://0.0.0.0:8001/frame-prev-data/{shozoku_code}"
     # prev_data_url = f"{os.getenv('CLOUD_CALC_PAGE')}/frame-prev-data/{shozoku_code}"
     try:

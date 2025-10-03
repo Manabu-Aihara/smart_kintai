@@ -12,7 +12,7 @@ def config_from_to_holiday() -> Tuple[date, date]:
     to_day4 = date(year=today.year, month=3, day=31)
     from_day10 = date(year=(today.year - 2), month=10, day=1)
     to_day10 = date(year=today.year, month=9, day=30)
-    if today.month in [4, 5, 6, 7, 8, 9]:
+    if today.month in [5, 6, 7, 8, 9, 10]:
         return from_day10, to_day10
     else:
         return from_day4, to_day4
@@ -122,19 +122,19 @@ def calculate_carry_over_all(api_data_list) -> Dict[int, Dict[str, Any]]:
     for staff_id, items in staff_data.items():
         holiday_count_obj = get_concerned_user_object(staff_id)
         if holiday_count_obj:
-            grant_list = (
-                holiday_count_obj.get_valid_holidays()[1:]
-                if len(holiday_count_obj.get_valid_holidays()) == 3
-                else holiday_count_obj.get_valid_holidays()
+            granted_list = (
+                holiday_count_obj.get_valid_holidays()
+                # if len(holiday_count_obj.get_valid_holidays()) >= 3
+                # else holiday_count_obj.get_valid_holidays()
             )
-            grant_sum = sum(grant_list)
+            grant_sum = sum(granted_list)
             print(f"ID{staff_id}: 付与日数: {grant_sum}")
             used_leave_days = [calc_leave_sum_days(d) for d in items]
             used_leave_times, contract_vacation_hours = zip(
                 *[calc_leave_sum_times(d) for d in items]
             )
             two_years_result_dict[staff_id] = {
-                "付与日数": grant_list,
+                "付与日数": granted_list,
                 "使用年休": used_leave_days,
                 "使用時間休": used_leave_times,
                 "契約休暇時間": contract_vacation_hours,

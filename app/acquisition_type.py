@@ -26,7 +26,7 @@ def divide_acquire_type(count: int) -> Optional[str]:
             return char
         elif count < 48:
             # raise KeyError(f" 勤務日数 {count} に対する、付与タイプが見つかりません。")
-            print(f"Acquisition type divide: {char}")
+            print("Acquisition type divide: F")
             return None
 
 
