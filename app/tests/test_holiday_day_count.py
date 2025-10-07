@@ -7,7 +7,7 @@ from app.holiday_day_count import HolidayDayCount
 @pytest.fixture
 def holiday_calculate(app_context):
     # holiday_base_time など必要な初期化値は適宜調整
-    return HolidayDayCount(id=115)  # 113 201 231 249
+    return HolidayDayCount(id=249)  # 113 201 231 249
 
 
 # @pytest.mark.skip
@@ -28,19 +28,19 @@ def test_print_acquisition_data(holiday_calculate):
 @pytest.mark.skip
 def test_count_workday_half_year(holiday_calculate):
     result = holiday_calculate.count_workday_half_year()
-    print(f"Test from first work count: {result}")
+    print(f"First work count: {result}")
 
 
 def test_count_workdays(holiday_calculate):
     result = holiday_calculate.count_workdays()
-    print(f"Test from count work list: {result}")
+    print(f"Count work list: {result}")
 
 
 # @pytest.mark.skip
 # @pytest.mark.freeze_time(datetime(2025, 9, 30))
 def test_count_recent_workdays(holiday_calculate):
-    result = holiday_calculate.count_recent_workdays()
-    print(f"Test from recent work count: {result}")
+    result = holiday_calculate.get_next_holiday_pair()
+    print(f"Next holiday and work count: {result}")
 
 
 @pytest.mark.skip

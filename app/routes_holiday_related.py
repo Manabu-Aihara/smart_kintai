@@ -6,10 +6,13 @@ import os
 
 from flask import jsonify, render_template, request, redirect
 from flask_login import current_user
+from sqlalchemy import update, insert, select
 
 # from apscheduler.schedulers.background import BackgroundScheduler
 
 from . import app, db
+from .database_async import get_session
+from .select_only_sync import read_session
 from .models import User, Team
 from .models_aprv import PaidHolidayLog
 from .carry_over_lib import (
@@ -67,10 +70,10 @@ def retrieve_api_data(url: str) -> List[dict]:
 
 @app.route("/carry-over/<shozoku_code>/<vacation_type>", methods=["GET"])
 def get_carry_over(shozoku_code, vacation_type):
-    data_url = f"http://0.0.0.0:8001/frame-data/{shozoku_code}/{vacation_type}"
-    # data_url = (
-    #     f"{os.getenv('CLOUD_CALC_PAGE')}/frame-data/{shozoku_code}/{vacation_type}"
-    # )
+    # data_url = f"http://0.0.0.0:8001/frame-data/{shozoku_code}/{vacation_type}"
+    data_url = (
+        f"{os.getenv('CLOUD_CALC_PAGE')}/frame-data/{shozoku_code}/{vacation_type}"
+    )
     # prev_data_url = f"http://0.0.0.0:8001/frame-prev-data/{shozoku_code}"
     # prev_data_url = f"{os.getenv('CLOUD_CALC_PAGE')}/frame-prev-data/{shozoku_code}"
     try:
@@ -85,8 +88,8 @@ def get_carry_over(shozoku_code, vacation_type):
 
 
 @app.route("/repair-holidays-form", methods=["GET"])
-def get_paid_holiday_list():
-    paid_holiday_log_list = get_last_paid_holiday_logs()
+async def get_paid_holiday_list():
+    paid_holiday_log_list = await get_last_paid_holiday_logs()
     return render_template(
         "attendance/paid_holiday_list_form.html",
         paid_holiday_log_list=paid_holiday_log_list,
@@ -94,44 +97,51 @@ def get_paid_holiday_list():
 
 
 @app.route("/repair-holidays.do", methods=["POST"])
-def repair_holidays():
-    update_target_list = []
-    from_now_on_grants = []
-    additional_carry_overs = []
+async def repair_holidays():
+    update_target_list: List[int] = []
+    from_now_on_grants: List[str] = []
+    additional_carry_overs: List[str] = []
     # フォームからのデータを処理
     for table_id in request.form.getlist("update_target"):
-        update_target_list.append(table_id)
+        update_target_list.append(int(table_id))
         from_now_on_grants.append(request.form.get(f"from_now_on_grant_{table_id}"))
         additional_carry_overs.append(
             request.form.get(f"additional_carry_over_{table_id}")
         )
 
-    update_paid_logs = db.session.query(PaidHolidayLog).filter(
-        PaidHolidayLog.id.in_(update_target_list)
+    update_paid_logs = (
+        read_session.query(PaidHolidayLog)
+        .filter(PaidHolidayLog.id.in_(update_target_list))
+        .all()
     )
 
     # ここでデータベースへの保存処理などを行う
-    try:
-        for update_target, grant_days, carry_over in zip(
-            update_paid_logs, from_now_on_grants, additional_carry_overs
-        ):
-            update_target.REMAIN_DAYS = float(grant_days)
-            update_target.CARRY_FORWARD = float(carry_over)
-            db.session.merge(update_target)
-            print(
-                f"Debug: Updating ID {update_target.id} with Staff ID {update_target.STAFFID}, "
-                f"Grant Days: {grant_days}, Carry Over: {carry_over}"
-            )
-        db.session.commit()
-    except Exception:
-        db.session.rollback()
-        raise
-    finally:
-        db.session.close()
+    statement_list = []
+    for update_target, table_id, grant_days, carry_over in zip(
+        update_paid_logs, update_target_list, from_now_on_grants, additional_carry_overs
+    ):
+        update_target.REMAIN_DAYS = float(grant_days)
+        update_target.CARRY_FORWARD = float(carry_over)
+        print(
+            f"Debug: Updating ID {update_target.id} with Staff ID {update_target.STAFFID}, "
+            f"Grant Days: {grant_days}, Carry Over: {carry_over}"
+        )
+        update_stmt = (
+            update(PaidHolidayLog)
+            .where(update_paid_logs.id == table_id)
+            .values(update_target)
+        )
+        statement_list.append(update_stmt)
+
+    async with get_session() as session:
+        async with session.begin():
+            for update_stmt in statement_list:
+                await session.execute(statement=update_stmt)
+
     return redirect("/repair-holidays-form")
 
 
-@app.route("/confirm-grant-holidays", methods=["GET", "POST"])
+@app.route("/confirm-grant-holidays", methods=["GET"])
 def confirm_grant_holidays():
     from_day, to_day = config_from_to_holiday()
     try:
@@ -144,37 +154,44 @@ def confirm_grant_holidays():
         )
     today = datetime.now().strftime("%Y年%m月%d日")
 
-    if request.method == "POST":
-        # フォームからのデータを処理
-        concerned_staff = request.form.getlist("staff_id")
-        from_now_on_grant = request.form.getlist("from_now_on_grant")
-        additional_carry_over = request.form.getlist("additional_carry_over")
-
-        # ここでデータベースへの保存処理などを行う
-        try:
-            for staff_id, grant_days, carry_over in zip(
-                concerned_staff, from_now_on_grant, additional_carry_over
-            ):
-                add_data = PaidHolidayLog(
-                    int(staff_id),
-                    float(grant_days),
-                    None,
-                    None,
-                    float(carry_over),
-                    None,
-                )
-                db.session.add(add_data)
-            db.session.commit()
-        except Exception:
-            db.session.rollback()
-            raise
-        finally:
-            db.session.close()
-        return redirect("/repair-holidays-form")
-
     return render_template(
         "attendance/confirm_grant_holidays.html",
         from_now_holidays=from_now_holidays,
         from_month=from_day.month,
         today=today,
     )
+
+
+@app.route("/grant-holidays.do", methods=["POST"])
+async def add_grant_holidays():
+    # if request.method == "POST":
+    # フォームからのデータを処理
+    concerned_staff = request.form.getlist("staff_id")
+    from_now_on_grant = request.form.getlist("from_now_on_grant")
+    additional_carry_over = request.form.getlist("additional_carry_over")
+
+    # ここでデータベースへの保存処理などを行う
+    statement_list = []
+    for staff_id, grant_days, carry_over in zip(
+        concerned_staff, from_now_on_grant, additional_carry_over
+    ):
+        if grant_days == "":
+            grant_days = 0
+        if carry_over == "":
+            carry_over = 0
+        stmt = insert(PaidHolidayLog).values(
+            STAFFID=int(staff_id),
+            REMAIN_DAYS=float(grant_days),
+            NOTIFICATION_id=None,
+            TIME_REST_FLAG=None,
+            CARRY_FORWARD=float(carry_over),
+            REMARK=None,
+        )
+        statement_list.append(stmt)
+
+    async with get_session() as session:
+        async with session.begin():
+            for stmt in statement_list:
+                await session.execute(statement=stmt)
+
+    return redirect("/repair-holidays-form")
