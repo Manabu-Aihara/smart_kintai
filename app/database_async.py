@@ -78,7 +78,8 @@ async def get_session():
     except IntegrityError as e:
         # print(f"!!Async session error: {e}!!")
         await session.rollback()
-        raise "再度「再集計」ボタンをクリックしてください"
+        raise e
+        # raise "再度「再集計」ボタンをクリックしてください"
     finally:
         # print("ここは通る！")
         await session.close()
