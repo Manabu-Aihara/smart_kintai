@@ -105,12 +105,12 @@ class HolidayDayCount(HolidayBase):
                 middle_in_day = from_list[0] + relativedelta(months=1)
                 recent_from = [middle_in_day.replace(day=1)] + from_list[1:-2]
                 recent_to = to_list[:-2]
-                print(f"△Debug type: {recent_from}")
+                print(f"△Debug count period: {recent_from}")
             else:
                 # print_acquisition_dataは、末尾は翌付与日からの範囲なので、2つ前まで
                 recent_from = from_list[:-2]
                 recent_to = to_list[:-2]
-                print(f"▲Debug type: {recent_from}")
+                print(f"▲Debug count period: {recent_from}")
         # 4期間以上
         elif len(self.get_acquisition_list(base_day)) > 4:
             recent_from = from_list[-5:-2]
@@ -151,13 +151,14 @@ class HolidayDayCount(HolidayBase):
             )
             work_counts.append(count)
 
-        # logger = HolidayLogger.get_logger("INFO")
-        # logger.info(f"ID{self.id}: count: 勤務日数は{work_counts}日です。")
-        if base_day.month == 4:
+        # 暫定の勤務日数を計算（2022年4月1日〜2022年6月30日含めた）
+        if overall_start == date(2022, 4, 1):
             provisional_work_count = work_counts[0] * 4 / 3
             work_counts[0] = round(provisional_work_count)
             print(f"Debug provisional work count: {work_counts[0]}")
 
+        # logger = HolidayLogger.get_logger("INFO")
+        # logger.info(f"ID{self.id}: count: 勤務日数は{work_counts}日です。")
         print(f"Work count: {work_counts}")
         return work_counts
 
@@ -221,10 +222,9 @@ class HolidayDayCount(HolidayBase):
             Attendance.WORKDAY <= end_of_range,
             Attendance.NOTIFICATION.notin_(n_absence_list),
             # Attendance.STARTTIME == '00:00'の場合、除かれる
-            # Attendance.NOTIFICATIONが"3"または"5", "9"の場合は、
-            # Attendance.STARTTIME != "00:00"の条件を適用しない
+            # Attendance.NOTIFICATIONが"3"または"5", "9"の場合は、Attendance.STARTTIME != "00:00"の条件を適用しない
             # → つまり、NOTIFICATIONが"3"または"5", "9"なら除外条件なし、それ以外は除外条件あり
-            # 「NOTIFICATIONが'3'または'5', "9"のときは適応」
+            # 「NOTIFICATIONが'3'または'5', "9"のときは、Attendance.STARTTIME == '00:00'を適応」
             or_(
                 Attendance.NOTIFICATION.in_(["3", "5", "9"]),
                 and_(

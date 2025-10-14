@@ -25,7 +25,7 @@ def test_print_acquisition_data(holiday_calculate):
     # print(f"Recent from: {recent_from}, Recent to: {recent_to}")  # デバッグ用
 
 
-@pytest.mark.skip
+# @pytest.mark.skip
 def test_count_workday_half_year(holiday_calculate):
     result = holiday_calculate.count_workday_half_year()
     print(f"First work count: {result}")
