@@ -1,13 +1,22 @@
 import pytest
 from freezegun import freeze_time
-from datetime import datetime
+
+from datetime import date
+from typing import List
 from app.holiday_day_count import HolidayDayCount
 
 
 @pytest.fixture
 def holiday_calculate(app_context):
     # holiday_base_time など必要な初期化値は適宜調整
-    return HolidayDayCount(id=249)  # 113 201 231 249
+    return HolidayDayCount(id=201)  # 113 201 231 249
+
+
+@pytest.mark.skip
+def test_get_diff_month(holiday_calculate):
+    result = holiday_calculate.get_diff_month()
+    print(f"Diff month: {result}")
+    assert result == 2
 
 
 # @pytest.mark.skip
@@ -25,15 +34,38 @@ def test_print_acquisition_data(holiday_calculate):
     # print(f"Recent from: {recent_from}, Recent to: {recent_to}")  # デバッグ用
 
 
-# @pytest.mark.skip
+@pytest.mark.skip
 def test_count_workday_half_year(holiday_calculate):
     result = holiday_calculate.count_workday_half_year()
     print(f"First work count: {result}")
 
 
+@pytest.mark.skip
 def test_count_workdays(holiday_calculate):
     result = holiday_calculate.count_workdays()
     print(f"Count work list: {result}")
+
+
+@pytest.mark.skip
+def test_acqire_holidays_dict_mock(monkeypatch, holiday_calculate):
+    work_half_count = 180
+    monkeypatch.setattr(
+        holiday_calculate,
+        "count_workday_half_year",
+        lambda: work_half_count,
+    )
+    # 例: 直近2期間分の勤務日数が180
+    acqisition_date_dict = holiday_calculate.acquire_holidays_dict(180)
+    print(f"{acqisition_date_dict}")
+    # assert list(acqisition_date_dict.values())[-3] == 8
+
+
+def test_acquire_holidays_dict(holiday_calculate):
+    work_count_list = holiday_calculate.count_workdays()
+    acqisition_data_list: List[dict[date, int]] = [
+        holiday_calculate.acquire_holidays_dict(wc) for wc in work_count_list
+    ]
+    print(f"{acqisition_data_list}")
 
 
 # @pytest.mark.skip
@@ -41,19 +73,20 @@ def test_count_workdays(holiday_calculate):
 def test_count_recent_workdays(holiday_calculate):
     result = holiday_calculate.get_next_holiday_pair()
     print(f"Next holiday and work count: {result}")
-
-
-@pytest.mark.skip
-def test_acquire_holidays_dict(holiday_calculate):
-    q1_result = holiday_calculate.acquire_holidays_dict(50)
-    q2_result = holiday_calculate.acquire_holidays_dict(180)
-    q3_result = holiday_calculate.acquire_holidays_dict(220)
-    print(
-        f"Q1 Result: {q1_result}, Q2 Result: {q2_result}, Q3 Result: {q3_result}"
-    )  # デバッグ用
+    assert result[1] == 8
 
 
 # @pytest.mark.skip
+# def test_acquire_holidays_dict(holiday_calculate):
+#     q1_result = holiday_calculate.acquire_holidays_dict(50)
+#     q2_result = holiday_calculate.acquire_holidays_dict(180)
+#     q3_result = holiday_calculate.acquire_holidays_dict(220)
+#     print(
+#         f"Q1 Result: {q1_result}, Q2 Result: {q2_result}, Q3 Result: {q3_result}"
+#     )  # デバッグ用
+
+
+@pytest.mark.skip
 # @pytest.mark.freeze_time(datetime(2025, 9, 30))
 def test_get_valid_holidays(monkeypatch, holiday_calculate):
     # work_half_count = 40
