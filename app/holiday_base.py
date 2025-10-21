@@ -62,9 +62,10 @@ class HolidayBase:
             self.in_day: datetime = datetime.combine(
                 user_contracts[0].START_DAY, datetime.min.time()
             )
-        elif target_user.INDAY is not None:
-            self.in_day = target_user.INDAY
         else:
+            self.in_day = target_user.INDAY
+
+        if target_user.INDAY is None and user_contracts[0].START_DAY is None:
             raise TypeError(f"ID{self.id}: 入職日がありません。")
 
         # 契約休暇時間 holiday_base_time: float

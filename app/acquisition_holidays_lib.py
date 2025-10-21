@@ -42,8 +42,9 @@ def acquire_holidays_from_now() -> Dict[int, Dict[str, Any]]:
             raise e
 
         if base_from.month == user_base_date.month:
-            deal_work_count, next_acquire_holidays = (
-                holiday_count_obj.get_next_holiday_pair()
+            deal_work_count = holiday_count_obj.count_recent_workdays()
+            next_acquire_holidays = holiday_count_obj.select_next_holiday(
+                deal_work_count
             )
 
             from_now_on_acquire_dict[activate_staff.STAFFID] = {
