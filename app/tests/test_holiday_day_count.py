@@ -1,7 +1,7 @@
 import pytest
 from freezegun import freeze_time
 
-from datetime import date
+from datetime import date, datetime
 from typing import List
 from app.holiday_day_count import HolidayDayCount
 
@@ -9,14 +9,14 @@ from app.holiday_day_count import HolidayDayCount
 @pytest.fixture
 def holiday_calculate(app_context):
     # holiday_base_time など必要な初期化値は適宜調整
-    return HolidayDayCount(id=201)  # 113 201 231 249
+    return HolidayDayCount(id=249)  # 113 201 231 249, 75 184 242
 
 
 @pytest.mark.skip
 def test_get_diff_month(holiday_calculate):
     result = holiday_calculate.get_diff_month()
-    print(f"Diff month: {result}")
-    assert result == 2
+    # print(f"Diff month: {result}")
+    assert result == 0
 
 
 # @pytest.mark.skip
@@ -34,16 +34,17 @@ def test_print_acquisition_data(holiday_calculate):
     # print(f"Recent from: {recent_from}, Recent to: {recent_to}")  # デバッグ用
 
 
-@pytest.mark.skip
-def test_count_workday_half_year(holiday_calculate):
-    result = holiday_calculate.count_workday_half_year()
-    print(f"First work count: {result}")
-
-
-@pytest.mark.skip
+# @pytest.mark.skip
 def test_count_workdays(holiday_calculate):
     result = holiday_calculate.count_workdays()
     print(f"Count work list: {result}")
+
+
+# @pytest.mark.skip
+def test_count_workday_half_year(holiday_calculate):
+    test_workdays = holiday_calculate.count_workdays()
+    result = holiday_calculate.count_workday_half_year(test_workdays[0])
+    print(f"First work count: {result}")
 
 
 @pytest.mark.skip
@@ -60,20 +61,22 @@ def test_acqire_holidays_dict_mock(monkeypatch, holiday_calculate):
     # assert list(acqisition_date_dict.values())[-3] == 8
 
 
+# @pytest.mark.skip
 def test_acquire_holidays_dict(holiday_calculate):
     work_count_list = holiday_calculate.count_workdays()
     acqisition_data_list: List[dict[date, int]] = [
         holiday_calculate.acquire_holidays_dict(wc) for wc in work_count_list
     ]
-    print(f"{acqisition_data_list}")
+    print(acqisition_data_list)
 
 
 # @pytest.mark.skip
 # @pytest.mark.freeze_time(datetime(2025, 9, 30))
 def test_count_recent_workdays(holiday_calculate):
-    result = holiday_calculate.get_next_holiday_pair()
-    print(f"Next holiday and work count: {result}")
-    assert result[1] == 8
+    test_workdays = holiday_calculate.count_recent_workdays()
+    test_acqisition = holiday_calculate.select_next_holiday(test_workdays)
+    print(f"Work count and next holiday: {test_workdays}, {test_acqisition}")
+    assert test_acqisition == 8
 
 
 # @pytest.mark.skip
