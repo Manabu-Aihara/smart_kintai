@@ -1,6 +1,5 @@
-import math
 from datetime import date, datetime
-from typing import Tuple, Dict, Any
+from typing import Tuple, Dict, Any, OrderedDict
 from collections import defaultdict
 
 from .holiday_day_count import HolidayDayCount
@@ -122,11 +121,10 @@ def calculate_carry_over_all(api_data_list) -> Dict[int, Dict[str, Any]]:
     for staff_id, items in staff_data.items():
         holiday_count_obj = get_concerned_user_object(staff_id)
         if holiday_count_obj:
-            granted_list = (
-                holiday_count_obj.get_valid_holidays()
-                # if len(holiday_count_obj.get_valid_holidays()) >= 3
-                # else holiday_count_obj.get_valid_holidays()
+            granted_dict: OrderedDict[date, int] = (
+                holiday_count_obj.get_effective_holidays()
             )
+            granted_list = list(granted_dict.values())
             grant_sum = sum(granted_list)
             print(f"ID{staff_id}: 付与日数: {grant_sum}")
             used_leave_days = [calc_leave_sum_days(d) for d in items]

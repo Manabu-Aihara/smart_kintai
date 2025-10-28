@@ -9,7 +9,7 @@ from app.holiday_day_count import HolidayDayCount
 @pytest.fixture
 def holiday_calculate(app_context):
     # holiday_base_time など必要な初期化値は適宜調整
-    return HolidayDayCount(id=231)  # 113 142 171 179 201 231 249, 75 184 242
+    return HolidayDayCount(id=96)  # 113 142 171 179 201 231 249, 75 184 242
 
 
 @pytest.mark.skip

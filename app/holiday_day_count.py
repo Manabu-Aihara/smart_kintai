@@ -353,52 +353,18 @@ class HolidayDayCount(HolidayBase):
 
         return next_holiday
 
-    def _calculate_period_start_date(self, acquisition_date: date) -> date:
-        """
-        付与日に対応する期間の開始日を計算する
-
-        @Param
-            acquisition_date: date 付与日
-        @Return
-            : date 期間開始日
-        """
-        # 入職日が4月1日・10月1日の場合は、付与日と同じ日付を期間開始日とする
-        # 入職日が第1週でなければ、翌月からカウント（今のところ私の独断）
-        shift_date = (
-            self.in_day + relativedelta(months=1)
-            if get_calendar_nth_dow(
-                self.in_day.year, self.in_day.month, self.in_day.day
-            )
-            != 1
-            else self.in_day
-        )
-
-        if self.in_day.month in [4, 10] and self.in_day.day == 1:
-            return acquisition_date
-        else:
-            return acquisition_date.replace(month=shift_date.month, day=1)
-
     def _find_matching_holiday_date(
-        self, period_start_date: date, holiday_dict: OrderedDict[date, int]
+        self, acquisition_date: date, holiday_dict: OrderedDict[date, int]
     ) -> date:
         """
-        期間開始日に一致する年休付与日を探す
+        付与日に相当する年休付与日を探す
 
         @Param
-            period_start_date: date 期間開始日 !これが付与日と一致する
+            acquisition_date: date これが付与日と一致する
             holiday_dict: OrderedDict[date, int] 年休付与辞書
         @Return
             : date 一致する日付（見つからない場合はNone）
         """
-        # 完全一致を探す
-        for holiday_date in holiday_dict.keys():
-            holiday_date_normalized = (
-                holiday_date.date() if hasattr(holiday_date, "date") else holiday_date
-            )
-            if holiday_date_normalized == period_start_date:
-                return holiday_date
-
-        # 完全一致しない場合は、最も近い日付を探す
         matched_date = None
         # min_diff = float("inf")
         # saved_date = None
@@ -407,26 +373,34 @@ class HolidayDayCount(HolidayBase):
             holiday_date_normalized = (
                 holiday_date.date() if hasattr(holiday_date, "date") else holiday_date
             )
-            # diff = abs((holiday_date_normalized - period_start_date).days)
-            print(f"Diff: {period_start_date}, {holiday_date_normalized}")
+            # diff = abs((holiday_date_normalized - acqisition_date).days)
+            print(f"Diff: {acquisition_date}, {holiday_date_normalized}")
+            # 一致する場合（4月、10月）
+            if holiday_date_normalized == acquisition_date:
+                return holiday_date
+
+            # 一致しない場合（4月、10月以外）は、下記の手法で
             # len(acquisition_dates) == 4 対応
-            # ifが一個減った
+            # get_effective_holidaysのifが一個減った
             if isinstance(holiday_date, datetime):
                 pass
-            elif period_start_date > holiday_date_normalized:
+            elif acquisition_date > holiday_date_normalized:
                 matched_date = holiday_date_normalized
-            elif matched_date is None and period_start_date < holiday_date_normalized:
+            # len(acquisition_dates) == 4 対応
+            # matched_dateのNoneが最後になるところ、逆の条件の値が必要になる
+            elif matched_date is None and acquisition_date < holiday_date_normalized:
                 matched_date = holiday_date_normalized
-
-            print(f"_matched date: {matched_date}")
-            # if i == 1:  # and period_start_date < holiday_date_normalized:
+            # 上記elifと同様
+            # elif i == 1:  # and acquisition_date < holiday_date_normalized:
             #     saved_date = holiday_date_normalized
             #     matched_date = saved_date
+            print(f"_matched date: {matched_date}")
+
+            # made by Cursor
             # elif diff < min_diff:
             #     min_diff = diff
             #     print(f"Min diff: {min_diff}")
             #     matched_date = holiday_date_normalized
-
         return matched_date
 
     def _process_acquisition_period(
@@ -444,12 +418,7 @@ class HolidayDayCount(HolidayBase):
         holiday_dict = self.acquire_holidays_dict(work_count)
         print(f"Process holiday dict: {holiday_dict}")
 
-        # 期間開始日を計算
-        period_start_date = self._calculate_period_start_date(acquisition_date)
-
         # 一致する日付を探す
-        # print(f"Period start date: {period_start_date}")
-        # 次回period_start_date ~ acquisition_dateでやってみる
         matched_date = self._find_matching_holiday_date(acquisition_date, holiday_dict)
         print(f"Matched date: {matched_date}")
 
@@ -471,53 +440,53 @@ class HolidayDayCount(HolidayBase):
         @Return
             : OrderedDict[date, int] 付与日とその日数
         """
-        try:
-            base_day = self.convert_base_day(self.in_day)
-            acquisition_dates = self.get_acquisition_list(base_day)
-            work_counts = self.count_workdays()
+        # try:
+        base_day = self.convert_base_day(self.in_day)
+        acquisition_dates = self.get_acquisition_list(base_day)
+        work_counts = self.count_workdays()
 
-            # 入職から4期間以内の場合は、最初の期間の勤務日数を12ヶ月換算する
-            if len(acquisition_dates) <= 4:
-                half_year_count = self.count_workday_half_year(work_counts[0])
-                work_counts[0] = half_year_count
+        # 入職から4期間以内の場合は、最初の期間の勤務日数を12ヶ月換算する
+        if len(acquisition_dates) <= 4:
+            half_year_count = self.count_workday_half_year(work_counts[0])
+            work_counts[0] = half_year_count
 
-            effective_holidays = OrderedDict()
-            inday_dict = self.acquire_inday_holidays()
+        effective_holidays = OrderedDict()
+        inday_dict = self.acquire_inday_holidays()
 
-            # 各期間の勤務日数に対応する年休付与日数を取得
-            for period_index, work_count in enumerate(work_counts):
-                # 現在の期間に対応する付与日を取得
-                acquisition_date_index = 4 - period_index
-                if len(acquisition_dates) >= 4:
-                    acquisition_date = acquisition_dates[-acquisition_date_index]
-                elif len(acquisition_dates) == 3:
-                    effective_holidays = inday_dict
-                    acquisition_date = acquisition_dates[-(acquisition_date_index) + 1]
-                    print(
-                        f"Log acquisition: {acquisition_dates[-(acquisition_date_index) + 1]}"
-                    )
-                elif len(acquisition_dates) == 2:
-                    effective_holidays = inday_dict
-                    acquisition_date = acquisition_dates[-2]
-
-                # 年休日数を取得
-                holiday_days = self._process_acquisition_period(
-                    acquisition_date, work_count
+        # 各期間の勤務日数に対応する年休付与日数を取得
+        for period_index, work_count in enumerate(work_counts):
+            # 現在の期間に対応する付与日を取得
+            acquisition_date_index = 4 - period_index
+            if len(acquisition_dates) >= 4:
+                acquisition_date = acquisition_dates[-acquisition_date_index]
+            elif len(acquisition_dates) == 3:
+                effective_holidays = inday_dict
+                acquisition_date = acquisition_dates[-(acquisition_date_index) + 1]
+                print(
+                    f"Log acquisition: {acquisition_dates[-(acquisition_date_index) + 1]}"
                 )
+            elif len(acquisition_dates) == 2:
+                effective_holidays = inday_dict
+                acquisition_date = acquisition_dates[-2]
 
-                effective_holidays[acquisition_date] = holiday_days
+            # 年休日数を取得
+            holiday_days = self._process_acquisition_period(
+                acquisition_date, work_count
+            )
+            effective_holidays[acquisition_date] = holiday_days
 
             # logger = HolidayLogger.get_logger("INFO", "-info")
             # logger.info(f"ID{self.id}: 有効な年休付与: {dict(effective_holidays)}")
-            return effective_holidays
+        return effective_holidays
 
-        except Exception as e:
-            logger = HolidayLogger.get_logger("ERROR", "-err")
-            logger.error(
-                f"ID{self.id}: get_effective_holidaysでエラーが発生: {e}",
-                exc_info=True,
-            )
-            return OrderedDict()
+        # エラーハンドリング by Cursor、今はいらないと思う
+        # except Exception as e:
+        #     logger = HolidayLogger.get_logger("ERROR", "-err")
+        #     logger.error(
+        #         f"ID{self.id}: get_effective_holidaysでエラーが発生: {e}",
+        #         exc_info=True,
+        #     )
+        #     return OrderedDict()
 
 
 @dataclass
