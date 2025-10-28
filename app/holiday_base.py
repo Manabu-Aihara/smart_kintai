@@ -1,6 +1,6 @@
 from datetime import date, datetime
 from dataclasses import dataclass
-from typing import List
+from typing import List, Tuple
 from collections import OrderedDict
 from monthdelta import monthmod
 from dateutil.relativedelta import relativedelta
@@ -185,3 +185,16 @@ class HolidayBase:
 
         first_data = [(self.in_day, acquisition_days)]
         return OrderedDict(first_data)
+
+    # 表示用: STARTDAY, ENDDAYのペア
+    def print_acquisition_data(self) -> Tuple[list[date], list[date]]:
+        base_day = self.convert_base_day(self.in_day)
+        day_list = [self.in_day.date()] + self.get_acquisition_list(base_day)
+
+        end_day_list = [
+            end_day + relativedelta(years=1, days=-1) for end_day in day_list
+        ]
+        end_day_list[0] = self.get_acquisition_list(base_day)[0] + relativedelta(
+            days=-1
+        )
+        return (day_list, end_day_list)

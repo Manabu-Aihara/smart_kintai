@@ -1,6 +1,6 @@
 from datetime import date, datetime
 from dataclasses import dataclass, field
-from typing import List, Tuple, Dict
+from typing import List, Dict
 from collections import OrderedDict
 from monthdelta import monthmod
 from dateutil.relativedelta import relativedelta
@@ -30,20 +30,6 @@ class HolidayDayCount(HolidayBase):
     acquire: 日数
     get: 日付
     """
-
-    # 表示用: STARTDAY, ENDDAYのペア
-    def print_acquisition_data(self) -> Tuple[list[date], list[date]]:
-        base_day = self.convert_base_day(self.in_day)
-        day_list = [self.in_day.date()] + self.get_acquisition_list(base_day)
-
-        end_day_list = [
-            end_day + relativedelta(years=1, days=-1) for end_day in day_list
-        ]
-        end_day_list[0] = self.get_acquisition_list(base_day)[0] + relativedelta(
-            days=-1
-        )
-        return (day_list, end_day_list)
-
     """
     出退勤による勤務日数、範囲は付与前の直近2、3期間分
     3月、9月末に起動
@@ -189,7 +175,7 @@ class HolidayDayCount(HolidayBase):
             : List<date> 付与日リスト
         """
 
-    def shift_half_year_list(self) -> List[date]:
+    def _shift_half_year_list(self) -> List[date]:
         base_day: datetime = self.convert_base_day(self.in_day)
 
         # 入職日が第1週でなければ、翌月からカウント（今のところ私の独断）
@@ -220,7 +206,7 @@ class HolidayDayCount(HolidayBase):
         return shift_date_list
 
     """
-    入職日から次回付与日までの年休付与日数を取得
+    入職日から次回付与日増までの年休付与日数を取得
     @Param
         work_count: int 勤務日数
     @Return
@@ -229,7 +215,7 @@ class HolidayDayCount(HolidayBase):
 
     def acquire_holidays_dict(self, work_count: int) -> OrderedDict[date, int]:
         base_day: datetime = self.convert_base_day(self.in_day)
-        shift_date_list = self.shift_half_year_list()
+        shift_date_list = self._shift_half_year_list()
         # print(f"Shift date list: {shift_date_list}")
 
         # 次回付与日を含む
@@ -261,7 +247,7 @@ class HolidayDayCount(HolidayBase):
         if len(day_list) > len(
             AcquisitionType.name(divide_acquire_type(work_count)).under5y
         ):
-            print("Onward pass.", day_list)
+            # print("Onward pass.", day_list)
             for day in day_list[8:]:
                 holiday_pair[day] = AcquisitionType.name(
                     divide_acquire_type(work_count)
@@ -367,62 +353,140 @@ class HolidayDayCount(HolidayBase):
 
         return next_holiday
 
-    """
-    〜3年遡って付与された日数のリスト
-    @Return
-        : list<int> 付与日数リスト
+    def _find_matching_holiday_date(
+        self, acquisition_date: date, holiday_dict: OrderedDict[date, int]
+    ) -> date:
         """
+        付与日に相当する年休付与日を探す
 
-    def get_valid_holidays(self) -> List[int]:
+        @Param
+            acquisition_date: date これが付与日と一致する
+            holiday_dict: OrderedDict[date, int] 年休付与辞書
+        @Return
+            : date 一致する日付（見つからない場合はNone）
+        """
+        matched_date = None
+        # min_diff = float("inf")
+        # saved_date = None
+
+        for i, holiday_date in enumerate(holiday_dict.keys()):
+            holiday_date_normalized = (
+                holiday_date.date() if hasattr(holiday_date, "date") else holiday_date
+            )
+            # diff = abs((holiday_date_normalized - acqisition_date).days)
+            print(f"Diff: {acquisition_date}, {holiday_date_normalized}")
+            # 一致する場合（4月、10月）
+            if holiday_date_normalized == acquisition_date:
+                return holiday_date
+
+            # 一致しない場合（4月、10月以外）は、下記の手法で
+            # len(acquisition_dates) == 4 対応
+            # get_effective_holidaysのifが一個減った
+            if isinstance(holiday_date, datetime):
+                pass
+            elif acquisition_date > holiday_date_normalized:
+                matched_date = holiday_date_normalized
+            # len(acquisition_dates) == 4 対応
+            # matched_dateのNoneが最後になるところ、逆の条件の値が必要になる
+            elif matched_date is None and acquisition_date < holiday_date_normalized:
+                matched_date = holiday_date_normalized
+            # 上記elifと同様
+            # elif i == 1:  # and acquisition_date < holiday_date_normalized:
+            #     saved_date = holiday_date_normalized
+            #     matched_date = saved_date
+            print(f"_matched date: {matched_date}")
+
+            # made by Cursor
+            # elif diff < min_diff:
+            #     min_diff = diff
+            #     print(f"Min diff: {min_diff}")
+            #     matched_date = holiday_date_normalized
+        return matched_date
+
+    def _process_acquisition_period(
+        self, acquisition_date: date, work_count: int
+    ) -> int:
+        """
+        単一の付与期間の年休日数を処理する
+
+        @Param
+            acquisition_date: date 付与日
+            work_count: int 勤務日数
+        @Return
+            : int 年休日数
+        """
+        holiday_dict = self.acquire_holidays_dict(work_count)
+        print(f"Process holiday dict: {holiday_dict}")
+
+        # 一致する日付を探す
+        matched_date = self._find_matching_holiday_date(acquisition_date, holiday_dict)
+        print(f"Matched date: {matched_date}")
+
+        if matched_date:
+            return holiday_dict[matched_date]
+        else:
+            # デフォルト値を設定（ログ出力）
+            logger = HolidayLogger.get_logger("WARNING", "-info")
+            logger.warning(
+                f"ID{self.id}: 付与日 {acquisition_date} "
+                f"に対応する年休日数が見つかりません。"
+            )
+            return 0
+
+    def get_effective_holidays(self) -> OrderedDict[date, int]:
+        """
+        年休付与日と付与日数の対応関係を整理して返す
+
+        @Return
+            : OrderedDict[date, int] 付与日とその日数
+        """
+        # try:
         base_day = self.convert_base_day(self.in_day)
+        acquisition_dates = self.get_acquisition_list(base_day)
         work_counts = self.count_workdays()
 
-        holiday_list = []
-        if len(self.get_acquisition_list(base_day)) == 1:
-            # 入職日年休付与以外受けていない人
-            holiday_list = list(self.acquire_inday_holidays().values())  # 1個
-        elif len(self.get_acquisition_list(base_day)) == 2:
-            # 入職日含め、付与2回受けている人
-            work_counts_half_ajust = self.count_workday_half_year(work_counts[0])
-            holiday_list = list(self.acquire_inday_holidays().values())  # 入職日付与
-            print(
-                f"Acquisition date/days =3: {self.acquire_holidays_dict(work_counts_half_ajust)}"
-            )
-            holiday_list.append(
-                list(self.acquire_holidays_dict(work_counts_half_ajust).values())[1]
-            )  # 2個
-        elif len(self.get_acquisition_list(base_day)) == 3:
-            # 入職日含め、付与3回受けている人
-            work_counts_half_ajust = self.count_workday_half_year(work_counts[0])
-            work_counts = self.count_workdays()
-            holiday_list = list(self.acquire_inday_holidays().values())  # 入職日付与
-            for idx, count in enumerate([work_counts_half_ajust] + work_counts[1:]):
-                print(f"Acquisition date/days =4: {self.acquire_holidays_dict(count)}")
-                acquisition_days = list(self.acquire_holidays_dict(count).values())[
-                    -3 + idx
-                ]
-                holiday_list.append(acquisition_days)  # 4個
-        elif len(self.get_acquisition_list(base_day)) == 4:
-            # 付与4回以上
-            work_counts_half_ajust = self.count_workday_half_year(work_counts[0])
-            work_counts = self.count_workdays()
-            for idx, count in enumerate([work_counts_half_ajust] + work_counts[1:]):
-                print(f"Acquisition date/days >4: {self.acquire_holidays_dict(count)}")
-                acquisition_days = list(self.acquire_holidays_dict(count).values())[
-                    -4 + idx
-                ]
-                holiday_list.append(acquisition_days)  # 3個
-        elif len(self.get_acquisition_list(base_day)) >= 5:
-            # 付与5回以上
-            work_counts = self.count_workdays()
-            for idx, count in enumerate(work_counts):
-                print(f"Acquisition date/days >5: {self.acquire_holidays_dict(count)}")
-                acquisition_days = list(self.acquire_holidays_dict(count).values())[
-                    -4 + idx
-                ]
-                holiday_list.append(acquisition_days)  # 3個
+        # 入職から4期間以内の場合は、最初の期間の勤務日数を12ヶ月換算する
+        if len(acquisition_dates) <= 4:
+            half_year_count = self.count_workday_half_year(work_counts[0])
+            work_counts[0] = half_year_count
 
-        return holiday_list
+        effective_holidays = OrderedDict()
+        inday_dict = self.acquire_inday_holidays()
+
+        # 各期間の勤務日数に対応する年休付与日数を取得
+        for period_index, work_count in enumerate(work_counts):
+            # 現在の期間に対応する付与日を取得
+            acquisition_date_index = 4 - period_index
+            if len(acquisition_dates) >= 4:
+                acquisition_date = acquisition_dates[-acquisition_date_index]
+            elif len(acquisition_dates) == 3:
+                effective_holidays = inday_dict
+                acquisition_date = acquisition_dates[-(acquisition_date_index) + 1]
+                print(
+                    f"Log acquisition: {acquisition_dates[-(acquisition_date_index) + 1]}"
+                )
+            elif len(acquisition_dates) == 2:
+                effective_holidays = inday_dict
+                acquisition_date = acquisition_dates[-2]
+
+            # 年休日数を取得
+            holiday_days = self._process_acquisition_period(
+                acquisition_date, work_count
+            )
+            effective_holidays[acquisition_date] = holiday_days
+
+            # logger = HolidayLogger.get_logger("INFO", "-info")
+            # logger.info(f"ID{self.id}: 有効な年休付与: {dict(effective_holidays)}")
+        return effective_holidays
+
+        # エラーハンドリング by Cursor、今はいらないと思う
+        # except Exception as e:
+        #     logger = HolidayLogger.get_logger("ERROR", "-err")
+        #     logger.error(
+        #         f"ID{self.id}: get_effective_holidaysでエラーが発生: {e}",
+        #         exc_info=True,
+        #     )
+        #     return OrderedDict()
 
 
 @dataclass
