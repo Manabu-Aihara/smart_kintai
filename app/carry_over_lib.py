@@ -1,5 +1,6 @@
+import math
 from datetime import date, datetime
-from typing import Tuple, Dict, Any, OrderedDict
+from typing import Tuple, Dict, Any, OrderedDict, Callable
 from collections import defaultdict
 
 from .holiday_day_count import HolidayDayCount
@@ -11,7 +12,7 @@ def config_from_to_holiday() -> Tuple[date, date]:
     to_day4 = date(year=today.year, month=3, day=31)
     from_day10 = date(year=(today.year - 2), month=10, day=1)
     to_day10 = date(year=today.year, month=9, day=30)
-    if today.month in [5, 6, 7, 8, 9, 10]:
+    if today.month in [4, 5, 6, 7, 8, 9]:
         return from_day10, to_day10
     else:
         return from_day4, to_day4
@@ -71,6 +72,18 @@ def calc_leave_sum_times(api_data: Dict[str, float]) -> Tuple[float, float]:
     return leave_times, api_data.get("contract_vacation_hours")
 
 
+def calc_leave_ceiling_times(func: Callable[..., Tuple[float, float]]) -> int:
+    leave_times, contract_vacation_hours = func()
+    ceiling = math.ceil
+    # APIデータから時間休と中抜けの合計を計算
+    if leave_times == 0:
+        used_convert_days = 0  # used_convert_days は一旦保留
+    else:
+        # 時間休と中抜けを契約休暇時間で割って、切り上げて日数に変換
+        used_convert_days = ceiling(leave_times / contract_vacation_hours)
+    return used_convert_days
+
+
 # 一年後とか使えるかも
 # def calculate_prev_carry(api_prev_data_list) -> Dict[int, dict]:
 #     """
@@ -119,6 +132,7 @@ def calculate_carry_over_all(api_data_list) -> Dict[int, Dict[str, Any]]:
 
     two_years_result_dict = {}
     for staff_id, items in staff_data.items():
+        print(f"Debug : {items}")
         holiday_count_obj = get_concerned_user_object(staff_id)
         if holiday_count_obj:
             granted_dict: OrderedDict[date, int] = (
@@ -126,7 +140,7 @@ def calculate_carry_over_all(api_data_list) -> Dict[int, Dict[str, Any]]:
             )
             granted_list = list(granted_dict.values())
             grant_sum = sum(granted_list)
-            print(f"ID{staff_id}: 付与日数: {grant_sum}")
+            print(f"ID{staff_id}: 合計付与日数: {grant_sum}")
             used_leave_days = [calc_leave_sum_days(d) for d in items]
             used_leave_times, contract_vacation_hours = zip(
                 *[calc_leave_sum_times(d) for d in items]
@@ -139,8 +153,26 @@ def calculate_carry_over_all(api_data_list) -> Dict[int, Dict[str, Any]]:
             }
         else:
             print(f"ID{staff_id}: 対象外のユーザーです。")
-            # result[staff_id] = {
-            #     "付与日数": {hc.in_day.strftime("%Y-%m-%d")},
-            #     "使用日数": 0,
-            # }
     return two_years_result_dict
+
+
+def get_alert_holidays(api_data_list) -> Dict[int, float]:
+    two_years_data_dict = calculate_carry_over_all(api_data_list)
+    ceiling = math.ceil
+
+    notification_dict = {}
+    for staff_id, data in two_years_data_dict.items():
+        granted_sum = sum(data["付与日数"])
+        used_leave_sum: float = sum(data["使用年休"])
+        leave_time_calc_datas = [
+            ceiling(l_t / c_t)
+            for l_t, c_t in zip(data["使用時間休"], data["契約休暇時間"])
+        ]
+        used_leave_time_sum = sum(leave_time_calc_datas)
+        used_leave_total = used_leave_sum + used_leave_time_sum
+        if used_leave_total > granted_sum:
+            alert_value = used_leave_total - granted_sum
+        else:
+            alert_value = 0
+        notification_dict[staff_id] = alert_value
+    return notification_dict

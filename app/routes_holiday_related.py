@@ -70,10 +70,10 @@ def retrieve_api_data(url: str) -> List[dict]:
 
 @app.route("/carry-over/<shozoku_code>/<vacation_type>", methods=["GET"])
 def get_carry_over(shozoku_code, vacation_type):
-    # data_url = f"http://0.0.0.0:8001/frame-data/{shozoku_code}/{vacation_type}"
-    data_url = (
-        f"{os.getenv('CLOUD_CALC_PAGE')}/frame-data/{shozoku_code}/{vacation_type}"
-    )
+    data_url = f"http://0.0.0.0:8001/frame-data/{shozoku_code}/{vacation_type}"
+    # data_url = (
+    #     f"{os.getenv('CLOUD_CALC_PAGE')}/frame-data/{shozoku_code}/{vacation_type}"
+    # )
     # prev_data_url = f"http://0.0.0.0:8001/frame-prev-data/{shozoku_code}"
     # prev_data_url = f"{os.getenv('CLOUD_CALC_PAGE')}/frame-prev-data/{shozoku_code}"
     try:

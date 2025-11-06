@@ -377,7 +377,7 @@ class HolidayDayCount(HolidayBase):
             print(f"Diff: {acquisition_date}, {holiday_date_normalized}")
             # 一致する場合（4月、10月）
             if holiday_date_normalized == acquisition_date:
-                return holiday_date
+                matched_date = holiday_date
 
             # 一致しない場合（4月、10月以外）は、下記の手法で
             # len(acquisition_dates) == 4 対応
@@ -387,7 +387,7 @@ class HolidayDayCount(HolidayBase):
             elif acquisition_date > holiday_date_normalized:
                 matched_date = holiday_date_normalized
             # len(acquisition_dates) == 4 対応
-            # matched_dateのNoneが最後になるところ、逆の条件の値が必要になる
+            # matched_dateのNoneの i == 1 になるところ、逆の条件の値が必要になる
             elif matched_date is None and acquisition_date < holiday_date_normalized:
                 matched_date = holiday_date_normalized
             # 上記elifと同様
