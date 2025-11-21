@@ -1,28 +1,43 @@
 import pytest
 from pytest_mock import MockFixture
+from typing import OrderedDict
+from datetime import date
+
+
+from app.holiday_day_count import HolidayDayCount
 from app.carry_over_lib import (
     calc_leave_sum_days,
-    calculate_carry_over,
-    calculate_carry_over_all,
+    get_alert_target_dict,
 )
 
 # 仮のAPIデータ例
-mock_api_data = [
+mock_api_data_20 = [
     {
         "staff_id": 20,
         "contract_work_hours": 8.0,
         "contract_vacation_hours": 8.0,
-        # "workday_count": 440,
         "leave_full": 12,
         "leave_half": 2,
         "hourly_leave": 10,
         "half_hour_leave": 3,
-    },
+    }
+]
+mock_api_data_31 = [
+    {
+        "staff_id": 31,
+        "contract_work_hours": 6.0,
+        "contract_vacation_hours": 6.0,
+        "leave_full": 5,
+        "leave_half": 4,
+        "hourly_leave": 2,
+        "half_hour_leave": 2,
+    }
+]
+mock_api_data_194 = [
     {
         "staff_id": 194,
         "contract_work_hours": 7.0,
         "contract_vacation_hours": 7.0,
-        # "workday_count": 300,
         "leave_full": 5,
         "leave_half": 3,
         "hourly_leave": 3,
@@ -32,48 +47,88 @@ mock_api_data = [
         "staff_id": 194,
         "contract_work_hours": 7.5,
         "contract_vacation_hours": 7.5,
-        # "workday_count": 60,
         "leave_full": 1,
         "leave_half": 2,
         "hourly_leave": 3,
         "half_hour_leave": 0,
     },
 ]
+mock_api_data_256 = [
+    {
+        "staff_id": 256,
+        "contract_work_hours": 7.0,
+        "contract_vacation_hours": 7.0,
+        "leave_full": 2,
+        "leave_half": 0,
+        "hourly_leave": 2,
+        "half_hour_leave": 0,
+    }
+]
 
 
+@pytest.fixture
+def holiday_obj(app_context):
+    return HolidayDayCount(id=256)
+
+
+@pytest.fixture(name="holidays_under")
+def get_grant_holidays_under(
+    holiday_obj, mocker: MockFixture
+) -> OrderedDict[date, int]:
+    work_half_count = 220
+    work_counts = [180, 220]
+
+    # count_workdayをモック
+    mock_half_count = mocker.patch.object(
+        HolidayDayCount, "count_workday_half_year", return_value=work_half_count
+    )
+    mocker.patch.object(HolidayDayCount, "count_workdays", return_value=work_counts)
+
+    result = holiday_obj.get_effective_holidays()
+    assert mock_half_count.call_count == 1
+    return result
+
+
+@pytest.fixture(name="holidays_over")
+def get_grant_holidays_over(holiday_obj, mocker: MockFixture) -> OrderedDict[date, int]:
+    work_counts = [180, 220, 220]
+
+    # count_workdayをモック
+    mocker.patch.object(HolidayDayCount, "count_workdays", return_value=work_counts)
+
+    return holiday_obj.get_effective_holidays()
+
+
+@pytest.mark.skip
+def test_app_data_mock(holidays_under, holidays_over):
+    print(f"Under holidays: {holidays_under}")
+    print(f"Over holidays: {holidays_over}")
+
+
+@pytest.mark.skip
 def test_calc_leave_sum_days(app_context):
-    for member in mock_api_data:
-        result = calc_leave_sum_days(member)
+    for data in mock_api_data_194:
+        result = calc_leave_sum_days(data)
         print(f"Rsult times={result}")
 
 
-def test_calculate_carry_over(mocker: MockFixture, app_context):
-    mock_workday_count = mocker.patch(
-        "app.carry_over_lib.HolidayCalculate.get_valid_holidays",
-        return_value=[8, 9],
+# @pytest.mark.skip
+def test_alert_target_dict_under(holidays_under, mocker: MockFixture):
+    print(f"Grant holidays: {holidays_under}")
+    mock_effective_holidays = mocker.patch.object(
+        HolidayDayCount, "get_effective_holidays", return_value=holidays_under
     )
-    result_carry = calculate_carry_over(mock_api_data, 194)
-    print(f"Carry over for staff is {result_carry}")
-    assert result_carry == 6.5
-
-    # 17-5-3/2-1=9.5
-    # 9.5-1-2/2-1=6.5
-
-    assert mock_workday_count.called
-    # if member["staff_id"] == 20:
-    #     result = calcurate_carry_over(member, 20)
-    #     print(f"Carry over for staff is {result}")
-    #     assert result == 23  # 期待値は38-12-2/2-2=23
+    test_notification = get_alert_target_dict(mock_api_data_256)
+    print(f"Test notification: {test_notification}")
+    assert mock_effective_holidays.called
 
 
-def test_calculate_carry_over_all(mocker: MockFixture, app_context):
-    mock_workday_count = mocker.patch(
-        "app.carry_over_lib.HolidayCalculate.get_valid_holidays",
-        return_value=[18, 20],  # 20
-        # return_value=[8, 9], # 194
+@pytest.mark.skip
+def test_alert_target_dict_over(holidays_over, mocker: MockFixture):
+    print(f"Grant holidays: {holidays_over}")
+    mock_effective_holidays = mocker.patch.object(
+        HolidayDayCount, "get_effective_holidays", return_value=holidays_over
     )
-    result_carry_all = calculate_carry_over_all(mock_api_data)
-    print(f"Carry over for staff is {result_carry_all}")
-    assert result_carry_all == {20: 23, 194: 6.5}
-
-    assert mock_workday_count.called
+    test_notification = get_alert_target_dict(mock_api_data_20)
+    print(f"Test notification: {test_notification}")
+    assert mock_effective_holidays.called

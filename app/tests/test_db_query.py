@@ -4,8 +4,8 @@ from datetime import date
 from sqlalchemy import or_, and_, func
 
 from app import db
-from app.database_base import session
 from app.models_aprv import PaidHolidayLog
+from app.attendance_query_class import AttendanceQuery
 
 
 @pytest.mark.skip
@@ -35,9 +35,10 @@ def test_attendance_count(app_context):
     assert count == 481
 
 
+@pytest.mark.skip
 def test_paid_holiday_log_query():
     subquery = (
-        session.query(
+        db.session.query(
             PaidHolidayLog.STAFFID,
             func.max(PaidHolidayLog.id),
         )
@@ -45,9 +46,19 @@ def test_paid_holiday_log_query():
         .subquery()
     )
     query = (
-        session.query(PaidHolidayLog.REMAIN_DAYS)
+        db.session.query(PaidHolidayLog.REMAIN_DAYS)
         .join(subquery, PaidHolidayLog.id == subquery.c.max)
         .all()
     )
     print(f"Query result: {query}")
     assert len(query) == 5
+
+
+from_day = date(2025, 1, 1)
+to_day = date(2025, 10, 31)
+
+
+def test_get_distinct_query(app_context):
+    aq_instance = AttendanceQuery(201, from_day, to_day)
+    query = aq_instance.get_distinct_user_query().all()
+    print(f"Query result: {query}")

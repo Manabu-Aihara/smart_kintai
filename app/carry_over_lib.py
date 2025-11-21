@@ -1,8 +1,12 @@
 import math
+import requests
 from datetime import date, datetime
-from typing import Tuple, Dict, Any, OrderedDict, Callable
+from typing import List, Tuple, Dict, Any, OrderedDict, Callable
 from collections import defaultdict
+import re
 
+from . import db
+from .models import Team
 from .holiday_day_count import HolidayDayCount
 
 
@@ -24,9 +28,31 @@ def get_concerned_user_object(staff_id: int) -> HolidayDayCount:
     user_base_day: datetime = HolidayDayCount.convert_base_day(
         holiday_count_obj_for_staff.in_day
     )
-    if user_base_day.month == base_from.month:  # 本番は==にします
+    if user_base_day.month == base_from.month:
         return holiday_count_obj_for_staff
     return None
+
+
+def retrieve_api_data(url: str) -> List[dict]:
+    response = requests.get(url)
+    response.raise_for_status()
+    api_data_dict = response.json()  # dict形式（この時点で）で取得
+
+    result = []
+    for key, item in api_data_dict.items():
+        staff_id: str = re.sub(r"(\d{1,4}): (.+)", r"\1", key)
+        print(f"Staff ID: {staff_id} / item: {item}")
+        extracted = {
+            "staff_id": int(staff_id),
+            "contract_vacation_hours": item.get("契約休暇（時間）"),
+            "leave_full": item.get("年休（全日）"),
+            "leave_half": item.get("年休（半日）"),
+            "hourly_leave": item.get("時間休"),
+            "half_hour_leave": item.get("中抜け"),
+        }
+        result.append(extracted)
+
+    return result
 
 
 """
@@ -132,8 +158,8 @@ def calculate_carry_over_all(api_data_list) -> Dict[int, Dict[str, Any]]:
 
     two_years_result_dict = {}
     for staff_id, items in staff_data.items():
-        print(f"Debug : {items}")
-        holiday_count_obj = get_concerned_user_object(staff_id)
+        print(f"Debug api items: {items}")
+        holiday_count_obj = HolidayDayCount(staff_id)
         if holiday_count_obj:
             granted_dict: OrderedDict[date, int] = (
                 holiday_count_obj.get_effective_holidays()
@@ -156,23 +182,79 @@ def calculate_carry_over_all(api_data_list) -> Dict[int, Dict[str, Any]]:
     return two_years_result_dict
 
 
-def get_alert_holidays(api_data_list) -> Dict[int, float]:
-    two_years_data_dict = calculate_carry_over_all(api_data_list)
+def fetch_api_server_dict():
+    team_queries = db.session.query(Team).all()
+    shozoku_code_list = [team.CODE for team in team_queries]
+    today = datetime.today()
+    json_responses = []
+    if today.month == 3:
+        for shozoku_code in shozoku_code_list:
+            data_url = f"http://0.0.0.0:8001/frame-data/{shozoku_code}/4"
+            # data_url = (
+            #     f"{os.getenv('CLOUD_CALC_PAGE')}/frame-data/{shozoku_code}/4"
+            # )
+            api_data_list = retrieve_api_data(data_url)
+            json_responses.extend(api_data_list)
+    elif today.month == 9:
+        for shozoku_code in shozoku_code_list:
+            data_url = f"http://0.0.0.0:8001/frame-data/{shozoku_code}/10"
+            # data_url = (
+            #     f"{os.getenv('CLOUD_CALC_PAGE')}/frame-data/{shozoku_code}/10"
+            # )
+            api_data_list = retrieve_api_data(data_url)
+            json_responses.extend(api_data_list)
+
+    # APIデータを、ループで取得するのが好ましくなければ
+    if today.month == 3:
+        data_url = "http://0.0.0.0:8001/frame-data/0/4"
+        # data_url = f"{os.getenv('CLOUD_CALC_PAGE')}/frame-data/0/4"
+        api_data_list = retrieve_api_data(data_url)
+        json_responses.extend(api_data_list)
+    elif today.month == 9:
+        data_url = "http://0.0.0.0:8001/frame-data/0/10"
+        # data_url = f"{os.getenv('CLOUD_CALC_PAGE')}/frame-data/0/10"
+        api_data_list = retrieve_api_data(data_url)
+        json_responses.extend(api_data_list)
+
+    return json_responses
+
+
+def get_alert_target_dict(api_data_list) -> Dict[int, float]:
     ceiling = math.ceil
 
+    staff_data = defaultdict(list)
+    # staff_idごとにデータをまとめる
+    for data in api_data_list:
+        staff_data[data["staff_id"]].append(data)
+
     notification_dict = {}
-    for staff_id, data in two_years_data_dict.items():
-        granted_sum = sum(data["付与日数"])
-        used_leave_sum: float = sum(data["使用年休"])
-        leave_time_calc_datas = [
-            ceiling(l_t / c_t)
-            for l_t, c_t in zip(data["使用時間休"], data["契約休暇時間"])
-        ]
-        used_leave_time_sum = sum(leave_time_calc_datas)
-        used_leave_total = used_leave_sum + used_leave_time_sum
-        if used_leave_total > granted_sum:
-            alert_value = used_leave_total - granted_sum
-        else:
-            alert_value = 0
-        notification_dict[staff_id] = alert_value
+    for staff_id, items in staff_data.items():
+        print(f"Debug api items: {items}")
+        holiday_count_obj = HolidayDayCount(staff_id)
+        if holiday_count_obj:
+            granted_dict: OrderedDict[date, int] = (
+                holiday_count_obj.get_effective_holidays()
+            )
+            granted_list = list(granted_dict.values())
+            if len(granted_list) < 3:
+                notification_dict[staff_id] = 0
+                continue
+            granted_sum = sum(granted_list)
+            used_leave_day_list = [calc_leave_sum_days(d) for d in items]
+            used_leave_times, contract_vacation_hours = zip(
+                *[calc_leave_sum_times(d) for d in items]
+            )
+            leave_time_ceil_list = [
+                ceiling(l_t / c_t)
+                for l_t, c_t in zip(used_leave_times, contract_vacation_hours)
+            ]
+            used_leave_total = sum(used_leave_day_list) + sum(leave_time_ceil_list)
+            remain_value = granted_sum - used_leave_total
+            print(f"Grant list and used: {granted_list} / {used_leave_total}")
+            granted_list.pop(1)
+            if remain_value > sum(granted_list):
+                alert_value = remain_value - sum(granted_list)
+            else:
+                alert_value = 0
+            notification_dict[staff_id] = alert_value
     return notification_dict
