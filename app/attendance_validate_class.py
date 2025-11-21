@@ -34,9 +34,10 @@ class AttendanceValidate:
         if self.notification == "" and self.notification_pm == "":
             print("△Pass 1")
             return "input"
-        elif (
+
+        if (
             self.notification in self.n_rest_list
-            and self.notification_pm in self.n_rest_list
+            or self.notification_pm in self.n_rest_list
         ):
             print("△Pass 1.5")
             return "input"
@@ -47,7 +48,7 @@ class AttendanceValidate:
 
         # 1. notification == "早退" かつ全日申請 notification_pm == "" の場合のみ True
         if self.notification == "2" and self.notification_pm == "":
-            print("△Pass 2.5")
+            print("△Pass 3 (input)")
             return "input"
         elif self.notification in self.n_list + ["9"]:
             print("△Pass 3 (empty)")

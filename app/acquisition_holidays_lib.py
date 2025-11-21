@@ -25,8 +25,8 @@ def acquire_holidays_from_now() -> Dict[int, Dict[str, Any]]:
             and_(
                 User.DISPLAY == 0,
                 User.STAFFID != 10000,
-                User.STAFFID != 224,
-                User.STAFFID != 246,
+                # User.STAFFID != 224,
+                # User.STAFFID != 246,
             )
         )
         .all()

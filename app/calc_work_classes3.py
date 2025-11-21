@@ -204,18 +204,25 @@ class CalcTimeClass:
     def get_actual_work_time(self) -> timedelta:
         input_work_time = self.calc_base_work_time()
         print(f"△Actual second: {input_work_time.total_seconds()}")
-        for notification in self.notifications:
-            if notification == "5":
-                return self.c_work_time
+        for i, notification in enumerate(self.notifications):
+            if i == 1 and notification in self.n_code_list + [""]:
+                pass
+            elif notification == "5":
+                result_actual_time = self.c_work_time
             elif notification == "3" or (
                 notification == "9" and self.sh_starttime == "00:00"
             ):
-                return self.c_holiday_time
+                result_actual_time = self.c_holiday_time
             elif notification in self.n_absence_list:
-                return timedelta(0)
+                result_actual_time = timedelta(0)
             else:
                 print(f"△check!: {self.provide_half_rest()}")
-                return (
+                print(f"{input_work_time}")
+                # if notification in self.n_half_list + ["6"]:
+                #     print("Correct!")
+                # else:
+                #     print(f"Bad!: {notification}")
+                result_actual_time = (
                     input_work_time
                     + (
                         self.provide_half_rest()
@@ -224,6 +231,8 @@ class CalcTimeClass:
                     )
                     - self.calc_normal_rest(input_work_time)
                 )
+
+        return result_actual_time
 
     """
         残業分
@@ -243,6 +252,7 @@ class CalcTimeClass:
 
     # リアル実働時間（労働時間 - 年休、出張、時間休など）
     def get_real_time(self) -> float:
+        # 年休全日、出張全日なら00:00
         working_time = self.check_over_work()
         print(f"△Real time: {working_time}")
         for one_notification in self.notifications:

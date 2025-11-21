@@ -234,7 +234,7 @@ class HolidayDayCount(HolidayBase):
             if i == len(day_list):
                 break
             else:
-                print(f"Expect result: {day_list[i]} {acquisition_day}")
+                # print(f"Expect result: {day_list[i]} {acquisition_day}")
                 # 3月・9月途中入職に対応
                 if i == 2 and (self.in_day.month in [3, 9] and self.in_day.day != 1):
                     holiday_pair[day_list[1]] = AcquisitionType.name("A").under5y[
@@ -374,10 +374,10 @@ class HolidayDayCount(HolidayBase):
                 holiday_date.date() if hasattr(holiday_date, "date") else holiday_date
             )
             # diff = abs((holiday_date_normalized - acqisition_date).days)
-            print(f"Diff: {acquisition_date}, {holiday_date_normalized}")
+            # print(f"Diff: {acquisition_date}, {holiday_date_normalized}")
             # 一致する場合（4月、10月）
             if holiday_date_normalized == acquisition_date:
-                return holiday_date
+                matched_date = holiday_date
 
             # 一致しない場合（4月、10月以外）は、下記の手法で
             # len(acquisition_dates) == 4 対応
@@ -387,14 +387,14 @@ class HolidayDayCount(HolidayBase):
             elif acquisition_date > holiday_date_normalized:
                 matched_date = holiday_date_normalized
             # len(acquisition_dates) == 4 対応
-            # matched_dateのNoneが最後になるところ、逆の条件の値が必要になる
+            # matched_dateのNoneの i == 1 になるところ、逆の条件の値が必要になる
             elif matched_date is None and acquisition_date < holiday_date_normalized:
                 matched_date = holiday_date_normalized
             # 上記elifと同様
             # elif i == 1:  # and acquisition_date < holiday_date_normalized:
             #     saved_date = holiday_date_normalized
             #     matched_date = saved_date
-            print(f"_matched date: {matched_date}")
+            # print(f"_matched date: {matched_date}")
 
             # made by Cursor
             # elif diff < min_diff:
@@ -458,14 +458,17 @@ class HolidayDayCount(HolidayBase):
             # 現在の期間に対応する付与日を取得
             acquisition_date_index = 4 - period_index
             if len(acquisition_dates) >= 4:
+                print("△Effective holidays: 入職から4期間以上")
                 acquisition_date = acquisition_dates[-acquisition_date_index]
             elif len(acquisition_dates) == 3:
+                print("▲Effective holidays: 入職から3期間")
                 effective_holidays = inday_dict
                 acquisition_date = acquisition_dates[-(acquisition_date_index) + 1]
                 print(
                     f"Log acquisition: {acquisition_dates[-(acquisition_date_index) + 1]}"
                 )
             elif len(acquisition_dates) == 2:
+                print("■Effective holidays: 入職から2期間")
                 effective_holidays = inday_dict
                 acquisition_date = acquisition_dates[-2]
 

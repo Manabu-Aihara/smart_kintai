@@ -449,6 +449,7 @@ def output_attendance(STAFFID, reference_flag, selected_date):
 
                 # 実働時間
                 actual_work_time = calculation_instance.get_actual_work_time()
+                print(f"実働時間: {actual_work_time}")
                 actual_work_time_str = (
                     re.sub(
                         r"([0-9]{1,2}):([0-9]{2}):00", r"\1:\2", f"{actual_work_time}"
@@ -461,6 +462,9 @@ def output_attendance(STAFFID, reference_flag, selected_date):
                 ] = actual_work_time_str
 
                 actual_second = actual_work_time.total_seconds()
+
+                # real_time = calculation_instance.get_real_time()
+                # print(f"リアル時間: {real_time}")
                 # 勤務日数
                 workday_count += 1 if actual_second != 0.0 else 0
 
