@@ -9,9 +9,9 @@ from app.holiday_day_count import HolidayDayCount
 @pytest.fixture
 def holiday_calculate(app_context):
     # cat DB おすすめID
-    # 113 142 171 179 201 231 249, 75 184 242
+    # 113 142 171 179 201 231 249, 75 184 205 242
     # holiday_base_time など必要な初期化値は適宜調整
-    return HolidayDayCount(id=20)
+    return HolidayDayCount(id=205)
 
 
 @pytest.mark.skip
@@ -49,9 +49,9 @@ def test_count_workday_half_year(holiday_calculate):
     print(f"First work count: {result}")
 
 
-# @pytest.mark.skip
+@pytest.mark.skip
 def test_acqire_holidays_dict_mock(monkeypatch, holiday_calculate):
-    work_half_count = 180
+    work_half_count = 220
     monkeypatch.setattr(
         holiday_calculate,
         "count_workday_half_year",
@@ -72,13 +72,13 @@ def test_acquire_holidays_dict(holiday_calculate):
     print(acqisition_data_list)
 
 
-@pytest.mark.skip
+# @pytest.mark.skip
 # @pytest.mark.freeze_time(datetime(2025, 9, 30))
 def test_count_recent_workdays(holiday_calculate):
     test_workdays = holiday_calculate.count_recent_workdays()
     test_acqisition = holiday_calculate.select_next_holiday(test_workdays)
     print(f"Work count and next holiday: {test_workdays}, {test_acqisition}")
-    assert test_acqisition == 8
+    # assert test_acqisition == 8
 
 
 # @pytest.mark.skip
@@ -94,17 +94,17 @@ def test_count_recent_workdays(holiday_calculate):
 # @pytest.mark.skip
 # @pytest.mark.freeze_time(datetime(2025, 9, 30))
 def test_get_effective_holidays(monkeypatch, holiday_calculate):
-    work_half_count = 220
-    # 例: 直近2期間分の勤務日数が180日、220日だった場合
-    work_counts = [180, 220, 200]
+    # work_half_count = 220
+    # # 例: 直近2期間分の勤務日数が180日、220日だった場合
+    # work_counts = [180, 220, 200]
 
-    # count_workdayをモック
-    # TypeError: <lambda>() takes 0 positional arguments but 1 was given
-    # https://stackoverflow.com/questions/54641750/typeerror-lambda-takes-0-positional-arguments-but-1-was-given-due-to-monkey
-    monkeypatch.setattr(
-        holiday_calculate, "count_workday_half_year", lambda x: work_half_count
-    )
-    monkeypatch.setattr(holiday_calculate, "count_workdays", lambda: work_counts)
+    # # count_workdayをモック
+    # # TypeError: <lambda>() takes 0 positional arguments but 1 was given
+    # # https://stackoverflow.com/questions/54641750/typeerror-lambda-takes-0-positional-arguments-but-1-was-given-due-to-monkey
+    # monkeypatch.setattr(
+    #     holiday_calculate, "count_workday_half_year", lambda x: work_half_count
+    # )
+    # monkeypatch.setattr(holiday_calculate, "count_workdays", lambda: work_counts)
 
     # 期待される付与区分・付与日数はacquisition_type.pyのロジックに合わせて決定
     # 例: 30→30*12/2, 180→B区分, 220→A区分

@@ -1,3 +1,4 @@
+import os
 from typing import List
 from datetime import datetime
 import requests
@@ -17,6 +18,7 @@ from .carry_over_lib import (
     config_from_to_holiday,
     retrieve_api_data,
     calculate_carry_over_all,
+    fetch_api_server_dict,
 )
 from .acquisition_holidays_lib import (
     acquire_holidays_from_now,
@@ -172,3 +174,12 @@ async def add_grant_holidays():
                 await session.execute(statement=stmt)
 
     return redirect("/repair-holidays-form")
+
+
+@app.route("/api/base-month-all/<base_month>", methods=["GET"])
+def api_base_month_all(base_month: str):
+    try:
+        api_data_list = fetch_api_server_dict(base_month)
+        return jsonify({"data": api_data_list})
+    except requests.RequestException as e:
+        return jsonify({"error": str(e)}), 500

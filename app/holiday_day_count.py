@@ -460,13 +460,11 @@ class HolidayDayCount(HolidayBase):
             if len(acquisition_dates) >= 4:
                 print("△Effective holidays: 入職から4期間以上")
                 acquisition_date = acquisition_dates[-acquisition_date_index]
+            # 当テストのモックにより、アイテムが4つになることがある
             elif len(acquisition_dates) == 3:
                 print("▲Effective holidays: 入職から3期間")
                 effective_holidays = inday_dict
                 acquisition_date = acquisition_dates[-(acquisition_date_index) + 1]
-                print(
-                    f"Log acquisition: {acquisition_dates[-(acquisition_date_index) + 1]}"
-                )
             elif len(acquisition_dates) == 2:
                 print("■Effective holidays: 入職から2期間")
                 effective_holidays = inday_dict
