@@ -1,3 +1,4 @@
+import os
 import math
 import requests
 from datetime import date, datetime
@@ -208,13 +209,13 @@ def fetch_api_server_dict(base_month: str) -> List[dict]:
 
     # APIデータを、ループで取得するのが好ましくなければ
     if base_month == "4":
-        data_url = "http://0.0.0.0:8001/frame-data/0/4"
-        # data_url = f"{os.getenv('CLOUD_CALC_PAGE')}/frame-data/0/4"
+        data_url = "http://0.0.0.0:8001/frame-data/0/4/?alert=true"
+        # data_url = f"{os.getenv('CLOUD_CALC_PAGE')}/frame-data/0/4/?alert=true"
         api_data_list = retrieve_api_data(data_url)
         json_responses.extend(api_data_list)
     elif base_month == "10":
-        data_url = "http://0.0.0.0:8001/frame-data/0/10"
-        # data_url = f"{os.getenv('CLOUD_CALC_PAGE')}/frame-data/0/10"
+        data_url = "http://0.0.0.0:8001/frame-data/0/10/?alert=true"
+        # data_url = f"{os.getenv('CLOUD_CALC_PAGE')}/frame-data/0/10/?alert=true"
         api_data_list = retrieve_api_data(data_url)
         json_responses.extend(api_data_list)
 
@@ -271,11 +272,8 @@ def get_alert_target_dict(api_data_list) -> Dict[int, float]:
             used_leave_total = sum(used_leave_day_list) + sum(leave_time_ceil_list)
             remain_value = granted_sum - used_leave_total
             print(f"Grant list and Used: {granted_list} / {used_leave_total}")
-            # 消滅寸前の付与分を除外、その合計より残り日数が多ければ通知
-            # 要するに、除外分が残っているということ
-            granted_list.pop(1)
-            if remain_value > sum(granted_list):
-                alert_value = remain_value - sum(granted_list)
+            if remain_value > granted_list[-1]:
+                alert_value = remain_value - granted_list[-1]
             else:
                 alert_value = 0
             notification_dict[staff_id] = alert_value

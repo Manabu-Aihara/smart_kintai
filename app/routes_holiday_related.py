@@ -2,7 +2,9 @@ import os
 from typing import List
 from datetime import datetime
 import requests
+from pathlib import Path
 
+from jinja2 import Template
 from flask import jsonify, render_template, request, redirect
 from flask_login import current_user
 from sqlalchemy import update, insert
@@ -19,6 +21,7 @@ from .carry_over_lib import (
     retrieve_api_data,
     calculate_carry_over_all,
     fetch_api_server_dict,
+    get_alert_target_dict,
 )
 from .acquisition_holidays_lib import (
     acquire_holidays_from_now,
@@ -176,10 +179,21 @@ async def add_grant_holidays():
     return redirect("/repair-holidays-form")
 
 
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+
 @app.route("/api/base-month-all/<base_month>", methods=["GET"])
 def api_base_month_all(base_month: str):
+    dateime_format = datetime.today().strftime("%Y%m%d%H%M")
+    file_name = f"{base_month}-{dateime_format}"
     try:
         api_data_list = fetch_api_server_dict(base_month)
-        return jsonify({"data": api_data_list})
+        # return jsonify({"data": api_data_list})
+        alerts = get_alert_target_dict(api_data_list)
+        # return jsonify({"alerts": alerts})
+        out_path = Path(f"logs/holiday_alert_{file_name}.json")
+        with out_path.open(mode="w") as f:
+            # get_data(as_text=True)を使って文字列として保存...AIスゲーな
+            f.write(jsonify({"alerts": alerts}).get_data(as_text=True))
     except requests.RequestException as e:
         return jsonify({"error": str(e)}), 500

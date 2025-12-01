@@ -242,6 +242,7 @@ class HolidayDayCount(HolidayBase):
                     ]  # 常勤として10日付与
                 else:
                     holiday_pair[day_list[i]] = acquisition_day
+        print(f"Debug holiday pair under5y: {holiday_pair}")
 
         # 入職5年以上くらい
         if len(day_list) > len(
@@ -252,6 +253,7 @@ class HolidayDayCount(HolidayBase):
                 holiday_pair[day] = AcquisitionType.name(
                     divide_acquire_type(work_count)
                 ).onward
+                print(f"Debug holiday onward date: {day}")
         # except KeyError as e:
         #     logger = HolidayLogger.get_logger("ERROR", "-err")
         #     logger.error(f"ID{self.id}: {work_count}, {e}", exc_info=False)
@@ -280,6 +282,19 @@ class HolidayDayCount(HolidayBase):
             f"ID{self.id}: count_workday > : 勤務期間を取得します。期間: {start_of_range} ~ {end_of_range}"
         )
 
+        if (
+            start_of_range == self.in_day
+        ):  # and monthmod(start_of_range, end_of_range)[0].months < 6:
+            # カウントする範囲が第1週でなければ、翌月から（今のところ私の独断）
+            start_of_range = (
+                start_of_range + relativedelta(months=1)
+                if get_calendar_nth_dow(
+                    start_of_range.year, start_of_range.month, start_of_range.day
+                )
+                != 1
+                else start_of_range
+            )
+
         n_absence_list: List[str] = ["8", "17", "18", "19", "20"]
 
         filters = [
@@ -304,22 +319,9 @@ class HolidayDayCount(HolidayBase):
         )
         print(f"△Work count 1: {recent_work_count}")
 
-        # カウントする範囲が第1週でなければ、翌月から（今のところ私の独断）
-        shift_start_of_range = (
-            start_of_range + relativedelta(months=1)
-            if get_calendar_nth_dow(
-                start_of_range.year, start_of_range.month, start_of_range.day
-            )
-            != 1
-            else start_of_range
-        )
-
-        recent_work_count = (
-            self.count_workday_half_year(recent_work_count)
-            if monthmod(shift_start_of_range, end_of_range)[0].months < 6
-            else recent_work_count
-        )
-        print(f"▲Work count 2: {recent_work_count}")
+        if monthmod(self.in_day, end_of_range)[0].months < 6:
+            recent_work_count = self.count_workday_half_year(recent_work_count)
+            print(f"▲Work count 2: {recent_work_count}")
 
         return recent_work_count
 
