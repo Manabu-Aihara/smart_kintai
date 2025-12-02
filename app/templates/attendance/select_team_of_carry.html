@@ -14,13 +14,14 @@
   </select>
   <select name="vacation_type">
     <option value="0">先月末まで</option>
-    <option value="1">年休</option>
+    <option value="4">4月基準</option>
+    <option value="10">10月基準</option>
   </select>
   <input type="submit" value="表示">
 </form>
 <!-- <button class="generate-uuid">トークン</a> -->
 <p class="boundary-p"></p>
 <div class="holiday-panel"><a href="{{ url_for('get_paid_holiday_list') }}">年休記録修正</a></div>
-<p class="boundary-p">下記リンクは主に<strong>3月31日</strong>、及び<strong>9月30日</strong>用です</p>
+<p class="boundary-p">下記リンクは主に<strong>3月31日</strong>、及び<strong>9月30日</strong>から、一ヶ月用です</p>
 <div class="next-grant-panel"><a href="{{ url_for('confirm_grant_holidays') }}">次回の年休付与</a></div>
 {% endblock %}

@@ -52,18 +52,19 @@ class HolidayDayCount(HolidayBase):
                 )
                 != 1
             ):
-                # 入職日が第1週でなければ、翌月からカウント（今のところ私の独断）
                 middle_in_day = from_list[0] + relativedelta(months=1)
                 recent_from = [middle_in_day.replace(day=1)] + from_list[1:-2]
                 recent_to = (
                     to_list[:-2]
+                    # 以下対象者は一人だが
                     if middle_in_day.month not in [4, 10]
                     else to_list[1:-1]
                 )
-                print(f"△Debug count period: {recent_to}")
+                print(f"△Debug count period: {recent_from}")
             else:
-                # print_acquisition_dataは、末尾は翌付与日からの範囲なので、2つ前まで
-                recent_from = from_list[:-2]
+                # print_acquisition_dateの末尾は、翌付与日なので、3つ前まで
+                # 🙅from_list[:-2]、len(from_list) == 2 の場合
+                recent_from = [from_list[0]] + from_list[1:-2]
                 recent_to = to_list[:-2]
                 print(f"▲Debug count period: {recent_from}")
         # 4期間以上
@@ -72,6 +73,7 @@ class HolidayDayCount(HolidayBase):
             recent_to = to_list[-5:-2]
 
         overall_start = recent_from[0]
+        # len(to_list) == 2 の場合、空だがエラーにならない
         overall_end = to_list[-1]
 
         n_absence_list: List[str] = ["8", "17", "18", "19", "20"]
@@ -242,6 +244,7 @@ class HolidayDayCount(HolidayBase):
                     ]  # 常勤として10日付与
                 else:
                     holiday_pair[day_list[i]] = acquisition_day
+        print(f"Debug holiday pair under5y: {holiday_pair}")
 
         # 入職5年以上くらい
         if len(day_list) > len(
@@ -252,6 +255,7 @@ class HolidayDayCount(HolidayBase):
                 holiday_pair[day] = AcquisitionType.name(
                     divide_acquire_type(work_count)
                 ).onward
+                # print(f"Debug holiday onward date: {day}")
         # except KeyError as e:
         #     logger = HolidayLogger.get_logger("ERROR", "-err")
         #     logger.error(f"ID{self.id}: {work_count}, {e}", exc_info=False)
@@ -280,6 +284,19 @@ class HolidayDayCount(HolidayBase):
             f"ID{self.id}: count_workday > : 勤務期間を取得します。期間: {start_of_range} ~ {end_of_range}"
         )
 
+        if (
+            start_of_range == self.in_day
+        ):  # and monthmod(start_of_range, end_of_range)[0].months < 6:
+            # カウントする範囲が第1週でなければ、翌月から（今のところ私の独断）
+            start_of_range = (
+                start_of_range + relativedelta(months=1)
+                if get_calendar_nth_dow(
+                    start_of_range.year, start_of_range.month, start_of_range.day
+                )
+                != 1
+                else start_of_range
+            )
+
         n_absence_list: List[str] = ["8", "17", "18", "19", "20"]
 
         filters = [
@@ -304,22 +321,9 @@ class HolidayDayCount(HolidayBase):
         )
         print(f"△Work count 1: {recent_work_count}")
 
-        # カウントする範囲が第1週でなければ、翌月から（今のところ私の独断）
-        shift_start_of_range = (
-            start_of_range + relativedelta(months=1)
-            if get_calendar_nth_dow(
-                start_of_range.year, start_of_range.month, start_of_range.day
-            )
-            != 1
-            else start_of_range
-        )
-
-        recent_work_count = (
-            self.count_workday_half_year(recent_work_count)
-            if monthmod(shift_start_of_range, end_of_range)[0].months < 6
-            else recent_work_count
-        )
-        print(f"▲Work count 2: {recent_work_count}")
+        if monthmod(self.in_day.date(), end_of_range)[0].months < 6:
+            recent_work_count = self.count_workday_half_year(recent_work_count)
+            print(f"▲Work count 2: {recent_work_count}")
 
         return recent_work_count
 
@@ -445,6 +449,9 @@ class HolidayDayCount(HolidayBase):
         acquisition_dates = self.get_acquisition_list(base_day)
         work_counts = self.count_workdays()
 
+        if len(acquisition_dates) == 1:
+            return self.acquire_inday_holidays()
+
         # 入職から4期間以内の場合は、最初の期間の勤務日数を12ヶ月換算する
         if len(acquisition_dates) <= 4:
             half_year_count = self.count_workday_half_year(work_counts[0])
@@ -460,13 +467,11 @@ class HolidayDayCount(HolidayBase):
             if len(acquisition_dates) >= 4:
                 print("△Effective holidays: 入職から4期間以上")
                 acquisition_date = acquisition_dates[-acquisition_date_index]
+            # 当テストのモックにより、アイテムが4つになることがある
             elif len(acquisition_dates) == 3:
                 print("▲Effective holidays: 入職から3期間")
                 effective_holidays = inday_dict
                 acquisition_date = acquisition_dates[-(acquisition_date_index) + 1]
-                print(
-                    f"Log acquisition: {acquisition_dates[-(acquisition_date_index) + 1]}"
-                )
             elif len(acquisition_dates) == 2:
                 print("■Effective holidays: 入職から2期間")
                 effective_holidays = inday_dict

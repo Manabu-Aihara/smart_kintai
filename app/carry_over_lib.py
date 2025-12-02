@@ -1,3 +1,4 @@
+import os
 import math
 import requests
 from datetime import date, datetime
@@ -7,7 +8,7 @@ import re
 
 from . import db
 from .models import Team
-from .holiday_day_count import HolidayDayCount
+from .holiday_day_count import HolidayCountFactory, HolidayDayCount
 
 
 def config_from_to_holiday() -> Tuple[date, date]:
@@ -165,7 +166,9 @@ def calculate_carry_over_all(api_data_list) -> Dict[int, Dict[str, Any]]:
                 holiday_count_obj.get_effective_holidays()
             )
             granted_list = list(granted_dict.values())
-            grant_sum = sum(granted_list)
+            grant_sum = (
+                sum(granted_list) if len(granted_list) > 3 else sum(granted_list[:-1])
+            )
             print(f"ID{staff_id}: 合計付与日数: {grant_sum}")
             used_leave_days = [calc_leave_sum_days(d) for d in items]
             used_leave_times, contract_vacation_hours = zip(
@@ -182,41 +185,50 @@ def calculate_carry_over_all(api_data_list) -> Dict[int, Dict[str, Any]]:
     return two_years_result_dict
 
 
-def fetch_api_server_dict():
+def fetch_api_server_dict(base_month: str) -> List[dict]:
     team_queries = db.session.query(Team).all()
     shozoku_code_list = [team.CODE for team in team_queries]
     today = datetime.today()
     json_responses = []
-    if today.month == 3:
-        for shozoku_code in shozoku_code_list:
-            data_url = f"http://0.0.0.0:8001/frame-data/{shozoku_code}/4"
-            # data_url = (
-            #     f"{os.getenv('CLOUD_CALC_PAGE')}/frame-data/{shozoku_code}/4"
-            # )
-            api_data_list = retrieve_api_data(data_url)
-            json_responses.extend(api_data_list)
-    elif today.month == 9:
-        for shozoku_code in shozoku_code_list:
-            data_url = f"http://0.0.0.0:8001/frame-data/{shozoku_code}/10"
-            # data_url = (
-            #     f"{os.getenv('CLOUD_CALC_PAGE')}/frame-data/{shozoku_code}/10"
-            # )
-            api_data_list = retrieve_api_data(data_url)
-            json_responses.extend(api_data_list)
+    # if today.month == 3:
+    #     for shozoku_code in shozoku_code_list:
+    #         data_url = f"http://0.0.0.0:8001/frame-data/{shozoku_code}/4"
+    #         # data_url = (
+    #         #     f"{os.getenv('CLOUD_CALC_PAGE')}/frame-data/{shozoku_code}/4"
+    #         # )
+    #         api_data_list = retrieve_api_data(data_url)
+    #         json_responses.extend(api_data_list)
+    # elif today.month == 9:
+    #     for shozoku_code in shozoku_code_list:
+    #         data_url = f"http://0.0.0.0:8001/frame-data/{shozoku_code}/10"
+    #         # data_url = (
+    #         #     f"{os.getenv('CLOUD_CALC_PAGE')}/frame-data/{shozoku_code}/10"
+    #         # )
+    #         api_data_list = retrieve_api_data(data_url)
+    #         json_responses.extend(api_data_list)
 
     # APIデータを、ループで取得するのが好ましくなければ
-    if today.month == 3:
-        data_url = "http://0.0.0.0:8001/frame-data/0/4"
-        # data_url = f"{os.getenv('CLOUD_CALC_PAGE')}/frame-data/0/4"
+    if base_month == "4":
+        # data_url = "http://0.0.0.0:8001/frame-data/0/4/?alert=true"
+        data_url = f"{os.getenv('CLOUD_CALC_PAGE')}/frame-data/0/4/?alert=true"
         api_data_list = retrieve_api_data(data_url)
         json_responses.extend(api_data_list)
-    elif today.month == 9:
-        data_url = "http://0.0.0.0:8001/frame-data/0/10"
-        # data_url = f"{os.getenv('CLOUD_CALC_PAGE')}/frame-data/0/10"
+    elif base_month == "10":
+        # data_url = "http://0.0.0.0:8001/frame-data/0/10/?alert=true"
+        data_url = f"{os.getenv('CLOUD_CALC_PAGE')}/frame-data/0/10/?alert=true"
         api_data_list = retrieve_api_data(data_url)
         json_responses.extend(api_data_list)
 
     return json_responses
+
+
+"""
+    Calculate alert targets for carry-over holidays.
+    @param
+        api_data_list: List[dict] List of API data dictionaries.
+    @return
+        : Dict[int, float] Dictionary mapping staff_id to alert value.
+"""
 
 
 def get_alert_target_dict(api_data_list) -> Dict[int, float]:
@@ -227,33 +239,41 @@ def get_alert_target_dict(api_data_list) -> Dict[int, float]:
     for data in api_data_list:
         staff_data[data["staff_id"]].append(data)
 
+    holiday_count_obj = HolidayCountFactory()
     notification_dict = {}
     for staff_id, items in staff_data.items():
         print(f"Debug api items: {items}")
-        holiday_count_obj = HolidayDayCount(staff_id)
-        if holiday_count_obj:
+        holiday_count_instance = holiday_count_obj.get_instance(staff_id)
+        if holiday_count_instance:
+            # 年休付与履歴、過去3回分を取得
             granted_dict: OrderedDict[date, int] = (
-                holiday_count_obj.get_effective_holidays()
+                holiday_count_instance.get_effective_holidays()
             )
             granted_list = list(granted_dict.values())
-            if len(granted_list) < 3:
+            # 2回までなら、パス
+            if len(granted_list) < 2:
                 notification_dict[staff_id] = 0
                 continue
-            granted_sum = sum(granted_list)
+            # リスト4個はないと思うが、一応対応
+            granted_sum = sum(
+                granted_list
+            )  # if len(granted_list) == 3 else sum(granted_list[:-1])
+            # 使用全日年休・半休の合計を計算
             used_leave_day_list = [calc_leave_sum_days(d) for d in items]
+            # 使用時間休・中抜けの合計を計算
             used_leave_times, contract_vacation_hours = zip(
                 *[calc_leave_sum_times(d) for d in items]
             )
+            # 時間休・中抜けを日数に変換（切り上げ）
             leave_time_ceil_list = [
                 ceiling(l_t / c_t)
                 for l_t, c_t in zip(used_leave_times, contract_vacation_hours)
             ]
             used_leave_total = sum(used_leave_day_list) + sum(leave_time_ceil_list)
             remain_value = granted_sum - used_leave_total
-            print(f"Grant list and used: {granted_list} / {used_leave_total}")
-            granted_list.pop(1)
-            if remain_value > sum(granted_list):
-                alert_value = remain_value - sum(granted_list)
+            print(f"Grant list and Used: {granted_list} / {used_leave_total}")
+            if remain_value > granted_list[-1]:
+                alert_value = remain_value - granted_list[-1]
             else:
                 alert_value = 0
             notification_dict[staff_id] = alert_value
