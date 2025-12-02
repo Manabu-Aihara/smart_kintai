@@ -52,10 +52,10 @@ def select_for_carry_over():
 
 @app.route("/carry-over/<shozoku_code>/<vacation_type>", methods=["GET"])
 def get_carry_over(shozoku_code, vacation_type):
-    data_url = f"http://0.0.0.0:8001/frame-data/{shozoku_code}/{vacation_type}"
-    # data_url = (
-    #     f"{os.getenv('CLOUD_CALC_PAGE')}/frame-data/{shozoku_code}/{vacation_type}"
-    # )
+    # data_url = f"http://0.0.0.0:8001/frame-data/{shozoku_code}/{vacation_type}"
+    data_url = (
+        f"{os.getenv('CLOUD_CALC_PAGE')}/frame-data/{shozoku_code}/{vacation_type}"
+    )
     # prev_data_url = f"http://0.0.0.0:8001/frame-prev-data/{shozoku_code}"
     # prev_data_url = f"{os.getenv('CLOUD_CALC_PAGE')}/frame-prev-data/{shozoku_code}"
     try:
@@ -195,5 +195,8 @@ def api_base_month_all(base_month: str):
         with out_path.open(mode="w") as f:
             # get_data(as_text=True)を使って文字列として保存...AIスゲーな
             f.write(jsonify({"alerts": alerts}).get_data(as_text=True))
+        return jsonify({"alerts": alerts})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
     except requests.RequestException as e:
         return jsonify({"error": str(e)}), 500
