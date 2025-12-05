@@ -21,6 +21,7 @@ from .new_calendar import NewCalendar
 from .common_func import NoneCheck, TimeCheck, blankCheck
 from .attendance_util import get_month_workday
 from .attendance_logging import AttendanceLogger
+from .holiday_to_attendance import read_alert_json, calc_in_alert_month
 
 # わかりにくいが、日付選択に使うため必要らしい
 # from . import routes_attendance_option2
@@ -135,9 +136,12 @@ def output_attendance(STAFFID, reference_flag, selected_date):
     # 申請: M_NOTIFICATIONとindexの紐づけ
     notification_items = db.session.query(Notification).all()
     exclude_list = [3, 5, 7, 8, 17, 18, 19, 20]
-    notification_pm_list = [
-        n for i, n in enumerate(notification_items, 1) if i not in exclude_list
-    ]
+    notification_pm_list = [n for n in notification_items if n.CODE not in exclude_list]
+    # notification_pm_list = []
+    # for n in notification_items:
+    #     if n not in exclude_list:
+    #         notification_pm_list.append(n)
+    print(f"PM notification: {notification_pm_list}")
 
     # 入力必要項目
     specify_member_list = [
@@ -383,7 +387,6 @@ def output_attendance(STAFFID, reference_flag, selected_date):
             attendance_obj = group[0]
             print(attendance_obj)
             if isinstance(attendance_obj, Attendance):
-                print("Pass 6")
                 print(f"GET何日: {attendance_obj.WORKDAY.day}")
 
                 attendance_data[attendance_obj.WORKDAY.day]["ID"] = attendance_obj.id
@@ -449,7 +452,7 @@ def output_attendance(STAFFID, reference_flag, selected_date):
 
                 # 実働時間
                 actual_work_time = calculation_instance.get_actual_work_time()
-                print(f"実働時間: {actual_work_time}")
+                print(f"{attendance_obj.WORKDAY.day}日実働時間: {actual_work_time}")
                 actual_work_time_str = (
                     re.sub(
                         r"([0-9]{1,2}):([0-9]{2}):00", r"\1:\2", f"{actual_work_time}"
@@ -463,8 +466,8 @@ def output_attendance(STAFFID, reference_flag, selected_date):
 
                 actual_second = actual_work_time.total_seconds()
 
-                # real_time = calculation_instance.get_real_time()
-                # print(f"リアル時間: {real_time}")
+                real_time = calculation_instance.get_real_time()
+                print(f"{attendance_obj.WORKDAY.day}日リアル時間: {real_time}")
                 # 勤務日数
                 workday_count += 1 if actual_second != 0.0 else 0
 
@@ -506,6 +509,13 @@ def output_attendance(STAFFID, reference_flag, selected_date):
         # print(f"Debug: repeat_list: {repeat_list}")
         print(f"Debug: start_day_subscript: {start_day_subscript}")
 
+    holiday_remain = read_alert_json(STAFFID)
+    # one_day_notifications = request.form.getlist("notifications")
+    # pm_notificatons = request.form.getlist("notifications_pm")
+    # print(f"Front notifications: {one_day_notifications}")
+    # print(f"Back notifications: {pm_notificatons}")
+    by_time_rest, digestion = calc_in_alert_month()
+    holiday_remain_alert = holiday_remain - digestion
     # for key, value in attendance_table_dict.items():
     #     print(f"Key: {key} Value: {value}")
     #     for k, v in value.items():
@@ -531,6 +541,8 @@ def output_attendance(STAFFID, reference_flag, selected_date):
         work_cnt=workday_count,
         distance_sum=distance_sum,
         holiday_works=holiday_work10_rnd,
+        holiday_alert=holiday_remain_alert,
+        under_word=by_time_rest,
         reload_y=reload_y,
     )
 

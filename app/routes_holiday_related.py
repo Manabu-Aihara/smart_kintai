@@ -4,12 +4,11 @@ from datetime import datetime
 import requests
 from pathlib import Path
 
-from jinja2 import Template
 from flask import jsonify, render_template, request, redirect
 from flask_login import current_user
 from sqlalchemy import update, insert
 
-# from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.schedulers.background import BackgroundScheduler
 
 from . import app, db
 from .database_async import get_session
@@ -52,10 +51,10 @@ def select_for_carry_over():
 
 @app.route("/carry-over/<shozoku_code>/<vacation_type>", methods=["GET"])
 def get_carry_over(shozoku_code, vacation_type):
-    # data_url = f"http://0.0.0.0:8001/frame-data/{shozoku_code}/{vacation_type}"
-    data_url = (
-        f"{os.getenv('CLOUD_CALC_PAGE')}/frame-data/{shozoku_code}/{vacation_type}"
-    )
+    data_url = f"http://0.0.0.0:8001/frame-data/{shozoku_code}/{vacation_type}"
+    # data_url = (
+    #     f"{os.getenv('CLOUD_CALC_PAGE')}/frame-data/{shozoku_code}/{vacation_type}"
+    # )
     # prev_data_url = f"http://0.0.0.0:8001/frame-prev-data/{shozoku_code}"
     # prev_data_url = f"{os.getenv('CLOUD_CALC_PAGE')}/frame-prev-data/{shozoku_code}"
     try:
@@ -184,7 +183,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 @app.route("/api/base-month-all/<base_month>", methods=["GET"])
 def api_base_month_all(base_month: str):
-    dateime_format = datetime.today().strftime("%Y%m%d%H%M")
+    dateime_format = datetime.today().strftime("%Y%m%d")
     file_name = f"{base_month}-{dateime_format}"
     try:
         api_data_list = fetch_api_server_dict(base_month)
@@ -200,3 +199,11 @@ def api_base_month_all(base_month: str):
         return jsonify({"error": str(e)}), 500
     except requests.RequestException as e:
         return jsonify({"error": str(e)}), 500
+
+
+def excute_scheduler_alert_method():
+    schedule = BackgroundScheduler()
+    schedule.add_job(
+        api_base_month_all, "cron", month="3, 9", day="1", hour="7", minute="0"
+    )
+    schedule.start()
