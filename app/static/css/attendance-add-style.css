@@ -1,9 +1,15 @@
-#dl-pdf {
-  display: flex;
-  flex-wrap: wrap;
-}
 #dl-pdf .title-name {
   width: 100%;
+  margin: 0 auto;
+}
+#dl-pdf .holiday-alert {
+  width: 80%;
+  height: 7vh;
+  line-height: 3;
+  text-align: center;
+  font-weight: bold;
+  background-color: moccasin;
+  color: deeppink;
   margin: 0 auto;
 }
 #dl-pdf .date-area {

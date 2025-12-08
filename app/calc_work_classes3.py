@@ -205,19 +205,18 @@ class CalcTimeClass:
         input_work_time = self.calc_base_work_time()
         print(f"△Actual second: {input_work_time.total_seconds()}")
         for i, notification in enumerate(self.notifications):
-            if i == 1 and notification in self.n_code_list + [""]:
+            if i == 0 and notification in self.n_code_list + [""]:
                 pass
             elif notification == "5":
-                result_actual_time = self.c_work_time
+                return self.c_work_time
             elif notification == "3" or (
                 notification == "9" and self.sh_starttime == "00:00"
             ):
-                result_actual_time = self.c_holiday_time
+                return self.c_holiday_time
             elif notification in self.n_absence_list:
-                result_actual_time = timedelta(0)
+                return timedelta(0)
             else:
-                print(f"△check!: {self.provide_half_rest()}")
-                print(f"{input_work_time}")
+                print(f"△Provide half!: {self.provide_half_rest()}")
                 # if notification in self.n_half_list + ["6"]:
                 #     print("Correct!")
                 # else:
@@ -231,8 +230,8 @@ class CalcTimeClass:
                     )
                     - self.calc_normal_rest(input_work_time)
                 )
-
-        return result_actual_time
+                print(f"△Half actual: {result_actual_time}")
+                return result_actual_time
 
     """
         残業分

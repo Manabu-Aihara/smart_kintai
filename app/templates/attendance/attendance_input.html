@@ -8,6 +8,7 @@
     integrity="sha384-xOolHFLEh07PJGoPkLv1IbcEPTNtaed2xpHsD9ESMhqIYd0nLMwNLD69Npy4HI+N" crossorigin="anonymous">
   <link href="{{bootstrap_find_resource('css/bootstrap.css', cdn='bootstrap')}}" rel="stylesheet">
   <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/attendance-add-style.css') }}">
   <!-- bootstrap-datepicker -->
   <link rel="stylesheet" type="text/css"
     href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.min.css">
@@ -54,10 +55,17 @@
         </ul>
       </div><!-- .posilock -->
       <div id="dl-pdf">
+        <input type="hidden" value="{{ select_m }}" id="alert-month">
         <div class="text-center title-name">
           <h3>{{ select_y }}年{{ select_m }}月分出退勤</h3>
           <h4>社員ID：{{ user.STAFFID }}氏名：{{ user.LNAME}} {{ user.FNAME }}</h4>
         </div>
+
+        <input type="hidden" value="{{ holiday_alert }}" id="holiday-remain">
+        {% if holiday_alert != 0 and holiday_alert is not none %}
+        <div class="holiday-alert">今月末で、<span id="alert-remain"></span><span id="alert-time"></span>日分の有給休暇が消えてしまいます。
+        </div>
+        {% endif %}
 
         <div class="disp">
           {% with successes = get_flashed_messages(category_filter=["success", "pre-success"]) %}
@@ -164,9 +172,7 @@
                   not none))
                   %}
                   <input class="form-control form-control-sm checked-time" type="time"
-                    name="begin_time{{ outer_key }}{{ ns.cnt }}" value="{{ inner_value_dict['start_time'] }}"><span>{{
-                    inner_value_dict["notification"]
-                    }}</span>
+                    name="begin_time{{ outer_key }}{{ ns.cnt }}" value="{{ inner_value_dict['start_time'] }}">
                   {% elif inner_value_dict["start_time"] == "00:00" and
                   inner_value_dict["end_time"] !=
                   "00:00" %}
@@ -176,6 +182,9 @@
                   <input class="form-control form-control-sm" type="time" name="begin_time{{ outer_key }}{{ ns.cnt }}"
                     value="{{ inner_value_dict['start_time'] }}">
                   {% endif %}
+                  <!-- <input type="hidden" name="notifications" id="notifications_{{ ns.cnt }}"
+                    value="{{ inner_value_dict['notification'] or '' }}"> -->
+                  <span class="notifications">{{ inner_value_dict['notification'] or '' }}</span>
                 </div>
               </td>
               <!-- 終業時間 -->
@@ -186,8 +195,7 @@
                   "00:00") %}
                   <input class="form-control form-control-sm checked-time" type="time"
                     name="fin_time{{ outer_key }}{{ ns.cnt }}" value="{{ inner_value_dict['end_time'] }}"
-                    onchange="func1()"><span>{{
-                    inner_value_dict["notification_pm"] }}</span>
+                    onchange="func1()">
                   {% elif (inner_value_dict["start_time"] == "00:00" and
                   inner_value_dict["end_time"] ==
                   "00:00")
@@ -206,6 +214,9 @@
                   <input class="form-control form-control-sm" type="time" name="fin_time{{ outer_key }}{{ ns.cnt }}"
                     value="{{ inner_value_dict['end_time'] }}" onchange="func1()">
                   {% endif %}
+                  <!-- <input type="hidden" name="notifications_pm" id="notifications_pm_{{ ns.cnt }}"
+                    value="{{ inner_value_dict['notification_pm'] or '' }}"> -->
+                  <span class="notifications_pm">{{ inner_value_dict['notification_pm'] or '' }}</span>
                 </div>
               </td>
               <!-- 走行距離 -->
@@ -218,7 +229,8 @@
               </td>
               <!-- 申請AM -->
               <td class="text-center">
-                <select class="form-control form-control-sm" name="notification{{ outer_key }}{{ ns.cnt }}">
+                <select class="form-control form-control-sm notification-select"
+                  name="notification{{ outer_key }}{{ ns.cnt }}" data-index="{{ ns.cnt }}">
                   <option value=""></option>
                   {% for notifi_opt in notifi_lst %}
                   {# Jinja2で数値(int)に変換エラー：UndefinedError: 'int' is undefined #}
@@ -235,7 +247,8 @@
               <!-- 申請PM -->
               <td class="text-center">
                 <div>
-                  <select class="form-control form-control-sm" name="notification_pm{{ outer_key }}{{ ns.cnt }}"
+                  <select class="form-control form-control-sm notification-pm-select"
+                    name="notification_pm{{ outer_key }}{{ ns.cnt }}" data-index="{{ ns.cnt }}"
                     style="border:1px solid;border-color:#dcdcdc;font-size:0.9em;">
                     {% if inner_value_dict["notification_pm"] == "" %}
                     <option value=""></option>
@@ -334,7 +347,7 @@
   <script>
     window.addEventListener('scroll', function () {
       scroll_position = window.pageYOffset;
-      console.log(scroll_position);
+      // console.log(scroll_position);
       document.querySelector('input[type=text][name=reload_h]').value = scroll_position;
     });          
   </script>
@@ -391,6 +404,7 @@
     }
     setInterval(realTime, 1000);
   </script>
+  <script src="{{ url_for('static', filename='js/CalcLastMonthRemains.js') }}"></script>
   {% endblock %}
 </body>
 {% endblock %}

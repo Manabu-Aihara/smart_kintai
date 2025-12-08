@@ -209,13 +209,13 @@ def fetch_api_server_dict(base_month: str) -> List[dict]:
 
     # APIデータを、ループで取得するのが好ましくなければ
     if base_month == "4":
-        # data_url = "http://0.0.0.0:8001/frame-data/0/4/?alert=true"
-        data_url = f"{os.getenv('CLOUD_CALC_PAGE')}/frame-data/0/4/?alert=true"
+        data_url = "http://0.0.0.0:8001/frame-data/0/4/?alert=true"
+        # data_url = f"{os.getenv('CLOUD_CALC_PAGE')}/frame-data/0/4/?alert=true"
         api_data_list = retrieve_api_data(data_url)
         json_responses.extend(api_data_list)
     elif base_month == "10":
-        # data_url = "http://0.0.0.0:8001/frame-data/0/10/?alert=true"
-        data_url = f"{os.getenv('CLOUD_CALC_PAGE')}/frame-data/0/10/?alert=true"
+        data_url = "http://0.0.0.0:8001/frame-data/0/10/?alert=true"
+        # data_url = f"{os.getenv('CLOUD_CALC_PAGE')}/frame-data/0/10/?alert=true"
         api_data_list = retrieve_api_data(data_url)
         json_responses.extend(api_data_list)
 
