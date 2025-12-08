@@ -55,14 +55,16 @@
         </ul>
       </div><!-- .posilock -->
       <div id="dl-pdf">
+        <input type="hidden" value="{{ select_m }}" id="alert-month">
         <div class="text-center title-name">
           <h3>{{ select_y }}年{{ select_m }}月分出退勤</h3>
           <h4>社員ID：{{ user.STAFFID }}氏名：{{ user.LNAME}} {{ user.FNAME }}</h4>
         </div>
 
+        <input type="hidden" value="{{ holiday_alert }}" id="holiday-remain">
         {% if holiday_alert != 0 and holiday_alert is not none %}
-        <div class="holiday-alert">今月末で、<span style="color: red;">{{ holiday_alert }}日{{ under_word
-            }}</span>分の有給休暇が消えてしまいます。</div>
+        <div class="holiday-alert">今月末で、<span id="alert-remain"></span><span id="alert-time"></span>日分の有給休暇が消えてしまいます。
+        </div>
         {% endif %}
 
         <div class="disp">
@@ -180,8 +182,9 @@
                   <input class="form-control form-control-sm" type="time" name="begin_time{{ outer_key }}{{ ns.cnt }}"
                     value="{{ inner_value_dict['start_time'] }}">
                   {% endif %}
-                  <input type="hidden" name="notifications" id="notifications_{{ ns.cnt }}"
-                    value="{{ inner_value_dict['notification'] or '' }}">
+                  <!-- <input type="hidden" name="notifications" id="notifications_{{ ns.cnt }}"
+                    value="{{ inner_value_dict['notification'] or '' }}"> -->
+                  <span class="notifications">{{ inner_value_dict['notification'] or '' }}</span>
                 </div>
               </td>
               <!-- 終業時間 -->
@@ -211,8 +214,9 @@
                   <input class="form-control form-control-sm" type="time" name="fin_time{{ outer_key }}{{ ns.cnt }}"
                     value="{{ inner_value_dict['end_time'] }}" onchange="func1()">
                   {% endif %}
-                  <input type="hidden" name="notifications_pm" id="notifications_pm_{{ ns.cnt }}"
-                    value="{{ inner_value_dict['notification_pm'] or '' }}">
+                  <!-- <input type="hidden" name="notifications_pm" id="notifications_pm_{{ ns.cnt }}"
+                    value="{{ inner_value_dict['notification_pm'] or '' }}"> -->
+                  <span class="notifications_pm">{{ inner_value_dict['notification_pm'] or '' }}</span>
                 </div>
               </td>
               <!-- 走行距離 -->
@@ -400,6 +404,7 @@
     }
     setInterval(realTime, 1000);
   </script>
+  <script src="{{ url_for('static', filename='js/CalcLastMonthRemains.js') }}"></script>
   {% endblock %}
 </body>
 {% endblock %}

@@ -509,13 +509,7 @@ def output_attendance(STAFFID, reference_flag, selected_date):
         # print(f"Debug: repeat_list: {repeat_list}")
         print(f"Debug: start_day_subscript: {start_day_subscript}")
 
-    holiday_remain = read_alert_json(STAFFID)
-    # one_day_notifications = request.form.getlist("notifications")
-    # pm_notificatons = request.form.getlist("notifications_pm")
-    # print(f"Front notifications: {one_day_notifications}")
-    # print(f"Back notifications: {pm_notificatons}")
-    by_time_rest, digestion = calc_in_alert_month()
-    holiday_remain_alert = holiday_remain - digestion
+    holiday_remain_alert = read_alert_json(STAFFID)
     # for key, value in attendance_table_dict.items():
     #     print(f"Key: {key} Value: {value}")
     #     for k, v in value.items():
@@ -542,7 +536,6 @@ def output_attendance(STAFFID, reference_flag, selected_date):
         distance_sum=distance_sum,
         holiday_works=holiday_work10_rnd,
         holiday_alert=holiday_remain_alert,
-        under_word=by_time_rest,
         reload_y=reload_y,
     )
 

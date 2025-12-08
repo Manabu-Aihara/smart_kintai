@@ -15,11 +15,10 @@ def read_alert_json(my_id: str):
     today = date.today()
 
     d = {}
-    if today.month == 12:  # .in_([3, 9]):
+    if today.month in [3, 9]:
         pattern = (
             r"holiday_alert_"
-            # + str(today.month + 1)
-            + str(10)
+            + (str(10) if today.month == 9 else str(4))
             + "-"
             + str(today.year)
             + r"\d{4}.json"
@@ -36,6 +35,7 @@ def read_alert_json(my_id: str):
             return v
 
 
+# GETハンドラにて、request.formから直接値を取得することができないため、使えない
 def calc_in_alert_month() -> Tuple[str, float]:
     one_day_notifications = request.form.getlist("notifications")
     pm_notificatons = request.form.getlist("notifications_pm")
@@ -65,7 +65,17 @@ def calc_in_alert_month() -> Tuple[str, float]:
     return additional, digestion_count
 
 
-# 例: holiday_to_attendance.py
+# 上の関数の代替: Attendanceテーブルのデータを引数として受け取り、同様の計算を行う
+"""
+Calculate the number of holiday hours to be deducted based on attendance table data.
+    Args:
+        attd_tbl (Dict): A nested dictionary representing the attendance table data.
+    Returns:
+        Tuple[str, float]: A tuple containing a string indicating if time-based rest
+          was taken and the total count of holiday hours to be deducted.
+    """
+
+
 def calc_in_alert_month_from_table(attd_tbl) -> Tuple[str, float]:
     time_rest_list = ["10", "11", "12", "13", "14", "15"]
     count = 0.0
