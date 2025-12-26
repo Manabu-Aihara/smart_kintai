@@ -156,6 +156,7 @@ class CalcTimeClass:
             )
         elif approval_count == 1:
             return (
+                # 2025/12/26 ここで不都合が生じる
                 self.c_work_time - input_time
                 # irregular!
                 if input_time < (self.c_work_time / 2)
@@ -203,7 +204,7 @@ class CalcTimeClass:
     # 9: 慶弔 congratulations and condolences
     def get_actual_work_time(self) -> timedelta:
         input_work_time = self.calc_base_work_time()
-        print(f"△Actual second: {input_work_time.total_seconds()}")
+        print(f"△Input second: {input_work_time.total_seconds()}")
         for i, notification in enumerate(self.notifications):
             if i == 0 and notification in self.n_code_list + [""]:
                 pass
@@ -230,7 +231,7 @@ class CalcTimeClass:
                     )
                     - self.calc_normal_rest(input_work_time)
                 )
-                print(f"△Half actual: {result_actual_time}")
+                print(f"△Actual pass: {result_actual_time}")
                 return result_actual_time
 
     """

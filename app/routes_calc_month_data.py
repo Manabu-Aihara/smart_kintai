@@ -11,6 +11,7 @@ from itertools import groupby
 from flask import redirect, render_template, request
 from flask_login import current_user
 from flask_login.utils import login_required
+from sqlalchemy import and_
 from sqlalchemy.orm import Query
 from pandas import Series
 
@@ -280,9 +281,11 @@ async def calculate_month_data2(startday: str, worktype: str):
             )
         )
     elif worktype == "2":
-        contract_distinct_user_query = (
-            attendance_query_obj.get_distinct_user_query().filter(
-                StaffJobContract.CONTRACT_CODE == 2
+        contract_distinct_user_query = attendance_query_obj.get_distinct_user_query().filter(
+            and_(
+                StaffJobContract.CONTRACT_CODE == 2,
+                # 一旦ここで止まってしまうので。普段はコメントアウト
+                User.STAFFID != 259,
             )
         )
 

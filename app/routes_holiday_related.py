@@ -201,9 +201,15 @@ def api_base_month_all(base_month: str):
         return jsonify({"error": str(e)}), 500
 
 
-def excute_scheduler_alert_method():
+def excute_scheduler_alert_method(base_month: str):
     schedule = BackgroundScheduler()
     schedule.add_job(
-        api_base_month_all, "cron", month="3, 9", day="1", hour="7", minute="0"
+        api_base_month_all,
+        "cron",
+        month="3, 9",
+        day="1",
+        hour="7",
+        minute="0",
+        kwargs={"base_month": base_month},
     )
     schedule.start()
