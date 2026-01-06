@@ -165,8 +165,8 @@ def calc_attendance_of_term(
         holiday_cnt += 1 if one_person_attendance.NOTIFICATION == "3" else 0
         half_holiday_cnt += (
             1
-            if one_person_attendance.NOTIFICATION == "4"
-            or one_person_attendance.NOTIFICATION2 == "4"
+            if one_person_attendance.NOTIFICATION in ["4", "16"]
+            or one_person_attendance.NOTIFICATION2 in ["4", "16"]
             else 0
         )
         late_cnt += (

@@ -1,5 +1,5 @@
 import os
-from datetime import timedelta
+from datetime import timedelta, date
 import logging
 from logging.handlers import RotatingFileHandler
 
@@ -100,3 +100,11 @@ file_handler.setLevel(logging.INFO)
 app.logger.addHandler(file_handler)
 
 app.logger.setLevel(logging.INFO)
+
+from .routes_holiday_related import excute_scheduler_alert_method  # noqa: E402,F401
+
+today = date.today()
+if today.month == 3:
+    excute_scheduler_alert_method("4")
+elif today.month == 9:
+    excute_scheduler_alert_method("10")
