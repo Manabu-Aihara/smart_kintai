@@ -201,13 +201,11 @@ class CalcTimeClass:
         input_work_time = self.calc_base_work_time()
         if self.sh_overtime == "0":
             print(f"△Approval half provide: {self._provide_half_notify()}")
-            working_time = (
+            return (
                 self.c_work_time
                 - self._provide_half_notify()
                 # - self.calc_normal_rest(input_work_time)
             )
-            # 契約時間 / 2 or 契約時間 or irregular
-            return working_time
         elif self.sh_overtime == "1":  # 残業した場合
             work_without_rest_time = input_work_time - self.calc_normal_rest(
                 input_work_time

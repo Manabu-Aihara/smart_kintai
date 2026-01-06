@@ -7,7 +7,7 @@ from pandas import Series
 
 from app import db
 from .models import RecordPaidHoliday
-from .calc_work_classes3 import CalcTimeClass, output_rest_time
+from .calc_work_classes4 import CalcTimeClass, output_rest_time
 
 """
     集計結果をSeriesで
