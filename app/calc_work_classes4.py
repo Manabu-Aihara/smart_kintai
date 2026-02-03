@@ -131,7 +131,7 @@ class CalcTimeClass:
 
     """
         irregular case handling
-        irregular case: 入力時間 (- 通常の休憩) < contract time
+        irregular case: 入力時間 < contract time
         @Params: timedelta input_work_time, int approval_count
         @Return: timedelta
         """
@@ -147,7 +147,7 @@ class CalcTimeClass:
         else:
             return timedelta(0)
 
-        return deal_with_irregular_time + self.calc_normal_rest(input_work_time)
+        return deal_with_irregular_time  # + self.calc_normal_rest(input_work_time)
 
     """
         休暇申請が半日ある場合の実働時間調整
@@ -250,12 +250,17 @@ class CalcTimeClass:
         """
 
     def get_over_time(self) -> float:
-        input_work_time = self.check_over_work()  # self.sh_overtime == "1" が前提
+        # self.sh_overtime == "1" が前提
+        if self.sh_overtime == "0":
+            return timedelta(0)
+
+        input_work_time = self.check_over_work()
         for one_notification in self.notifications:
             if one_notification in self.n_half_list + ["6"]:
                 over_time_in_work = input_work_time - self.c_work_time / 2
             else:
                 over_time_in_work = input_work_time - self.c_work_time
+        print(f"△Over time: {over_time_in_work}")
         return over_time_in_work.total_seconds()
 
     """

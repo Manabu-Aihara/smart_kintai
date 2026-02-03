@@ -95,6 +95,14 @@ def post_to_token():
     # return redirect("https://hello-865742550561.asia-northeast1.run.app")
 
 
+@app.route("/mcp/auth", methods=["GET", "POST"])
+@login_required
+def post_secure_data():
+    user_num, group_num = get_user_group_id(current_user.STAFFID)
+    token_dict = issue_token(user_num, group_num)
+    return redirect(f"http://127.0.0.1:8001/secure-data?token={token_dict['data']}")
+
+
 @app.route("/refresh", methods=["GET", "POST"])
 # @login_required
 @token_required

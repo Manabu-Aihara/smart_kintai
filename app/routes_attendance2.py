@@ -395,7 +395,7 @@ def output_attendance(STAFFID, reference_flag, selected_date):
         print(f"List detail: {group_list}")
         for group in group_list:
             attendance_obj = group[0]
-            print(attendance_obj)
+            # print(attendance_obj)
             if isinstance(attendance_obj, Attendance):
                 print(f"GET何日: {attendance_obj.WORKDAY.day}")
                 work_day = attendance_obj.WORKDAY.day
@@ -465,17 +465,13 @@ def output_attendance(STAFFID, reference_flag, selected_date):
 
                 real_time = calculation_instance.get_real_time()
                 print(f"{work_day}日リアル時間: {real_time}")
+                over_time = calculation_instance.get_over_time()
+                print(f"{work_day}日残業時間: {over_time}")
+
                 # 勤務日数
                 workday_count += 1 if actual_second != 0.0 else 0
 
                 actual_time_sum += actual_second
-                time_sum_normal = actual_time_sum / 3600
-                # 実働時間計：10進数
-                actual_time_rnd = (
-                    Decimal(time_sum_normal).quantize(Decimal("0.01"), ROUND_HALF_UP)
-                    if time_sum_normal >= 0
-                    else "--:--"
-                )
 
                 # 走行距離計
                 distance_sum += (
@@ -499,6 +495,17 @@ def output_attendance(STAFFID, reference_flag, selected_date):
                 holiday_work10_rnd = Decimal(holiday_work_10).quantize(
                     Decimal("0.01"), ROUND_HALF_UP
                 )
+
+        print(f"実働時間計(秒): {actual_time_sum}")
+        time_sum_normal = actual_time_sum / 3600
+        print(f"実働時間計(時間): {time_sum_normal}")
+
+        # 実働時間計：10進数
+        actual_time_rnd = (
+            Decimal(time_sum_normal).quantize(Decimal("0.01"), ROUND_HALF_UP)
+            if time_sum_normal >= 0
+            else "--:--"
+        )
 
         attendance_table_dict[f"{idx}"] = attendance_data
         # print(f"Debug: template_repeat: {template_repeat}")

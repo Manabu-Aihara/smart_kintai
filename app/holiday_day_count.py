@@ -382,15 +382,11 @@ class HolidayDayCount(HolidayBase):
             : date 一致する日付（見つからない場合はNone）
         """
         matched_date = None
-        # min_diff = float("inf")
-        # saved_date = None
 
         for i, holiday_date in enumerate(holiday_dict.keys()):
             holiday_date_normalized = (
                 holiday_date.date() if hasattr(holiday_date, "date") else holiday_date
             )
-            # diff = abs((holiday_date_normalized - acqisition_date).days)
-            # print(f"Diff: {acquisition_date}, {holiday_date_normalized}")
             # 一致する場合（4月、10月）
             if holiday_date_normalized == acquisition_date:
                 matched_date = holiday_date
@@ -412,11 +408,6 @@ class HolidayDayCount(HolidayBase):
             #     matched_date = saved_date
             # print(f"_matched date: {matched_date}")
 
-            # made by Cursor
-            # elif diff < min_diff:
-            #     min_diff = diff
-            #     print(f"Min diff: {min_diff}")
-            #     matched_date = holiday_date_normalized
         return matched_date
 
     def _process_acquisition_period(
