@@ -79,9 +79,9 @@ def post_access_token():
     print(f"First group number: {group_num}")
     token_dict = issue_token(user_num, group_num)
     # resp = make_response(jsonify(token_data))
-    return redirect(f"http://localhost:5173/auth?token={token_dict['data']}")
-    # cloud_site = os.getenv("CLOUD_TIMETABLE4")
-    # return redirect(f"{cloud_site}/auth?token={token_dict['data']}")
+    # return redirect(f"http://localhost:5173/auth?token={token_dict['data']}")
+    cloud_site = os.getenv("CLOUD_TIMETABLE4")
+    return redirect(f"{cloud_site}/auth?token={token_dict['data']}")
 
 
 @app.route("/calc/auth", methods=["GET", "POST"])
@@ -89,9 +89,9 @@ def post_access_token():
 def post_to_token():
     user_num, group_num = get_user_group_id(current_user.STAFFID)
     token_dict = issue_token(user_num, group_num)
-    return redirect(f"http://0.0.0.0:8001/users/me?token={token_dict['data']}")
-    # cloud_site = os.getenv("CLOUD_CALC_PAGE")
-    # return redirect(f"{cloud_site}/users/me?token={token_dict['data']}")
+    # return redirect(f"http://0.0.0.0:8001/users/me?token={token_dict['data']}")
+    cloud_site = os.getenv("CLOUD_CALC_PAGE")
+    return redirect(f"{cloud_site}/users/me?token={token_dict['data']}")
     # return redirect("https://hello-865742550561.asia-northeast1.run.app")
 
 
@@ -100,7 +100,10 @@ def post_to_token():
 def post_secure_data():
     user_num, group_num = get_user_group_id(current_user.STAFFID)
     token_dict = issue_token(user_num, group_num)
-    return redirect(f"http://127.0.0.1:8001/secure-data?token={token_dict['data']}")
+    # return redirect(f"http://127.0.0.1:8001/secure-data?token={token_dict['data']}")
+    # return redirect(f"http://0.0.0.0:8001/secure-data?token={token_dict['data']}")
+    cloud_site = os.getenv("CLOUD_MCP_SITE")
+    return redirect(f"{cloud_site}/secure-data?token={token_dict['data']}")
 
 
 @app.route("/refresh", methods=["GET", "POST"])
