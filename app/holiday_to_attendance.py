@@ -23,12 +23,17 @@ def read_alert_json(my_id: str):
             + str(today.year)
             + r"\d{4}.json"
         )
+        print(f"Log file path: {log_file_path}")
+        read_json_file = ""
         for filename in os.listdir(log_file_path):
             if re.search(pattern, filename):
                 read_json_file = log_file_path.joinpath(filename)
 
-        with open(read_json_file, "r") as f:
-            d: Dict[str, float] = json.load(f)["alerts"]
+        try:
+            with open(read_json_file, "r") as f:
+                d: Dict[str, float] = json.load(f)["alerts"]
+        except FileNotFoundError:
+            pass
 
     for k, v in d.items():
         if k == my_id:

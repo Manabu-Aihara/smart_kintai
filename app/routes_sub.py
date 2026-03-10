@@ -100,10 +100,10 @@ def post_to_token():
 def post_secure_data():
     user_num, group_num = get_user_group_id(current_user.STAFFID)
     token_dict = issue_token(user_num, group_num)
-    # return redirect(f"http://127.0.0.1:8001/secure-data?token={token_dict['data']}")
+    return redirect(f"http://127.0.0.1:8001/secure-data?token={token_dict['data']}")
     # return redirect(f"http://0.0.0.0:8001/secure-data?token={token_dict['data']}")
-    cloud_site = os.getenv("CLOUD_MCP_SITE")
-    return redirect(f"{cloud_site}/secure-data?token={token_dict['data']}")
+    # cloud_site = os.getenv("CLOUD_MCP_SITE")
+    # return redirect(f"{cloud_site}/secure-data?token={token_dict['data']}")
 
 
 @app.route("/refresh", methods=["GET", "POST"])
