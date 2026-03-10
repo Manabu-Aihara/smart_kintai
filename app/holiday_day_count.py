@@ -84,12 +84,15 @@ class HolidayDayCount(HolidayBase):
             Attendance.WORKDAY <= overall_end,
             Attendance.NOTIFICATION.notin_(n_absence_list),
             # 除外条件: Attendance.STARTTIME != '00:00'
-            # Attendance.NOTIFICATIONが"3"または"5", "9"の場合は、Attendance.STARTTIME != "00:00"の条件を適用しない
-            # → つまり、NOTIFICATIONが"3"または"5", "9"なら除外条件なし、それ以外は除外条件あり
+            # Attendance.NOTIFICATIONが"3"または"5", "9"の場合は、またはAttendance.ONCALLがNoneでない場合、
+            # Attendance.STARTTIME != "00:00"の条件を適用しない
+            # つまり、NOTIFICATIONが"3"または"5", "9"なら除外条件なし、それ以外は除外条件あり
             or_(
                 Attendance.NOTIFICATION.in_(["3", "5", "9"]),
+                Attendance.ONCALL.isnot(None),
                 and_(
                     ~Attendance.NOTIFICATION.in_(["3", "5", "9"]),
+                    ~Attendance.ONCALL.isnot(None),
                     Attendance.STARTTIME != "00:00",
                 ),
             ),
@@ -305,16 +308,25 @@ class HolidayDayCount(HolidayBase):
             Attendance.WORKDAY <= end_of_range,
             Attendance.NOTIFICATION.notin_(n_absence_list),
             # Attendance.STARTTIME == '00:00'の場合、除かれる
-            # Attendance.NOTIFICATIONが"3"または"5", "9"の場合は、Attendance.STARTTIME != "00:00"の条件を適用しない
-            # → つまり、NOTIFICATIONが"3"または"5", "9"なら除外条件なし、それ以外は除外条件あり
-            # 「NOTIFICATIONが'3'または'5', "9"のときは、Attendance.STARTTIME == '00:00'を適応」
+            # しかし、Attendance.NOTIFICATIONが"3"または"5", "9"の場合、加えてAttendance.ONCALLがNoneでない場合は、
+            # Attendance.STARTTIME == "00:00"もカウントに含める
+            # つまり、NOTIFICATIONが"3"または"5", "9"なら00:00も含む、それ以外は00:00を除く
             or_(
                 Attendance.NOTIFICATION.in_(["3", "5", "9"]),
+                Attendance.ONCALL.isnot(None),
                 and_(
                     ~Attendance.NOTIFICATION.in_(["3", "5", "9"]),
+                    ~Attendance.ONCALL.isnot(None),
                     Attendance.STARTTIME != "00:00",
                 ),
             ),
+            # or_(
+            #     Attendance.ONCALL.isnot(None),
+            #     and_(
+            #         ~Attendance.ONCALL.isnot(None),
+            #         Attendance.STARTTIME != "00:00",
+            #     ),
+            # ),
         ]
         recent_work_count = (
             db.session.query(Attendance.WORKDAY).filter(*filters).count()
@@ -370,15 +382,11 @@ class HolidayDayCount(HolidayBase):
             : date 一致する日付（見つからない場合はNone）
         """
         matched_date = None
-        # min_diff = float("inf")
-        # saved_date = None
 
         for i, holiday_date in enumerate(holiday_dict.keys()):
             holiday_date_normalized = (
                 holiday_date.date() if hasattr(holiday_date, "date") else holiday_date
             )
-            # diff = abs((holiday_date_normalized - acqisition_date).days)
-            # print(f"Diff: {acquisition_date}, {holiday_date_normalized}")
             # 一致する場合（4月、10月）
             if holiday_date_normalized == acquisition_date:
                 matched_date = holiday_date
@@ -400,11 +408,6 @@ class HolidayDayCount(HolidayBase):
             #     matched_date = saved_date
             # print(f"_matched date: {matched_date}")
 
-            # made by Cursor
-            # elif diff < min_diff:
-            #     min_diff = diff
-            #     print(f"Min diff: {min_diff}")
-            #     matched_date = holiday_date_normalized
         return matched_date
 
     def _process_acquisition_period(

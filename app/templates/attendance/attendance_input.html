@@ -26,14 +26,14 @@
   {{ display_top_belt(stf_login, current_user) }}
   {% import "bootstrap/wtf.html" as wtf %}
   <h3>
-    <form method="POST" action="/attendance/{{ stf_login.STAFFID }}/input.do">
+    <form method="POST" action="/attendance/{{ STAFFID }}/{{ ref_flag }}/input.do">
       {{ month_form.csrf_token }}
       <input type="text" id="select_month" class="h5" name="select_month" value="{{ selected_date }}" />
       {{ wtf.form_field(month_form.slct, class="btn btn-primary") }}
     </form>
   </h3>
   <div class="idx-tbl">
-    <form method="POST" action="/attendance/{{ stf_login.STAFFID }}/input.do" onsubmit="mes()">
+    <form method="POST" action="/attendance/{{ STAFFID }}/{{ ref_flag }}/input.do" onsubmit="mes()">
       <div class="posilock">
         <ul class="btn-list2">
           <li>

@@ -2,7 +2,7 @@ import pytest
 from datetime import timedelta
 
 
-from app.calc_work_classes3 import CalcTimeFactory
+from app.calc_work_classes4 import CalcTimeFactory
 
 
 @pytest.fixture

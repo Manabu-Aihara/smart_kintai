@@ -30,6 +30,7 @@ from .models import (
     SystemInfo,
     StaffJobContract,
     StaffHolidayContract,
+    TableOfCount,
 )
 from .common_func import GetPullDownList, blankCheck
 from .db_check_util import compare_db_item, check_contract_value
@@ -644,11 +645,15 @@ def user_delete_admin(STAFFID):
         db.session.query(SystemInfo).filter(SystemInfo.STAFFID == STAFFID).first()
     )
     user_info = db.session.query(User).filter(User.STAFFID == STAFFID).first()
+    user_counter = (
+        db.session.query(TableOfCount).filter(TableOfCount.STAFFID == STAFFID).all()
+    )
 
     db.session.delete(user_info)
     db.session.delete(user_system_info)
     db.session.delete(user_holiday_info)
     db.session.delete(user_login)
+    # db.session.delete(user_counter)
     db.session.commit()
 
     flash("ユーザを削除しました", "info")

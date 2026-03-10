@@ -4,6 +4,7 @@ from datetime import date
 from sqlalchemy import or_, and_, func
 
 from app import db
+from app.models import TableOfCount
 from app.models_aprv import PaidHolidayLog
 from app.attendance_query_class import AttendanceQuery
 
@@ -58,7 +59,18 @@ from_day = date(2025, 1, 1)
 to_day = date(2025, 10, 31)
 
 
+@pytest.mark.skip
 def test_get_distinct_query(app_context):
     aq_instance = AttendanceQuery(201, from_day, to_day)
     query = aq_instance.get_distinct_user_query().all()
     print(f"Query result: {query}")
+
+
+def test_comfirm_mapped_query(app_context):
+    user_counter = db.session.query(TableOfCount).filter(TableOfCount.STAFFID == 277)
+    print(f"Query result: {user_counter}")
+    try:
+        db.session.delete(user_counter)
+        db.session.commit()
+    except Exception as e:
+        print(e)

@@ -15,7 +15,7 @@ from . import app, db
 from .forms import SelectMonthForm, SaveForm
 from .models import User, StaffLogin, Notification, Attendance
 from .attendance_query_class import AttendanceQuery
-from .calc_work_classes3 import CalcTimeFactory
+from .calc_work_classes4 import CalcTimeFactory
 from .attendance_validate_class import AttendanceValidate
 from .new_calendar import NewCalendar
 from .common_func import NoneCheck, TimeCheck, blankCheck
@@ -299,7 +299,17 @@ def output_attendance(STAFFID, reference_flag, selected_date):
                 display_engel_list.append(non_display)
                 display_distance_list.append("")
                 display_over_list.append(type_in_over)
+            elif template.TEMPLATE_NO == 3:
+                attendance_columns_list.append(
+                    attendance_all_columns[3:5] + attendance_all_columns[6:]
+                )
+                display_oncall_list.append(non_display)
+                display_oncall_correspond_list.append(non_display)
+                display_engel_list.append(non_display)
+                display_distance_list.append(non_display)
+                display_over_list.append(type_in_over)
 
+        print(f"Debug: template_repeat for {idx}: {template_repeat}")
         attendance_data["columns"] = attendance_columns_list[template_repeat_subscript]
         attendance_data["oncall_disp"] = display_oncall_list[template_repeat_subscript]
         attendance_data["oncall_crsp_disp"] = display_oncall_correspond_list[
@@ -385,55 +395,44 @@ def output_attendance(STAFFID, reference_flag, selected_date):
         print(f"List detail: {group_list}")
         for group in group_list:
             attendance_obj = group[0]
-            print(attendance_obj)
+            # print(attendance_obj)
             if isinstance(attendance_obj, Attendance):
                 print(f"GET何日: {attendance_obj.WORKDAY.day}")
+                work_day = attendance_obj.WORKDAY.day
 
-                attendance_data[attendance_obj.WORKDAY.day]["ID"] = attendance_obj.id
+                attendance_data[work_day]["ID"] = attendance_obj.id
                 # オンコール当番
-                attendance_data[attendance_obj.WORKDAY.day][
-                    "oncall"
-                ] = attendance_obj.ONCALL
+                attendance_data[work_day]["oncall"] = attendance_obj.ONCALL
                 # オンコール対応
-                attendance_data[attendance_obj.WORKDAY.day]["oncall_count"] = NoneCheck(
+                attendance_data[work_day]["oncall_count"] = NoneCheck(
                     attendance_obj.ONCALL_COUNT
                 )
                 # エンゼル対応
-                attendance_data[attendance_obj.WORKDAY.day]["engel_count"] = NoneCheck(
+                attendance_data[work_day]["engel_count"] = NoneCheck(
                     attendance_obj.ENGEL_COUNT
                 )
                 # 開始時間
-                attendance_data[attendance_obj.WORKDAY.day]["start_time"] = TimeCheck(
+                attendance_data[work_day]["start_time"] = TimeCheck(
                     attendance_obj.STARTTIME
                 )
                 # 終了時間
-                attendance_data[attendance_obj.WORKDAY.day]["end_time"] = TimeCheck(
+                attendance_data[work_day]["end_time"] = TimeCheck(
                     attendance_obj.ENDTIME
                 )
                 # 走行距離
-                attendance_data[attendance_obj.WORKDAY.day][
-                    "mileage"
-                ] = attendance_obj.MILEAGE
+                attendance_data[work_day]["mileage"] = attendance_obj.MILEAGE
                 # 申請(AM)
-                attendance_data[attendance_obj.WORKDAY.day][
-                    "notification"
-                ] = attendance_obj.NOTIFICATION
+                attendance_data[work_day]["notification"] = attendance_obj.NOTIFICATION
                 # 申請(PM)
-                attendance_data[attendance_obj.WORKDAY.day][
+                attendance_data[work_day][
                     "notification_pm"
                 ] = attendance_obj.NOTIFICATION2
                 # 残業申請
-                attendance_data[attendance_obj.WORKDAY.day][
-                    "over_time"
-                ] = attendance_obj.OVERTIME
+                attendance_data[work_day]["over_time"] = attendance_obj.OVERTIME
                 # アルコールチェック
-                attendance_data[attendance_obj.WORKDAY.day][
-                    "alcohol"
-                ] = attendance_obj.ALCOHOL
+                attendance_data[work_day]["alcohol"] = attendance_obj.ALCOHOL
                 # 備考
-                attendance_data[attendance_obj.WORKDAY.day][
-                    "remark"
-                ] = attendance_obj.REMARK
+                attendance_data[work_day]["remark"] = attendance_obj.REMARK
 
                 calculation_instance = calc_time_factory.get_instance(staff_id=staff_id)
                 # 常勤かパートか
@@ -452,7 +451,7 @@ def output_attendance(STAFFID, reference_flag, selected_date):
 
                 # 実働時間
                 actual_work_time = calculation_instance.get_actual_work_time()
-                print(f"{attendance_obj.WORKDAY.day}日実働時間: {actual_work_time}")
+                print(f"{work_day}日実働時間: {actual_work_time}")
                 actual_work_time_str = (
                     re.sub(
                         r"([0-9]{1,2}):([0-9]{2}):00", r"\1:\2", f"{actual_work_time}"
@@ -460,25 +459,19 @@ def output_attendance(STAFFID, reference_flag, selected_date):
                     if actual_work_time > timedelta(hours=0)
                     else "0.0"
                 )
-                attendance_data[attendance_obj.WORKDAY.day][
-                    "worktime"
-                ] = actual_work_time_str
+                attendance_data[work_day]["worktime"] = actual_work_time_str
 
                 actual_second = actual_work_time.total_seconds()
 
                 real_time = calculation_instance.get_real_time()
-                print(f"{attendance_obj.WORKDAY.day}日リアル時間: {real_time}")
+                print(f"{work_day}日リアル時間: {real_time}")
+                over_time = calculation_instance.get_over_time()
+                print(f"{work_day}日残業時間: {over_time}")
+
                 # 勤務日数
                 workday_count += 1 if actual_second != 0.0 else 0
 
                 actual_time_sum += actual_second
-                time_sum_normal = actual_time_sum / 3600
-                # 実働時間計：10進数
-                actual_time_rnd = (
-                    Decimal(time_sum_normal).quantize(Decimal("0.01"), ROUND_HALF_UP)
-                    if time_sum_normal >= 0
-                    else "--:--"
-                )
 
                 # 走行距離計
                 distance_sum += (
@@ -503,8 +496,18 @@ def output_attendance(STAFFID, reference_flag, selected_date):
                     Decimal("0.01"), ROUND_HALF_UP
                 )
 
+        print(f"実働時間計(秒): {actual_time_sum}")
+        time_sum_normal = actual_time_sum / 3600
+        print(f"実働時間計(時間): {time_sum_normal}")
+
+        # 実働時間計：10進数
+        actual_time_rnd = (
+            Decimal(time_sum_normal).quantize(Decimal("0.01"), ROUND_HALF_UP)
+            if time_sum_normal >= 0
+            else "--:--"
+        )
+
         attendance_table_dict[f"{idx}"] = attendance_data
-        print(f"Debug: template_repeat for {idx}: {template_repeat}")
         # print(f"Debug: template_repeat: {template_repeat}")
         # print(f"Debug: repeat_list: {repeat_list}")
         print(f"Debug: start_day_subscript: {start_day_subscript}")
@@ -519,6 +522,7 @@ def output_attendance(STAFFID, reference_flag, selected_date):
 
     return render_template(
         "attendance/attendance_input.html",
+        STAFFID=STAFFID,
         ref_flag=reference_flag,
         month_form=form_of_month,
         save_form=save_form,
@@ -566,15 +570,15 @@ def get_move_distance(form_distance: str) -> Optional[str]:
         return result_distance
 
 
-@app.route("/attendance/<STAFFID>/input.do", methods=["POST"])
+@app.route("/attendance/<STAFFID>/<reference_flag>/input.do", methods=["POST"])
 @login_required
-def input_attendance(STAFFID):
+def input_attendance(STAFFID, reference_flag):
     form_of_month = SelectMonthForm()
     selected_form_date = ""
     if form_of_month.validate_on_submit():
         selected_form_date = request.form.get("select_month")  # 選択された日付
         print(f"Select form date: {selected_form_date}")
-        return redirect(f"/attendance/{STAFFID}/1/{selected_form_date}")
+        return redirect(f"/attendance/{STAFFID}/{reference_flag}/{selected_form_date}")
 
     print(f"Re-render date: {request.form.get('select_month')}")
     selected_form_date = request.form.get("select_month")  # 選択された日付
@@ -825,4 +829,4 @@ def input_attendance(STAFFID):
         logger = AttendanceLogger.get_logger(updated_month)
         logger.info(updated_user)
 
-    return redirect(f"/attendance/{STAFFID}/1/{selected_form_date}")
+    return redirect(f"/attendance/{STAFFID}/{reference_flag}/{selected_form_date}")
